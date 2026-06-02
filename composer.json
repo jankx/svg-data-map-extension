@@ -1,0 +1,22 @@
+{
+    "name": "puleeno/svg-data-map",
+    "description": "An interactive tool to upload custom SVG maps, group vector elements into regions, place custom markers, bind content, and export configurations to JSON.",
+    "type": "project",
+    "license": "GPL-3.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "Jankx\\Extensions\\SvgDataMap\\": "includes/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Puleeno Nguyen",
+            "email": "puleeno@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    }
+}

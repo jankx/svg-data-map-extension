@@ -1,0 +1,19 @@
+{
+    "name": "SVG Data Map",
+    "version": "1.0.0",
+    "description": "An interactive tool to upload custom SVG maps, group vector elements into regions, place custom markers, bind content, and export configurations to JSON.",
+    "author": "Puleeno",
+    "extension_id": "svg-data-map",
+    "context": [
+        "always"
+    ],
+    "caller": {
+        "file": "includes/SvgDataMapExtension.php",
+        "class": "Jankx\\Extensions\\SvgDataMap\\SvgDataMapExtension",
+        "method": "init"
+    },
+    "requirements": {
+        "php": ">=7.4"
+    },
+    "auto_activate": true
+}

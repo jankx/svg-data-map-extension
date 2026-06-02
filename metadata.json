@@ -1,0 +1,8 @@
+{
+  "name": "SVG Data Map",
+  "description": "An interactive tool to upload custom SVG maps, group vector elements into regions, place custom markers, bind content, and export configurations to JSON.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
