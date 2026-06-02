@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "jankx/svg-data-map-info",
+    "version": "1.0.0",
+    "title": "Jankx SVG Data Map Info",
+    "category": "jankx",
+    "description": "Displays region info for a linked SVG Data Map.",
+    "attributes": {
+        "mapId": {
+            "type": "string",
+            "default": "default-map"
+        }
+    },
+    "supports": {
+        "html": false
+    },
+    "editorScript": "file:../../dist/assets/index.js",
+    "editorStyle": "file:../../dist/assets/index.css",
+    "style": "file:../../dist/assets/index.css"
+}

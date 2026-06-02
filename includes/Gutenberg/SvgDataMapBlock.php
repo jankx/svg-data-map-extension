@@ -17,7 +17,7 @@ class SvgDataMapBlock extends Block
      */
     protected function registerEditorAssets(): void
     {
-        $asset_file = $this->blockPath . '/dist/assets/index.asset.php';
+        $asset_file = dirname(dirname($this->blockPath)) . '/dist/assets/index.asset.php';
         $assets = file_exists($asset_file) ? require $asset_file : [
             'dependencies' => ['wp-blocks', 'wp-element', 'wp-editor'],
             'version' => '1.0.0'
@@ -37,7 +37,7 @@ class SvgDataMapBlock extends Block
             true
         );
 
-        if (file_exists($this->blockPath . '/dist/assets/index.css')) {
+        if (file_exists(dirname(dirname($this->blockPath)) . '/dist/assets/index.css')) {
             wp_enqueue_style(
                 'jankx-svg-data-map-editor',
                 $styleUrl,
@@ -59,7 +59,8 @@ class SvgDataMapBlock extends Block
         if (!$extension) return;
 
         // Enqueue TailwindCSS/Main styles
-        $cssPath = $this->blockPath . '/dist/assets/index.css';
+        $rootPath = dirname(dirname($this->blockPath));
+        $cssPath = $rootPath . '/dist/assets/index.css';
         if (file_exists($cssPath)) {
             $styleUrl = $extension->get_extension_url() . '/dist/assets/index.css';
             wp_enqueue_style(
@@ -71,9 +72,9 @@ class SvgDataMapBlock extends Block
         }
 
         // Enqueue frontend.js for interactivity
-        $jsPath = $this->blockPath . '/dist/assets/frontend.js';
+        $jsPath = $rootPath . '/dist/assets/frontend.js';
         if (file_exists($jsPath)) {
-            $assetFile = $this->blockPath . '/dist/assets/frontend.asset.php';
+            $assetFile = $rootPath . '/dist/assets/frontend.asset.php';
             $assets = file_exists($assetFile) ? require $assetFile : [
                 'dependencies' => [],
                 'version' => '1.0.0'
@@ -114,36 +115,15 @@ class SvgDataMapBlock extends Block
         <div class="jankx-svg-data-map-runtime font-sans" 
              id="svg-map-<?php echo esc_attr(uniqid()); ?>"
              data-config="<?php echo esc_attr(json_encode($config)); ?>"
+             data-map-id="<?php echo esc_attr($attributes['mapId'] ?? 'default-map'); ?>"
              data-ssr="yes">
             
-            <div class="flex flex-col lg:flex-row min-h-[600px] bg-slate-50 rounded-[2rem] overflow-hidden shadow-2xl border border-white/50">
+            <div class="flex flex-col bg-slate-50 rounded-[2rem] overflow-hidden shadow-2xl border border-white/50">
                 
-                <!-- LEFT: Map View Port (70%) -->
-                <div class="lg:w-[65%] xl:w-[70%] p-8 relative flex items-center justify-center bg-[#F1F7FA]">
+                <!-- Map View Port (100%) -->
+                <div class="p-8 relative flex items-center justify-center bg-[#F1F7FA]">
                     <div class="jankx-svg-map-wrapper w-full h-full min-h-[500px] flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[700px] [&>svg]:w-auto [&>svg]:h-auto">
                         <?php echo $config['globalSvgContent'] ?? ''; ?>
-                    </div>
-                </div>
-
-                <!-- RIGHT: Detail Sidebar (35%) -->
-                <div class="lg:w-[35%] xl:w-[32%] bg-[#D7EEF9] p-10 flex flex-col shadow-inner">
-                    <!-- Dynamic Title -->
-                    <div class="mb-10">
-                        <h2 class="jankx-map-active-title text-4xl font-black text-[#1E4D65] tracking-tight transition-all duration-300 drop-shadow-sm">
-                             Việt Nam
-                        </h2>
-                    </div>
-
-                    <!-- Post List Container -->
-                    <div class="jankx-svg-map-info-panel flex-1 overflow-y-auto pr-4 custom-scrollbar">
-                        <div class="flex flex-col items-center justify-center h-full text-center space-y-6 py-10 opacity-70">
-                             <div class="w-20 h-20 bg-white/40 rounded-3xl flex items-center justify-center shadow-inner">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1E4D65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                             </div>
-                             <p class="text-[#1E4D65] font-bold text-sm leading-relaxed max-w-[200px]">
-                                Chọn một khu vực trên bản đồ để xem thông tin di sản.
-                             </p>
-                        </div>
                     </div>
                 </div>
             </div>

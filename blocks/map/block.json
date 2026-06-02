@@ -7,6 +7,10 @@
     "category": "jankx",
     "description": "Interactive SVG map with dynamic WordPress data binding.",
     "attributes": {
+        "mapId": {
+            "type": "string",
+            "default": "default-map"
+        },
         "config": {
             "type": "object",
             "default": {}
@@ -19,7 +23,7 @@
             "full"
         ]
     },
-    "editorScript": "file:./dist/assets/index.js",
-    "editorStyle": "file:./dist/assets/index.css",
-    "style": "file:./dist/assets/index.css"
+    "editorScript": "file:../../dist/assets/index.js",
+    "editorStyle": "file:../../dist/assets/index.css",
+    "style": "file:../../dist/assets/index.css"
 }

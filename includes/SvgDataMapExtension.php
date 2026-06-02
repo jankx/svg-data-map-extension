@@ -3,6 +3,7 @@ namespace Jankx\Extensions\SvgDataMap;
 
 use Jankx\Extensions\AbstractExtension;
 use Jankx\Extensions\SvgDataMap\Gutenberg\SvgDataMapBlock;
+use Jankx\Extensions\SvgDataMap\Gutenberg\SvgDataMapInfoBlock;
 
 class SvgDataMapExtension extends AbstractExtension
 {
@@ -54,12 +55,27 @@ class SvgDataMapExtension extends AbstractExtension
 
     public function register_blocks_in_service($repository, $app)
     {
-        $block_path = rtrim($this->get_extension_path(), '/');
-        if (file_exists($block_path . '/block.json')) {
-            // Ensure the class is loaded and registered
-            $block = new SvgDataMapBlock($block_path);
-            $block->boot(); // Ensure boot is called manually if service doesn't
-            $repository->registerBlock($block);
+        $extension_path = rtrim($this->get_extension_path(), '/');
+        $blocks_dir = $extension_path . '/blocks';
+
+        if (is_dir($blocks_dir)) {
+            // Map Block
+            if (file_exists($blocks_dir . '/map/block.json')) {
+                $block = new SvgDataMapBlock($blocks_dir . '/map');
+                $repository->registerBlock($block);
+            }
+
+            // Info Block
+            if (file_exists($blocks_dir . '/info/block.json')) {
+                $block = new SvgDataMapInfoBlock($blocks_dir . '/info');
+                $repository->registerBlock($block);
+            }
+        } else {
+            // Fallback to root block.json for backward compatibility if needed
+            if (file_exists($extension_path . '/block.json')) {
+                $block = new SvgDataMapBlock($extension_path);
+                $repository->registerBlock($block);
+            }
         }
     }
 

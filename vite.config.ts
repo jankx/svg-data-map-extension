@@ -19,7 +19,7 @@ export default defineConfig(() => {
       sourcemap: true,
       minify: true,
       lib: {
-        entry: path.resolve(__dirname, 'src/main.tsx'),
+        entry: path.resolve(__dirname, 'blocks/shared/main.tsx'),
         name: 'SvgDataMap',
         formats: ['iife'] as any,
         fileName: () => `assets/index.js`,
