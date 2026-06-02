@@ -54,10 +54,11 @@ class SvgDataMapExtension extends AbstractExtension
 
     public function register_blocks_in_service($repository, $app)
     {
-        $block_path = $this->get_extension_path();
+        $block_path = rtrim($this->get_extension_path(), '/');
         if (file_exists($block_path . '/block.json')) {
-            // Instantiate with path so the block knows where its assets are
+            // Ensure the class is loaded and registered
             $block = new SvgDataMapBlock($block_path);
+            $block->boot(); // Ensure boot is called manually if service doesn't
             $repository->registerBlock($block);
         }
     }

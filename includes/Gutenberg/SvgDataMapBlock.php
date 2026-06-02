@@ -33,7 +33,7 @@ class SvgDataMapBlock extends Block
             'jankx-svg-data-map-editor',
             $scriptUrl,
             $assets['dependencies'],
-            $assets['version'],
+            '999.9.9',
             true
         );
 
@@ -113,7 +113,8 @@ class SvgDataMapBlock extends Block
         ?>
         <div class="jankx-svg-data-map-runtime font-sans" 
              id="svg-map-<?php echo esc_attr(uniqid()); ?>"
-             data-config="<?php echo esc_attr(json_encode($config)); ?>">
+             data-config="<?php echo esc_attr(json_encode($config)); ?>"
+             data-ssr="yes">
             
             <div class="flex flex-col lg:flex-row min-h-[600px] bg-slate-50 rounded-[2rem] overflow-hidden shadow-2xl border border-white/50">
                 

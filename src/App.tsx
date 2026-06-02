@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SVGMapConfig } from './types';
 import { VIETNAM_MAP_PRESET, EXHIBITION_MAP_PRESET } from './utils/samples';
 import { SVGViewerPanel } from './components/SVGViewerPanel';
@@ -29,7 +29,11 @@ interface AppProps {
 
 export default function App({ blockConfig, onBlockConfigChange, isGutenberg = false }: AppProps) {
   // Global active tab state ('viewer' mode or 'builder' mode)
-  const [activeTab, setActiveTab] = useState<'viewer' | 'builder'>(isGutenberg ? 'builder' : 'viewer');
+  const [activeTab, setActiveTab] = useState<'viewer' | 'builder'>('viewer');
+
+  useEffect(() => {
+    setActiveTab('viewer');
+  }, []);
 
   // Current loaded map configurations
   const getInitialConfig = () => {
@@ -102,6 +106,7 @@ export default function App({ blockConfig, onBlockConfigChange, isGutenberg = fa
 
           {/* Center Tabs switches */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl self-start md:self-center">
+            {activeTab === 'builder' && <div style={{ color: 'red', fontWeight: 'bold' }}>DEBUG: BUILDER ACTIVE</div>}
             <button
               id="tab-viewer-btn"
               onClick={() => {
