@@ -27,6 +27,8 @@ interface AppProps {
   blockConfig?: SVGMapConfig;
   onBlockConfigChange?: (config: SVGMapConfig) => void;
   isGutenberg?: boolean;
+  activeTab?: 'viewer' | 'builder';
+  onActiveTabChange?: (tab: 'viewer' | 'builder') => void;
 }
 
 export default function App({
@@ -34,13 +36,21 @@ export default function App({
   mapId = 'default-map',
   blockConfig,
   onBlockConfigChange,
-  isGutenberg = false
+  isGutenberg = false,
+  activeTab: externalActiveTab,
+  onActiveTabChange: externalOnActiveTabChange
 }: AppProps) {
   // Global active tab state ('viewer' mode or 'builder' mode)
-  const [activeTab, setActiveTab] = useState<'viewer' | 'builder'>('viewer');
+  const [internalActiveTab, setInternalActiveTab] = useState<'viewer' | 'builder'>('viewer');
+
+  // Use external activeTab if provided (from Gutenberg block), otherwise use internal state
+  const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalActiveTab;
+  const setActiveTab = externalOnActiveTabChange || setInternalActiveTab;
 
   useEffect(() => {
-    setActiveTab('viewer');
+    if (externalActiveTab === undefined) {
+      setInternalActiveTab('viewer');
+    }
   }, []);
 
   // Current loaded map configurations
@@ -82,8 +92,45 @@ export default function App({
       }
     };
 
+    // Handle builder mode state from map block
+    const handleBuilderModeChange = (e: any) => {
+      if (e.detail.mapId === mapId) {
+        // Hide Info block when map is in builder mode
+        if (blockId === 'jankx/svg-data-map-info') {
+          const infoEditor = document.querySelector('.jankx-svg-data-map-info-editor') as HTMLElement;
+          if (infoEditor) {
+            if (e.detail.isBuilderMode) {
+              infoEditor.style.display = 'none';
+            } else {
+              infoEditor.style.display = 'block';
+            }
+          }
+        }
+
+        // Hide all other blocks when in builder mode (only for map block)
+        if (blockId === 'jankx/svg-data-map' && isGutenberg) {
+          const editorBlocks = document.querySelectorAll('.block-editor-block-list__block');
+          const currentBlockWrapper = document.querySelector('.jankx-svg-data-map-editor')?.closest('.block-editor-block-list__block') as HTMLElement;
+
+          editorBlocks.forEach((block: any) => {
+            if (currentBlockWrapper && !currentBlockWrapper.contains(block) && !block.contains(currentBlockWrapper)) {
+              if (e.detail.isBuilderMode) {
+                block.style.display = 'none';
+              } else {
+                block.style.display = '';
+              }
+            }
+          });
+        }
+      }
+    };
+
     window.addEventListener('jankx-svg-map-region-selected', handleGlobalSelect);
-    return () => window.removeEventListener('jankx-svg-map-region-selected', handleGlobalSelect);
+    window.addEventListener('jankx-svg-map-builder-mode', handleBuilderModeChange);
+    return () => {
+      window.removeEventListener('jankx-svg-map-region-selected', handleGlobalSelect);
+      window.removeEventListener('jankx-svg-map-builder-mode', handleBuilderModeChange);
+    };
   }, [mapId, blockId]);
 
   const handleConfigChange = (newConfig: SVGMapConfig) => {
@@ -112,13 +159,11 @@ export default function App({
   };
 
   return (
-    <div id="app-root-container" className="min-h-screen bg-slate-50/50 flex flex-col font-sans">
+    <div id="app-root-container" className={`${isGutenberg && activeTab === 'builder' ? 'fixed inset-0 z-[999999] bg-white' : 'min-h-screen bg-slate-50/50'} flex flex-col font-sans`}>
 
       {/* 1. Header Toolbar navigation element */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-indigo-50/50 shadow-sm px-6 py-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
-          {/* Slogan Logo layout */}
+      <header className={`${isGutenberg && activeTab === 'builder' ? 'px-4 py-3' : 'sticky top-0 z-50 px-6 py-4'} bg-white/95 backdrop-blur-md border-b border-indigo-50/50 shadow-sm`}>
+        <div className={`${isGutenberg && activeTab === 'builder' ? '' : 'max-w-7xl mx-auto'} flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
               <Map className="w-5 h-5" />
@@ -134,51 +179,27 @@ export default function App({
             </div>
           </div>
 
-          {/* Center Tabs switches */}
-          {blockId === 'jankx/svg-data-map' && (
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl self-start md:self-center">
-              <button
-                id="tab-viewer-btn"
-                onClick={() => {
-                  setActiveTab('viewer');
-                  // Auto reset temporary selections so viewing is clean
-                  setSelectedRegionId(mapConfig.regions[0]?.id || null);
-                }}
-                className={`flex items-center gap-2 p-2 px-4 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'viewer'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-                  }`}
-              >
-                <Eye className="w-4 h-4" />
-                <span>Chế độ Trình chiếu</span>
-              </button>
-              <button
-                id="tab-builder-btn"
-                onClick={() => {
-                  setActiveTab('builder');
-                  setSelectedRegionId(null);
-                }}
-                className={`flex items-center gap-2 p-2 px-4 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'builder'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-                  }`}
-              >
-                <Settings className="w-4 h-4" />
-                <span>Chế độ Soạn thảo (Builder)</span>
-              </button>
-            </div>
-          )}
-
           {/* Quick utility actions */}
           <div className="flex items-center gap-2 self-start md:self-auto">
-            <button
-              id="global-reset-btn"
-              onClick={handleResetCurrent}
-              className="p-2 px-3 text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-              title="Đặt lại bản đồ hiện tại về dữ liệu mặc định ban đầu"
-            >
-              <RotateCcw className="w-3.5 h-3.5" /> Khôi phục mẫu
-            </button>
+            {isGutenberg && activeTab === 'builder' && (
+              <button
+                onClick={() => setActiveTab('viewer')}
+                className="p-2 px-3 text-xs bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+                title="Thoát chế độ toàn màn hình"
+              >
+                <Settings className="w-3.5 h-3.5" /> Thoát toàn màn hình
+              </button>
+            )}
+            {!isGutenberg && (
+              <button
+                id="global-reset-btn"
+                onClick={handleResetCurrent}
+                className="p-2 px-3 text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+                title="Đặt lại bản đồ hiện tại về dữ liệu mặc định ban đầu"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Khôi phục mẫu
+              </button>
+            )}
 
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 border-l border-slate-200 pl-3">
               <span>Màn hình:</span>
@@ -186,12 +207,11 @@ export default function App({
               <span className="font-bold text-slate-600 capitalize">{activeTab === 'viewer' ? 'Live' : 'Edit'}</span>
             </div>
           </div>
-
         </div>
       </header>
 
       {/* 2. Main Content viewport wrapper */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8">
+      <main className={`${isGutenberg && activeTab === 'builder' ? 'flex-1 overflow-auto p-4' : 'flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8'}`}>
 
         {/* Dynamic content rendering according to active tab and blockId */}
         {blockId === 'jankx/svg-data-map-info' ? (
@@ -217,16 +237,18 @@ export default function App({
                   </p>
                 </div>
 
-                <button
-                  id="header-goto-builder-btn"
-                  onClick={() => {
-                    setActiveTab('builder');
-                    setSelectedRegionId(null);
-                  }}
-                  className="bg-white text-indigo-700 hover:bg-slate-50 font-extrabold text-xs p-2.5 px-4 rounded-xl shadow-lg shadow-indigo-900/10 transition whitespace-nowrap self-start md:self-auto cursor-pointer font-mono"
-                >
-                  Vào Soạn Thảo Để Đổi Bản Đồ &rarr;
-                </button>
+                {!isGutenberg && (
+                  <button
+                    id="header-goto-builder-btn"
+                    onClick={() => {
+                      setActiveTab('builder');
+                      setSelectedRegionId(null);
+                    }}
+                    className="bg-white text-indigo-700 hover:bg-slate-50 font-extrabold text-xs p-2.5 px-4 rounded-xl shadow-lg shadow-indigo-900/10 transition whitespace-nowrap self-start md:self-auto cursor-pointer font-mono"
+                  >
+                    Vào Soạn Thảo Để Đổi Bản Đồ &rarr;
+                  </button>
+                )}
               </div>
 
               {/* Viewer Component */}
@@ -255,16 +277,6 @@ export default function App({
                     </p>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto text-xs">
-                  <button
-                    id="builder-quick-load-ex-btn"
-                    onClick={() => handleLoadPreset('exhibition')}
-                    className="p-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg transition"
-                  >
-                    Nạp sơ đồ Triển lãm Abstract
-                  </button>
-                </div>
               </div>
 
               {/* Builder Component workspace */}
@@ -280,20 +292,22 @@ export default function App({
       </main>
 
       {/* 3. Global Footer bar */}
-      <footer className="mt-12 bg-white border-t border-slate-150 py-6 px-6 text-center text-xs text-slate-400">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-1">
-            <span>SVG Data Map</span>
-            <span>&copy; 2026. Thiết kế dạng Abstract hướng mở cho mọi loại dữ liệu bản đồ.</span>
-          </div>
+      {!isGutenberg && activeTab !== 'builder' && (
+        <footer className="mt-12 bg-white border-t border-slate-150 py-6 px-6 text-center text-xs text-slate-400">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-1">
+              <span>SVG Data Map</span>
+              <span>&copy; 2026. Thiết kế dạng Abstract hướng mở cho mọi loại dữ liệu bản đồ.</span>
+            </div>
 
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Trực tuyến
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Trực tuyến
+              </span>
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
