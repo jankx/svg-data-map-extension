@@ -41,15 +41,4 @@ document.addEventListener('DOMContentLoaded', () => {
   if (rootElement) {
     render(<App isGutenberg={true} />, rootElement);
   }
-
-  // Handle frontend runtime elements
-  const runtimeElements = document.querySelectorAll('.jankx-svg-data-map-runtime');
-  runtimeElements.forEach((el) => {
-    try {
-      const config = JSON.parse((el as HTMLElement).dataset.config || '{}');
-      render(<App blockConfig={config} isGutenberg={false} />, el);
-    } catch (e) {
-      console.error('Failed to initialize SVG Data Map:', e);
-    }
-  });
 });

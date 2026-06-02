@@ -37,6 +37,8 @@ class SvgDataMapExtension extends AbstractExtension
     public function init(): void
     {
         self::$instance = $this;
+        add_action('wp_ajax_svg_data_map_fetch_posts', [$this, 'ajax_fetch_posts']);
+        add_action('wp_ajax_nopriv_svg_data_map_fetch_posts', [$this, 'ajax_fetch_posts']);
     }
 
     public static function get_instance(): ?self
@@ -59,6 +61,57 @@ class SvgDataMapExtension extends AbstractExtension
             $block->boot();
             $block->register();
         }
+    }
+
+
+
+    public function ajax_fetch_posts()
+    {
+        $term_id = isset($_POST['term_id']) ? intval($_POST['term_id']) : 0;
+        $taxonomy = isset($_POST['taxonomy']) ? sanitize_text_field($_POST['taxonomy']) : 'category';
+        $post_type = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : 'post';
+
+        if (!$term_id) {
+            wp_send_json_error(['message' => 'Invalid parameters']);
+        }
+
+        $args = [
+            'post_type' => $post_type,
+            'posts_per_page' => 5,
+            'tax_query' => [
+                [
+                    'taxonomy' => $taxonomy,
+                    'field' => 'term_id',
+                    'terms' => $term_id
+                ]
+            ]
+        ];
+
+        $query = new \WP_Query($args);
+        $html = '';
+
+        if ($query->have_posts()) {
+            $html .= '<ul class="space-y-3">';
+            while ($query->have_posts()) {
+                $query->the_post();
+                $title = get_the_title();
+                $link = get_permalink();
+                $date = get_the_date();
+                
+                $html .= '<li class="group cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition border-b border-slate-100 last:border-b-0">';
+                $html .= '<a href="' . esc_url($link) . '" class="block">';
+                $html .= '<h4 class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition leading-tight">' . esc_html($title) . '</h4>';
+                $html .= '<p class="text-[10px] text-slate-400 mt-1">' . esc_html($date) . '</p>';
+                $html .= '</a>';
+                $html .= '</li>';
+            }
+            $html .= '</ul>';
+            wp_reset_postdata();
+        } else {
+            $html = '<p class="text-slate-400 text-xs italic">Chưa có bài viết nào trong khu vực này.</p>';
+        }
+
+        wp_send_json_success(['html' => $html]);
     }
 
     public function register_admin_menu()

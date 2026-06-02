@@ -21,6 +21,6 @@
     },
     "editorScript": "file:./dist/assets/index.js",
     "editorStyle": "file:./dist/assets/index.css",
-    "script": "file:./dist/assets/index.js",
+    "script": "file:./dist/assets/frontend.js",
     "style": "file:./dist/assets/index.css"
 }
