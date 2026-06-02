@@ -44,11 +44,3 @@ if (typeof registerBlockType !== 'undefined') {
   });
 }
 
-// 2. Runtime & Admin Page Mounting
-document.addEventListener('DOMContentLoaded', () => {
-  // Handle standalone admin page if #root exists
-  const rootElement = document.getElementById('root');
-  if (rootElement) {
-    render(<App isGutenberg={true} />, rootElement);
-  }
-});

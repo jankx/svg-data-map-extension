@@ -39,7 +39,6 @@ class SvgDataMapExtension extends AbstractExtension
         self::$instance = $this;
         add_action('wp_ajax_svg_data_map_fetch_posts', [$this, 'ajax_fetch_posts']);
         add_action('wp_ajax_nopriv_svg_data_map_fetch_posts', [$this, 'ajax_fetch_posts']);
-        add_action('wp_ajax_svg_data_map_save_config', [$this, 'ajax_save_config']);
     }
 
     public static function get_instance(): ?self
@@ -49,8 +48,6 @@ class SvgDataMapExtension extends AbstractExtension
 
     public function register_hooks(): void
     {
-        add_action('admin_menu', [$this, 'register_admin_menu']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         // Register through GutenbergService's official channel
         add_action('jankx/gutenberg/register-blocks', [$this, 'register_blocks_in_service'], 10, 2);
     }
@@ -120,97 +117,4 @@ class SvgDataMapExtension extends AbstractExtension
         wp_send_json_success(['html' => $html]);
     }
 
-    public function ajax_save_config()
-    {
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => 'Permission denied']);
-        }
-
-        $config = isset($_POST['config']) ? json_decode(stripslashes($_POST['config']), true) : null;
-        if (!$config) {
-            wp_send_json_error(['message' => 'Invalid configuration data']);
-        }
-
-        // Save to global option
-        update_option('jankx_svg_map_global_config', $config);
-        
-        wp_send_json_success(['message' => 'Configuration saved successfully']);
-    }
-
-    public function register_admin_menu()
-    {
-        add_menu_page(
-            __('SVG Data Map', 'jankx'),
-            __('SVG Data Map', 'jankx'),
-            'manage_options',
-            'svg-data-map',
-            [$this, 'render_admin_page'],
-            'dashicons-location-alt',
-            30
-        );
-    }
-
-    public function render_admin_page()
-    {
-        echo '<div id="root"></div>';
-    }
-
-    public function enqueue_admin_assets($hook)
-    {
-        if ($hook !== 'toplevel_page_svg-data-map') {
-            return;
-        }
-
-        $base_url = $this->get_extension_url();
-
-        // Localize initial data for React
-        $initial_config = get_option('jankx_svg_map_global_config', []);
-        wp_localize_script('wp-element', 'jankxSvgMapData', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('svg_data_map_action'),
-            'initialConfig' => $initial_config
-        ]);
-        // In development, we might want to load from Vite dev server
-        // For now, let's assume it's built or we point to the vite dev server if it's running
-        if (defined('JANKX_DEBUG') && JANKX_DEBUG) {
-             wp_enqueue_script('svg-data-map-vite', 'http://localhost:3000/src/main.tsx', [], null, true);
-             // We need to add type="module" to the script tag
-             add_filter('script_loader_tag', function($tag, $handle) {
-                 if ($handle === 'svg-data-map-vite') {
-                     return str_replace('<script ', '<script type="module" ', $tag);
-                 }
-                 return $tag;
-             }, 10, 2);
-        } else {
-            // Load from build directory
-            $manifest_path = $this->get_extension_path() . '/dist/.vite/manifest.json';
-            if (file_exists($manifest_path)) {
-                $manifest = json_decode(file_get_contents($manifest_path), true);
-                
-                // Enqueue main script
-                if (isset($manifest['src/main.tsx'])) {
-                    $entry = $manifest['src/main.tsx'];
-                    wp_enqueue_script('svg-data-map', $base_url . '/dist/' . $entry['file'], ['wp-element', 'wp-blocks'], $this->get_version(), true);
-                    
-                    // Enqueue script dependencies from .asset.php if it exists
-                    $asset_file = $this->get_extension_path() . '/dist/assets/index.asset.php';
-                    if (file_exists($asset_file)) {
-                        $assets = require $asset_file;
-                        foreach ($assets['dependencies'] as $dep) {
-                            wp_enqueue_script($dep);
-                        }
-                    }
-                }
-
-                // Enqueue main style
-                if (isset($manifest['style.css'])) {
-                    wp_enqueue_style('svg-data-map', $base_url . '/dist/' . $manifest['style.css']['file'], [], $this->get_version());
-                } elseif (isset($manifest['src/main.tsx']['css'])) {
-                    foreach ($manifest['src/main.tsx']['css'] as $css) {
-                        wp_enqueue_style('svg-data-map', $base_url . '/dist/' . $css, [], $this->get_version());
-                    }
-                }
-            }
-        }
-    }
 }
