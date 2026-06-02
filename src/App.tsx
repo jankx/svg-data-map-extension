@@ -32,7 +32,8 @@ export default function App({ blockConfig, onBlockConfigChange, isGutenberg = fa
   const [activeTab, setActiveTab] = useState<'viewer' | 'builder'>(isGutenberg ? 'builder' : 'viewer');
 
   // Current loaded map configurations
-  const [mapConfig, setMapConfig] = useState<SVGMapConfig>(blockConfig || VIETNAM_MAP_PRESET);
+  const initialConfig = (blockConfig && Array.isArray(blockConfig.regions)) ? blockConfig : VIETNAM_MAP_PRESET;
+  const [mapConfig, setMapConfig] = useState<SVGMapConfig>(initialConfig);
 
   // Current active selected region ID across components
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);

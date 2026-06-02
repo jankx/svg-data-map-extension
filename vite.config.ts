@@ -39,8 +39,8 @@ export default defineConfig(() => {
         ],
         output: {
           globals: {
-            react: 'React',
-            'react-dom': 'ReactDOM',
+            react: 'wp.element',
+            'react-dom': 'wp.element',
             '@wordpress/blocks': 'wp.blocks',
             '@wordpress/block-editor': 'wp.blockEditor',
             '@wordpress/components': 'wp.components',
