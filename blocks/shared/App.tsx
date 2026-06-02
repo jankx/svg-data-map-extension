@@ -228,29 +228,6 @@ export default function App({
         ) : (
           activeTab === 'viewer' ? (
             <div className="space-y-4 animate-fade-in" id="tab-content-viewer">
-              {/* Short onboarding info panel for first-time builders */}
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white rounded-2xl p-6 shadow-md shadow-indigo-500/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="max-w-2xl">
-                  <h2 className="text-xl font-bold tracking-tight">Thử nghiệm với Bản Đồ Du Lịch Động!</h2>
-                  <p className="text-indigo-100 text-xs mt-1 leading-relaxed">
-                    Trải nghiệm giải pháp tương tác SVG Mapping trừu tượng (Abstract). Lựa chọn các vùng như <b>Thủ Đô Hà Nội</b>, <b>Cố đô Huế</b>, <b>Tây Nguyên</b>, <b>Sài Gòn</b> hoặc click trực tiếp vào <b>Đà Nẵng & Hội An</b> để thấy hiệu ứng tải bài viết, liên kết cờ giao thông/địa danh chuẩn cấu trúc JSON.
-                  </p>
-                </div>
-
-                {!isGutenberg && (
-                  <button
-                    id="header-goto-builder-btn"
-                    onClick={() => {
-                      setActiveTab('builder');
-                      setSelectedRegionId(null);
-                    }}
-                    className="bg-white text-indigo-700 hover:bg-slate-50 font-extrabold text-xs p-2.5 px-4 rounded-xl shadow-lg shadow-indigo-900/10 transition whitespace-nowrap self-start md:self-auto cursor-pointer font-mono"
-                  >
-                    Vào Soạn Thảo Để Đổi Bản Đồ &rarr;
-                  </button>
-                )}
-              </div>
-
               {/* Viewer Component */}
               <SVGViewerPanel
                 config={mapConfig}
