@@ -29,34 +29,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Setup default view HTML template
         const defaultHTML = `
-            <div class="text-center">
-                <div class="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 shrink-0 shadow-inner">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-16 h-16 text-indigo-800 animate-spin-slow"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800 leading-snug">
-                    Bắt đầu Hành Trình Khám Phá
-                </h3>
-                <p class="text-slate-600 text-xs mt-2 max-w-xs mx-auto leading-relaxed">
-                    Vui lòng click chọn các vùng miền và địa danh trên bản đồ để hiển thị thông tin bài viết chi tiết.
-                </p>
+            <div class="flex flex-col items-center justify-center h-full text-center space-y-4 py-10 opacity-60">
+                 <div class="w-16 h-16 bg-white/50 rounded-2xl flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1E4D65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                 </div>
+                 <p class="text-[#1E4D65] font-bold text-sm leading-relaxed">
+                    Chọn một khu vực trên bản đồ để xem thông tin di sản đường biển.
+                 </p>
             </div>
         `;
 
         // Show loading HTML
         const showLoading = () => {
             infoPanel.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full space-y-4">
-                    <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                    <p class="text-indigo-600 font-bold text-xs">Đang tải dữ liệu...</p>
+                <div class="flex flex-col items-center justify-center h-full space-y-4 py-10">
+                    <div class="w-10 h-10 border-4 border-white/30 border-t-[#1E4D65] rounded-full animate-spin"></div>
+                    <p class="text-[#1E4D65] font-bold text-xs uppercase tracking-widest">Đang tìm kiếm...</p>
                 </div>
             `;
         };
 
         const showError = () => {
             infoPanel.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full text-center text-red-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <p class="font-bold text-sm">Lỗi tải dữ liệu</p>
+                <div class="flex flex-col items-center justify-center h-full text-center text-[#1E4D65]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-2 opacity-50"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <p class="font-bold text-sm">Không thể tải thông tin</p>
                 </div>
             `;
         };
@@ -76,15 +73,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const currElement = svgWrapper.querySelector(`#${regionId}`);
             if (currElement) currElement.classList.add('jankx-map-active');
 
+            // Update Title if element exists
+            const titleEl = container.querySelector('.jankx-map-active-title');
+            if (titleEl) titleEl.textContent = region.label || 'Khu vực';
+
             showLoading();
             loading = true;
 
             try {
-                // Determine layout mapping
-                let layout = region.layout || 'icon-card';
-                // Since user wants SSR layout, mapping JS may need to request HTML from server.
-                // In a true vanilla setup we hit the REST API or Admin AJAX:
-                const ajaxUrl = ((window as any).jankxDynamicDataLayoutView?.ajaxUrl) || '/wp-admin/admin-ajax.php';
+                const ajaxUrl = ((window as any).jankxViewsData?.ajaxUrl) || '/wp-admin/admin-ajax.php';
 
                 const formData = new FormData();
                 formData.append('action', 'svg_data_map_fetch_posts');
@@ -103,16 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (data.success) {
                     infoPanel.innerHTML = `
-                      <div class="h-full flex flex-col items-start w-full animate-fade-in text-left">
-                        <div class="mb-5 flex flex-col gap-1 w-full border-b border-slate-100 pb-4">
-                            <h3 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-sky-500 leading-tight">
-                              ${region.label || 'Vùng đã chọn'}
-                            </h3>
+                        <div class="w-full animate-fade-in">
+                           ${data.data.html || '<p class="text-slate-400 text-sm italic">Chưa có bài viết nào.</p>'}
                         </div>
-                        <div class="w-full">
-                           ${data.data.html || '<p class="text-slate-400 text-sm">Chưa có bài viết nào.</p>'}
-                        </div>
-                      </div>
                     `;
                 } else {
                     showError();
@@ -130,7 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const el = svgWrapper.querySelector(`#${r.id}`);
             if (el) {
                 el.classList.add('jankx-map-region-clickable');
-                el.addEventListener('click', () => {
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
                     selectRegion(r.id);
                 });
             }

@@ -32,8 +32,18 @@ export default function App({ blockConfig, onBlockConfigChange, isGutenberg = fa
   const [activeTab, setActiveTab] = useState<'viewer' | 'builder'>(isGutenberg ? 'builder' : 'viewer');
 
   // Current loaded map configurations
-  const initialConfig = (blockConfig && Array.isArray(blockConfig.regions)) ? blockConfig : VIETNAM_MAP_PRESET;
-  const [mapConfig, setMapConfig] = useState<SVGMapConfig>(initialConfig);
+  const getInitialConfig = () => {
+    if (blockConfig && Array.isArray(blockConfig.regions) && blockConfig.regions.length > 0) {
+      return blockConfig;
+    }
+    const globalConfig = (window as any).jankxSvgMapData?.initialConfig;
+    if (globalConfig && Array.isArray(globalConfig.regions) && globalConfig.regions.length > 0) {
+      return globalConfig;
+    }
+    return VIETNAM_MAP_PRESET;
+  };
+
+  const [mapConfig, setMapConfig] = useState<SVGMapConfig>(getInitialConfig());
 
   // Current active selected region ID across components
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);

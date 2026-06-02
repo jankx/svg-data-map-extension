@@ -69,6 +69,10 @@ export function SVGMapperEditor({
   const [isEditingRawSvg, setIsEditingRawSvg] = useState(false);
   const [rawSvgInput, setRawSvgInput] = useState('');
 
+  // Saving state
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+
   // Active Region being inspected in sidebar panel
   const activeRegionObj = config.regions.find(r => r.id === selectedRegionId) || null;
 
@@ -90,18 +94,42 @@ export function SVGMapperEditor({
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(config.svgContent, 'image/svg+xml');
-      const interactiveNodes = doc.querySelectorAll('[id]');
-      const ids: string[] = [];
 
-      interactiveNodes.forEach(node => {
-        const id = node.getAttribute('id');
+      // Select all potential interactive elements
+      const interactiveNodes = doc.querySelectorAll('path, g, polygon, rect, circle, ellipse');
+      const ids: string[] = [];
+      let missingIdCount = 0;
+      let hasChanged = false;
+
+      interactiveNodes.forEach((node, index) => {
+        let id = node.getAttribute('id');
+
+        // If element doesn't have an ID, generate a temporary but stable one
+        if (!id) {
+          id = `${node.tagName.toLowerCase()}-${index + 1}`;
+          node.setAttribute('id', id);
+          hasChanged = true;
+          missingIdCount++;
+        }
+
         // Filter out typical styling elements like gradients/patterns
-        if (id && !id.startsWith('grid') && !id.startsWith('gradient')) {
+        if (id && !id.startsWith('grid') && !id.startsWith('gradient') && !id.startsWith('mask') && !id.startsWith('clip')) {
           ids.push(id);
         }
       });
+
       setAvailablePathIds(ids);
       setRawSvgInput(config.svgContent);
+
+      // If we auto-generated IDs, we need to update the actual config content so they persist
+      if (hasChanged) {
+        const serializer = new XMLSerializer();
+        const updatedSvg = serializer.serializeToString(doc);
+        onChangeConfig({
+          ...config,
+          svgContent: updatedSvg
+        });
+      }
     } catch (e) {
       console.warn('SVG parse notice during loading', e);
     }
@@ -299,6 +327,36 @@ export function SVGMapperEditor({
       const { marker, ...rest } = region;
       return rest;
     });
+  };
+
+  // Save to WordPress System via AJAX
+  const handleSaveToSystem = async () => {
+    setIsSaving(true);
+    setSaveStatus(null);
+
+    const ajaxUrl = (window as any).jankxSvgMapData?.ajaxUrl || '/wp-admin/admin-ajax.php';
+    const formData = new FormData();
+    formData.append('action', 'svg_data_map_save_config');
+    formData.append('config', JSON.stringify(config));
+
+    try {
+      const response = await fetch(ajaxUrl, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSaveStatus({ type: 'success', msg: 'Đã lưu cấu hình bản đồ thành công!' });
+        setTimeout(() => setSaveStatus(null), 3000);
+      } else {
+        throw new Error(data.data?.message || 'Lỗi lưu dữ liệu');
+      }
+    } catch (e) {
+      console.error(e);
+      setSaveStatus({ type: 'error', msg: 'Lỗi: ' + (e as Error).message });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Export full mapping setup to a JSON file (downloadable)
@@ -531,6 +589,15 @@ export function SVGMapperEditor({
 
           <div className="flex gap-2">
             <button
+              id="btn-save-system"
+              onClick={handleSaveToSystem}
+              disabled={isSaving}
+              className="p-2 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20"
+            >
+              {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {isSaving ? 'Đang lưu...' : 'Lưu Hệ Thống'}
+            </button>
+            <button
               id="btn-show-json-import"
               onClick={() => setShowJsonOverlay(true)}
               className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
@@ -548,6 +615,12 @@ export function SVGMapperEditor({
             </button>
           </div>
         </div>
+
+        {saveStatus && (
+          <div className={`p-3 rounded-xl text-xs font-bold animate-in ${saveStatus.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+            {saveStatus.msg}
+          </div>
+        )}
 
         {/* Map panel */}
         <div className="relative h-[530px]">

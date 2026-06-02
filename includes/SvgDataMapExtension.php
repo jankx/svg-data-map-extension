@@ -39,6 +39,7 @@ class SvgDataMapExtension extends AbstractExtension
         self::$instance = $this;
         add_action('wp_ajax_svg_data_map_fetch_posts', [$this, 'ajax_fetch_posts']);
         add_action('wp_ajax_nopriv_svg_data_map_fetch_posts', [$this, 'ajax_fetch_posts']);
+        add_action('wp_ajax_svg_data_map_save_config', [$this, 'ajax_save_config']);
     }
 
     public static function get_instance(): ?self
@@ -50,16 +51,17 @@ class SvgDataMapExtension extends AbstractExtension
     {
         add_action('admin_menu', [$this, 'register_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
-        add_action('init', [$this, 'register_block']);
+        // Register through GutenbergService's official channel
+        add_action('jankx/gutenberg/register-blocks', [$this, 'register_blocks_in_service'], 10, 2);
     }
 
-    public function register_block()
+    public function register_blocks_in_service($repository, $app)
     {
         $block_path = $this->get_extension_path();
         if (file_exists($block_path . '/block.json')) {
+            // Instantiate with path so the block knows where its assets are
             $block = new SvgDataMapBlock($block_path);
-            $block->boot();
-            $block->register();
+            $repository->registerBlock($block);
         }
     }
 
@@ -96,22 +98,43 @@ class SvgDataMapExtension extends AbstractExtension
                 $query->the_post();
                 $title = get_the_title();
                 $link = get_permalink();
-                $date = get_the_date();
+                $excerpt = get_the_excerpt();
+                if (empty($excerpt)) {
+                    $excerpt = wp_trim_words(get_the_content(), 30);
+                }
                 
-                $html .= '<li class="group cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition border-b border-slate-100 last:border-b-0">';
-                $html .= '<a href="' . esc_url($link) . '" class="block">';
-                $html .= '<h4 class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition leading-tight">' . esc_html($title) . '</h4>';
-                $html .= '<p class="text-[10px] text-slate-400 mt-1">' . esc_html($date) . '</p>';
+                $html .= '<div class="bg-white rounded-2xl p-6 mb-4 shadow-sm hover:shadow-md transition-all duration-300 border border-white group animate-in">';
+                $html .= '<h4 class="text-lg font-extrabold text-[#1E4D65] mb-3 leading-tight group-hover:text-blue-600 transition-colors">' . esc_html($title) . '</h4>';
+                $html .= '<p class="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-4">' . esc_html($excerpt) . '</p>';
+                $html .= '<a href="' . esc_url($link) . '" class="inline-flex items-center text-xs font-bold text-[#D39C7E] uppercase tracking-widest hover:text-[#b07d61] transition-colors">';
+                $html .= 'Xem chi tiết <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>';
                 $html .= '</a>';
-                $html .= '</li>';
+                $html .= '</div>';
             }
-            $html .= '</ul>';
+            $html .= '</div>'; // End list wrapper if needed
             wp_reset_postdata();
         } else {
             $html = '<p class="text-slate-400 text-xs italic">Chưa có bài viết nào trong khu vực này.</p>';
         }
 
         wp_send_json_success(['html' => $html]);
+    }
+
+    public function ajax_save_config()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Permission denied']);
+        }
+
+        $config = isset($_POST['config']) ? json_decode(stripslashes($_POST['config']), true) : null;
+        if (!$config) {
+            wp_send_json_error(['message' => 'Invalid configuration data']);
+        }
+
+        // Save to global option
+        update_option('jankx_svg_map_global_config', $config);
+        
+        wp_send_json_success(['message' => 'Configuration saved successfully']);
     }
 
     public function register_admin_menu()
@@ -139,7 +162,14 @@ class SvgDataMapExtension extends AbstractExtension
         }
 
         $base_url = $this->get_extension_url();
-        
+
+        // Localize initial data for React
+        $initial_config = get_option('jankx_svg_map_global_config', []);
+        wp_localize_script('wp-element', 'jankxSvgMapData', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('svg_data_map_action'),
+            'initialConfig' => $initial_config
+        ]);
         // In development, we might want to load from Vite dev server
         // For now, let's assume it's built or we point to the vite dev server if it's running
         if (defined('JANKX_DEBUG') && JANKX_DEBUG) {

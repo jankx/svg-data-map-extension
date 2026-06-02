@@ -9,11 +9,13 @@ class SvgDataMapBlock extends Block
 
     protected function registerHooks(): void
     {
-        add_action('enqueue_block_editor_assets', [$this, 'enqueueEditorAssets']);
-        add_action('enqueue_block_assets', [$this, 'enqueueBlockAssets']);
+        // Internal hooks can be added here if needed
     }
 
-    public function enqueueEditorAssets()
+    /**
+     * Standard Jankx lifecycle for editor assets
+     */
+    protected function registerEditorAssets(): void
     {
         $asset_file = $this->blockPath . '/dist/assets/index.asset.php';
         $assets = file_exists($asset_file) ? require $asset_file : [
@@ -21,18 +23,11 @@ class SvgDataMapBlock extends Block
             'version' => '1.0.0'
         ];
 
-        // Create correct URL for the script
-        $baseUrl = str_replace(ABSPATH, site_url('/'), $this->blockPath);
-        // Better way: use the extension instance if available
         $extension = \Jankx\Extensions\SvgDataMap\SvgDataMapExtension::get_instance();
-        if ($extension) {
-            $scriptUrl = $extension->get_extension_url() . '/dist/assets/index.js';
-            $styleUrl = $extension->get_extension_url() . '/dist/assets/index.css';
-        } else {
-            // fallback
-            $scriptUrl = content_url('themes/jankx/extensions/svg-data-map/dist/assets/index.js');
-            $styleUrl = content_url('themes/jankx/extensions/svg-data-map/dist/assets/index.css');
-        }
+        if (!$extension) return;
+
+        $scriptUrl = $extension->get_extension_url() . '/dist/assets/index.js';
+        $styleUrl = $extension->get_extension_url() . '/dist/assets/index.css';
 
         wp_enqueue_script(
             'jankx-svg-data-map-editor',
@@ -53,88 +48,137 @@ class SvgDataMapBlock extends Block
     }
 
     /**
-     * enqueue_block_assets fires in BOTH the editor iframe AND frontend,
-     * which is what we need to get TailwindCSS inside the editor iframe.
+     * Standard Jankx lifecycle for frontend assets.
+     * Note: For Gutenberg apiVersion 3, we also need to ensure styles 
+     * are loaded in the editor iframe, which registerFrontendAssets handles 
+     * in modern Jankx versions or via 'style' attribute in block.json.
      */
-    public function enqueueBlockAssets()
+    protected function registerFrontendAssets(): void
     {
         $extension = \Jankx\Extensions\SvgDataMap\SvgDataMapExtension::get_instance();
         if (!$extension) return;
 
+        // Enqueue TailwindCSS/Main styles
         $cssPath = $this->blockPath . '/dist/assets/index.css';
-        if (!file_exists($cssPath)) return;
+        if (file_exists($cssPath)) {
+            $styleUrl = $extension->get_extension_url() . '/dist/assets/index.css';
+            wp_enqueue_style(
+                'jankx-svg-data-map',
+                $styleUrl,
+                [],
+                '1.0.0'
+            );
+        }
 
-        $styleUrl = $extension->get_extension_url() . '/dist/assets/index.css';
+        // Enqueue frontend.js for interactivity
+        $jsPath = $this->blockPath . '/dist/assets/frontend.js';
+        if (file_exists($jsPath)) {
+            $assetFile = $this->blockPath . '/dist/assets/frontend.asset.php';
+            $assets = file_exists($assetFile) ? require $assetFile : [
+                'dependencies' => [],
+                'version' => '1.0.0'
+            ];
 
-        wp_enqueue_style(
-            'jankx-svg-data-map',
-            $styleUrl,
-            [],
-            '1.0.0'
-        );
+            $scriptUrl = $extension->get_extension_url() . '/dist/assets/frontend.js';
+            wp_enqueue_script(
+                'jankx-svg-data-map-frontend',
+                $scriptUrl,
+                $assets['dependencies'],
+                $assets['version'],
+                true
+            );
+        }
     }
 
     public function render($attributes, $content = '', $block = null)
     {
         $config = $attributes['config'] ?? [];
-        if (empty($config) || empty($config['globalSvgContent'])) {
-            return is_admin() ? __('Vui lòng cấu hình bản đồ từ SVG.', 'jankx') : '';
+        
+        // Load default SVG using absolute path to be safe
+        if (empty($config['globalSvgContent'])) {
+            $svg_path = '/home/puleeno/Projects/baotanghanghai.vn/wp-content/themes/baotanghanghai/Ban do.svg';
+            if (file_exists($svg_path)) {
+                $config['globalSvgContent'] = file_get_contents($svg_path);
+            } else {
+                // Try relative to current theme if absolute fails
+                $svg_path = get_stylesheet_directory() . '/Ban do.svg';
+                if (file_exists($svg_path)) {
+                    $config['globalSvgContent'] = file_get_contents($svg_path);
+                }
+            }
         }
 
-        if (is_admin()) {
-            return '';
-        }
-
+        // SSR Skeleton
         ob_start();
         ?>
-        <div class="jankx-svg-data-map-runtime animate-fade-in" data-config="<?php echo esc_attr(json_encode($config)); ?>">
-            <div class="flex flex-col lg:flex-row gap-6 p-4 md:p-6 bg-slate-50/50 rounded-xl border border-slate-200">
+        <div class="jankx-svg-data-map-runtime font-sans" 
+             id="svg-map-<?php echo esc_attr(uniqid()); ?>"
+             data-config="<?php echo esc_attr(json_encode($config)); ?>">
+            
+            <div class="flex flex-col lg:flex-row min-h-[600px] bg-slate-50 rounded-[2rem] overflow-hidden shadow-2xl border border-white/50">
                 
-                <div class="lg:w-2/3 bg-white rounded-xl shadow-sm border border-slate-100 p-4 relative overflow-hidden flex items-center justify-center min-h-[400px]">
-                    <div class="jankx-svg-map-wrapper w-full h-full [&>svg]:w-full [&>svg]:h-full [&>svg]:object-contain">
-                        <?php echo $config['globalSvgContent']; ?>
+                <!-- LEFT: Map View Port (70%) -->
+                <div class="lg:w-[65%] xl:w-[70%] p-8 relative flex items-center justify-center bg-[#F1F7FA]">
+                    <div class="jankx-svg-map-wrapper w-full h-full min-h-[500px] flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[700px] [&>svg]:w-auto [&>svg]:h-auto">
+                        <?php echo $config['globalSvgContent'] ?? ''; ?>
                     </div>
                 </div>
 
-                <div class="lg:w-1/3 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-                    <div class="jankx-svg-map-info-panel h-full">
-                        <div class="text-center h-full flex flex-col items-center justify-center">
-                            <div class="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 shrink-0 shadow-inner">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-16 h-16 text-indigo-800 animate-spin-slow"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                            </div>
-                            <h3 class="text-lg font-bold text-slate-800 leading-snug">
-                                Bắt đầu Hành Trình Khám Phá
-                            </h3>
-                            <p class="text-slate-600 text-xs mt-2 max-w-xs mx-auto leading-relaxed">
-                                Vui lòng click chọn các vùng miền và địa danh trên bản đồ để hiển thị thông tin bài viết chi tiết.
-                            </p>
+                <!-- RIGHT: Detail Sidebar (35%) -->
+                <div class="lg:w-[35%] xl:w-[32%] bg-[#D7EEF9] p-10 flex flex-col shadow-inner">
+                    <!-- Dynamic Title -->
+                    <div class="mb-10">
+                        <h2 class="jankx-map-active-title text-4xl font-black text-[#1E4D65] tracking-tight transition-all duration-300 drop-shadow-sm">
+                             Việt Nam
+                        </h2>
+                    </div>
+
+                    <!-- Post List Container -->
+                    <div class="jankx-svg-map-info-panel flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                        <div class="flex flex-col items-center justify-center h-full text-center space-y-6 py-10 opacity-70">
+                             <div class="w-20 h-20 bg-white/40 rounded-3xl flex items-center justify-center shadow-inner">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1E4D65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                             </div>
+                             <p class="text-[#1E4D65] font-bold text-sm leading-relaxed max-w-[200px]">
+                                Chọn một khu vực trên bản đồ để xem thông tin di sản.
+                             </p>
                         </div>
                     </div>
                 </div>
             </div>
             
             <style>
-                <?php
-                if (!empty($config['regions'])) {
-                    foreach ($config['regions'] as $region) {
-                        if (empty($region['id'])) continue;
-                        $id = sanitize_html_class($region['id']);
-                        $defaultColor = esc_attr($region['defaultColor'] ?? '#e2e8f0');
-                        $hoverColor = esc_attr($region['hoverColor'] ?? '#6366f1');
-                        echo "
-                        .jankx-svg-map-wrapper svg #{$id} {
-                            fill: {$defaultColor};
-                            transition: fill 0.3s ease;
-                            cursor: pointer;
-                        }
-                        .jankx-svg-map-wrapper svg #{$id}:hover,
-                        .jankx-svg-map-wrapper svg #{$id}.jankx-map-active {
-                            fill: {$hoverColor} !important;
-                        }
-                        ";
-                    }
+                /* Force SVG Visibility */
+                .jankx-svg-map-wrapper svg {
+                    display: block;
+                    margin: 0 auto;
                 }
-                ?>
+                .jankx-svg-map-wrapper svg path, 
+                .jankx-svg-map-wrapper svg g {
+                    fill: #3498db !important; /* Blue from image */
+                    stroke: #ffffff;
+                    stroke-width: 0.5px;
+                    transition: all 0.3s ease-out;
+                    cursor: pointer;
+                    vector-effect: non-scaling-stroke;
+                }
+                .jankx-svg-map-wrapper svg path:hover,
+                .jankx-svg-map-wrapper svg g:hover {
+                    fill: #2980b9 !important;
+                    filter: brightness(1.1);
+                }
+                .jankx-svg-map-wrapper svg .jankx-map-active {
+                    fill: #1E4D65 !important;
+                }
+
+                /* Sidebar custom scrollbar */
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #B3D9EA; border-radius: 10px; }
+                
+                /* Post item animations */
+                @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-in { animation: fadeInUp 0.5s ease forwards; }
             </style>
         </div>
         <?php
