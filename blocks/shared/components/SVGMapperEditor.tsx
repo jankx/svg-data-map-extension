@@ -686,6 +686,23 @@ export function SVGMapperEditor({
               </div>
             </div>
 
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Tiện ích & Nhãn:</label>
+              <div className="flex flex-col gap-2 mt-1">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={config.settings.showMarkerLabels ?? true}
+                    onChange={(e) => onChangeConfig({
+                      ...config,
+                      settings: { ...config.settings, showMarkerLabels: e.target.checked }
+                    })}
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-600 group-hover:text-indigo-600 transition">Hiện nhãn Marker</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -405,7 +405,7 @@ export function SVGMapContainer({
                 </div>
 
                 {/* Micro Label */}
-                {region.marker.label && (
+                {config.settings.showMarkerLabels !== false && region.marker.label && (
                   <div className={`mt-1 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-all border ${isSelected
                     ? 'bg-blue-900 text-white border-blue-800 scale-105'
                     : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100 group-hover/marker:scale-105'

@@ -42,6 +42,7 @@ export interface MapSettings {
   selectedFillColor: string;
   markerColor: string;
   backgroundColor: string;
+  showMarkerLabels: boolean;
 }
 
 export interface SVGMapConfig {
