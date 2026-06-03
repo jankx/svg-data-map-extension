@@ -67,8 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const region = regionMap.get(regionId);
             console.log('SVG Map: Region data:', region);
-            if (!region || !region.termId) {
-                console.warn('SVG Map: Region or termId missing for region:', regionId);
+            if (!region) {
+                console.warn('SVG Map: Region not found:', regionId);
                 return;
             }
 
@@ -99,6 +99,62 @@ document.addEventListener('DOMContentLoaded', () => {
             const titleEl = container.querySelector('.jankx-map-active-title') || (infoPanel.parentElement ? infoPanel.parentElement.querySelector('.jankx-map-active-title') : null);
             if (titleEl) titleEl.textContent = region.name || region.label || 'Khu vực';
 
+            // Start rendering info panel
+            let manualItemsHtml = '';
+            if (region.items && region.items.length > 0) {
+                region.items.forEach((item: any) => {
+                    manualItemsHtml += `
+                        <div class="bg-indigo-50/50 p-5 rounded-xl shadow-sm border border-indigo-100/50 hover:shadow transition mb-4 animate-in">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <span class="p-0.5 px-1.5 rounded bg-indigo-600 text-white text-[9px] font-bold uppercase tracking-wider">Ghim</span>
+                                <h3 class="font-bold text-slate-900 text-base m-0 tracking-tight">${item.title || 'Thông tin'}</h3>
+                            </div>
+                            <p class="text-slate-600 text-xs leading-relaxed whitespace-pre-wrap break-words line-clamp-3">${item.description || ''}</p>
+                            ${item.linkUrl ? `
+                                <a href="${item.linkUrl}" target="_blank" class="inline-flex items-center gap-1 mt-3 font-sans font-bold text-xs text-indigo-800 hover:text-indigo-900 transition-colors">
+                                    <span>${item.linkLabel || 'Xem chi tiết'}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </a>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            // Set initial HTML with static data
+            const setInfoHtml = (dynamicHtml: string = '') => {
+                infoPanel.innerHTML = `
+                    <div class="flex flex-col h-full justify-between animate-fade-in">
+                        <div>
+                            <h2 class="text-3xl font-sans font-bold text-slate-800 tracking-tight mb-1 flex items-center gap-2 m-0 p-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-800 shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                ${region.name || 'Hạng mục'}
+                            </h2>
+                            <p class="text-slate-600/90 text-xs leading-relaxed mb-5 mt-1">
+                                ${region.description || 'Thông tin chi tiết về khu vực di sản này.'}
+                            </p>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto space-y-4 max-h-[460px] pr-2 custom-scrollbar">
+                            ${manualItemsHtml}
+                            ${dynamicHtml}
+                        </div>
+
+                        <div class="pt-4 mt-4 border-t border-sky-200/80 flex items-center justify-between text-[11px] text-sky-800 font-medium">
+                            <span>Tọa độ Dữ liệu SVG</span>
+                            <span class="bg-sky-200/60 px-2 py-0.5 rounded uppercase tracking-tighter">Bản đồ động</span>
+                        </div>
+                    </div>
+                `;
+            };
+
+            // If no termId, just show manual data and stop
+            if (!region.termId) {
+                console.log('SVG Map: No termId, showing manual data only');
+                setInfoHtml();
+                return;
+            }
+
             showLoading();
             loading = true;
 
@@ -114,32 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (data.success) {
-                    infoPanel.innerHTML = `
-                        <div class="flex flex-col h-full justify-between animate-fade-in">
-                            <div>
-                                <h2 class="text-3xl font-sans font-bold text-slate-800 tracking-tight mb-1 flex items-center gap-2 m-0 p-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-800 shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                                    ${region.name || 'Hạng mục'}
-                                </h2>
-                                <p class="text-slate-600/90 text-xs leading-relaxed mb-5 mt-1">
-                                    ${region.description || 'Thông tin chi tiết về khu vực di sản này.'}
-                                </p>
-                            </div>
-
-                            <div class="flex-1 overflow-y-auto space-y-4 max-h-[460px] pr-2 custom-scrollbar">
-                                ${data.data.html}
-                            </div>
-
-                            <div class="pt-4 mt-4 border-t border-sky-200/80 flex items-center justify-between text-[11px] text-sky-800 font-medium">
-                                <span>Tọa độ Dữ liệu SVG</span>
-                                <span class="bg-sky-200/60 px-2 py-0.5 rounded uppercase tracking-tighter">Bản đồ động</span>
-                            </div>
-                        </div>
-                    `;
+                    setInfoHtml(data.data.html);
                 } else {
                     showError();
                 }
             } catch (e) {
+                console.error('SVG Map: AJAX error:', e);
                 showError();
             } finally {
                 loading = false;
@@ -187,17 +223,50 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Attach events to Markers
+        // Attach events to Markers and position them
         container.querySelectorAll('.jankx-marker-btn').forEach(btn => {
-            const rid = btn.getAttribute('data-region-id');
-            btn.addEventListener('click', (e) => {
+            const markerBtn = btn as HTMLButtonElement;
+            const rid = markerBtn.getAttribute('data-region-id');
+            const pathId = markerBtn.getAttribute('data-path-id');
+
+            // 1. Position the marker using SVG centroid
+            if (pathId) {
+                const pathEl = svgWrapper.querySelector(`#${pathId}`) as SVGGraphicsElement;
+                if (pathEl && typeof pathEl.getBBox === 'function') {
+                    try {
+                        const bbox = pathEl.getBBox();
+                        const centerX = bbox.x + bbox.width / 2;
+                        const centerY = bbox.y + bbox.height / 2;
+
+                        // We need the viewBox dimensions to calculate percentage
+                        const viewBox = svgWrapper.getAttribute('viewBox')?.split(' ').map(Number) || [0, 0, 1000, 1000];
+                        const vbW = viewBox[2];
+                        const vbH = viewBox[3];
+
+                        const leftPct = (centerX / vbW) * 100;
+                        const topPct = (centerY / vbH) * 100;
+
+                        markerBtn.style.left = `${leftPct}%`;
+                        markerBtn.style.top = `${topPct}%`;
+                        markerBtn.style.display = 'flex';
+                        markerBtn.style.position = 'absolute';
+                    } catch (e) {
+                        console.error('SVG Map: Failed to calculate bbox for', pathId, e);
+                    }
+                }
+            }
+
+            // 2. Attach events
+            markerBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
+                console.log('SVG Map: Marker clicked for region:', rid);
                 if (rid) selectRegion(rid);
             });
-            btn.addEventListener('mouseenter', () => {
+            markerBtn.addEventListener('mouseenter', () => {
                 if (rid) setRegionHover(rid, true);
             });
-            btn.addEventListener('mouseleave', () => {
+            markerBtn.addEventListener('mouseleave', () => {
                 if (rid) setRegionHover(rid, false);
             });
         });
