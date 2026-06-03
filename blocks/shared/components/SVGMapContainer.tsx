@@ -392,6 +392,7 @@ export function SVGMapContainer({
                 svgWrapperRef={svgWrapperRef}
                 onSelectRegion={onSelectRegion}
                 getMarkerIcon={getMarkerIcon}
+                scale={scale}
               />
             );
           })}
@@ -483,7 +484,7 @@ export function SVGMapContainer({
   );
 }
 
-const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, svgWrapperRef, onSelectRegion, getMarkerIcon }: any) => {
+const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, svgWrapperRef, onSelectRegion, getMarkerIcon, scale = 1 }: any) => {
   const markerRef = React.useRef<HTMLButtonElement>(null);
 
   React.useLayoutEffect(() => {
@@ -508,8 +509,9 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
             const screenPt = pt.matrixTransform(ctm);
             const layerRect = layer.getBoundingClientRect();
 
-            const relX = screenPt.x - layerRect.left;
-            const relY = screenPt.y - layerRect.top;
+            // Correct coordinate for internal CSS space which is scaled by CSS transform
+            const relX = (screenPt.x - layerRect.left) / scale;
+            const relY = (screenPt.y - layerRect.top) / scale;
 
             markerRef.current.style.left = `${relX}px`;
             markerRef.current.style.top = `${relY}px`;
@@ -525,7 +527,7 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
     if (svgWrapperRef.current) observer.observe(svgWrapperRef.current);
 
     return () => observer.disconnect();
-  });
+  }, [scale, pathId, region]);
 
   return (
     <button
