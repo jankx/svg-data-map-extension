@@ -138,6 +138,11 @@ export function SVGMapContainer({
 
   // Click handler using event delegation
   const handleSvgClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Stop propagation to prevent Gutenberg conflicts
+    if (isGutenberg) {
+      e.stopPropagation();
+    }
+
     // If placing marker in builder mode, capture click coordinates first!
     if (isBuilderMode && isPlacingMarker && onPlaceMarkerCoords && svgWrapperRef.current) {
       const rect = svgWrapperRef.current.getBoundingClientRect();
@@ -173,6 +178,11 @@ export function SVGMapContainer({
 
   // Drag listeners for Map Pan & Zoom
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Stop propagation to prevent Gutenberg from dragging the whole block
+    if (isGutenberg) {
+      e.stopPropagation();
+    }
+
     // Only permit dragging if we are NOT in marker placement mode, or if clicking middle mouse / space
     if (isPlacingMarker) return;
 
@@ -186,6 +196,11 @@ export function SVGMapContainer({
 
   const handleDragMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging) return;
+
+    if (isGutenberg) {
+      e.stopPropagation();
+    }
+
     const newPosition = {
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y
@@ -292,29 +307,27 @@ export function SVGMapContainer({
         cursor: pointer;
       }
     `;
-    // 4. Marker Animations
-    if (config.settings.showMarkerAnimation) {
-      css += `
-        @keyframes jankx-mark-pulse {
-          0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
-          100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
-        }
-        .jankx-marker-pulse::before {
-          content: "";
-          position: absolute;
-          top: 18px;
-          left: 50%;
-          width: 36px;
-          height: 36px;
-          background-color: ${config.settings.markerColor || '#3b82f6'};
-          border-radius: 50%;
-          transform: translate(-50%, -50%);
-          z-index: -1;
-          animation: jankx-mark-pulse 2s infinite;
-          opacity: 0;
-        }
-      `;
-    }
+    // 4. Marker Animations (Global definition for utility class)
+    css += `
+      @keyframes jankx-mark-pulse {
+        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+        100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+      }
+      .jankx-marker-pulse::before {
+        content: "";
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        width: 36px;
+        height: 36px;
+        background-color: ${config.settings.markerColor || '#3b82f6'};
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: -1;
+        animation: jankx-mark-pulse 2s infinite;
+        opacity: 0;
+      }
+    `;
 
     return css;
   };
@@ -363,7 +376,7 @@ export function SVGMapContainer({
               <button
                 key={region.marker.id}
                 id={`marker-btn-${region.marker.id}`}
-                className={`absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag ${config.settings.showMarkerAnimation ? 'jankx-marker-pulse' : ''}`}
+                className={`absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag ${region.marker.showAnimation ? 'jankx-marker-pulse' : ''}`}
                 style={{
                   left: `${region.marker.x}%`,
                   top: `${region.marker.y}%`,

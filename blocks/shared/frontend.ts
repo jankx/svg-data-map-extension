@@ -1,12 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const mapElements = document.querySelectorAll('.jankx-svg-data-map-runtime');
     const infoElements = document.querySelectorAll('.jankx-svg-data-map-info-runtime');
+    console.log('SVG Map: Found info elements:', infoElements.length);
 
     // Registry of info panels indexed by mapId
     const infoPanelsByMapId = new Map();
     infoElements.forEach(el => {
         const mid = el.getAttribute('data-map-id') || 'default-map';
         const contentArea = el.querySelector('.jankx-svg-map-info-content');
+        console.log('SVG Map: Registered info panel for mapId:', mid, !!contentArea);
         if (contentArea) {
             infoPanelsByMapId.set(mid, contentArea);
         }
@@ -15,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mapElements.forEach((container) => {
         const rawConfig = container.getAttribute('data-config');
         const mapId = container.getAttribute('data-map-id') || 'default-map';
+        console.log('SVG Map: Initializing map:', mapId);
         if (!rawConfig) return;
 
         let config: any;
@@ -59,10 +62,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const selectRegion = async (regionId: string) => {
+            console.log('SVG Map: Selecting region:', regionId);
             if (loading || activeRegionId === regionId) return;
 
             const region = regionMap.get(regionId);
-            if (!region || !region.termId) return;
+            console.log('SVG Map: Region data:', region);
+            if (!region || !region.termId) {
+                console.warn('SVG Map: Region or termId missing for region:', regionId);
+                return;
+            }
 
             // Update SVG visuals (all paths in this region)
             if (activeRegionId) {
