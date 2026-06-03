@@ -181,13 +181,22 @@ export default function App({
 
           {/* Quick utility actions */}
           <div className="flex items-center gap-2 self-start md:self-auto">
+            {isGutenberg && activeTab === 'viewer' && blockId === 'jankx/svg-data-map' && (
+              <button
+                onClick={() => setActiveTab('builder')}
+                className="p-2 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-500/20"
+                title="Mở bộ công cụ thiết kế bản đồ"
+              >
+                <Settings className="w-3.5 h-3.5" /> Chỉnh sửa bản đồ (Full)
+              </button>
+            )}
             {isGutenberg && activeTab === 'builder' && (
               <button
                 onClick={() => setActiveTab('viewer')}
                 className="p-2 px-3 text-xs bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
                 title="Thoát chế độ toàn màn hình"
               >
-                <Settings className="w-3.5 h-3.5" /> Thoát toàn màn hình
+                <Eye className="w-3.5 h-3.5" /> Xem kết quả
               </button>
             )}
             {!isGutenberg && (

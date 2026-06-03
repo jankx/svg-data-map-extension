@@ -1,0 +1,12 @@
+{
+  "blocks/shared/main.tsx": {
+    "file": "assets/index.js",
+    "name": "main",
+    "src": "blocks/shared/main.tsx",
+    "isEntry": true
+  },
+  "style.css": {
+    "file": "svg-data-map.css",
+    "src": "style.css"
+  }
+}

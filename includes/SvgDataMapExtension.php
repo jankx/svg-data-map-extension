@@ -107,28 +107,31 @@ class SvgDataMapExtension extends AbstractExtension
         $html = '';
 
         if ($query->have_posts()) {
-            $html .= '<ul class="space-y-3">';
             while ($query->have_posts()) {
                 $query->the_post();
                 $title = get_the_title();
                 $link = get_permalink();
                 $excerpt = get_the_excerpt();
                 if (empty($excerpt)) {
-                    $excerpt = wp_trim_words(get_the_content(), 30);
+                    $excerpt = wp_trim_words(get_the_content(), 20);
                 }
                 
-                $html .= '<div class="bg-white rounded-2xl p-6 mb-4 shadow-sm hover:shadow-md transition-all duration-300 border border-white group animate-in">';
-                $html .= '<h4 class="text-lg font-extrabold text-[#1E4D65] mb-3 leading-tight group-hover:text-blue-600 transition-colors">' . esc_html($title) . '</h4>';
-                $html .= '<p class="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-4">' . esc_html($excerpt) . '</p>';
-                $html .= '<a href="' . esc_url($link) . '" class="inline-flex items-center text-xs font-bold text-[#D39C7E] uppercase tracking-widest hover:text-[#b07d61] transition-colors">';
-                $html .= 'Xem chi tiết <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>';
+                $html .= '<div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow transition mb-4 animate-in">';
+                $html .= '<h3 class="font-bold text-slate-900 text-base mb-1.5 tracking-tight">' . esc_html($title) . '</h3>';
+                $html .= '<p class="text-slate-600 text-xs leading-relaxed whitespace-pre-wrap break-words line-clamp-3">' . esc_html($excerpt) . '</p>';
+                $html .= '<a href="' . esc_url($link) . '" target="_blank" class="inline-flex items-center gap-1 mt-3 font-sans font-bold text-xs text-amber-800 hover:text-amber-900 transition-colors">';
+                $html .= '<span>Xem chi tiết</span>';
+                $html .= '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
                 $html .= '</a>';
                 $html .= '</div>';
             }
-            $html .= '</div>'; // End list wrapper if needed
             wp_reset_postdata();
         } else {
-            $html = '<p class="text-slate-400 text-xs italic">Chưa có bài viết nào trong khu vực này.</p>';
+            $html = '<div class="bg-white/80 backdrop-blur-sm p-8 rounded-xl text-center border border-dashed border-sky-300">';
+            $html .= '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-500/80 mx-auto mb-2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>';
+            $html .= '<p class="text-sm font-semibold text-sky-900">Không có dữ liệu</p>';
+            $html .= '<p class="text-xs text-sky-700/80 mt-1">Vùng này chưa được gán nội dung nào.</p>';
+            $html .= '</div>';
         }
 
         wp_send_json_success(['html' => $html]);

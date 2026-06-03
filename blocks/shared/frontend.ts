@@ -64,14 +64,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const region = regionMap.get(regionId);
             if (!region || !region.termId) return;
 
-            // Update SVG visuals
+            // Update SVG visuals (all paths in this region)
             if (activeRegionId) {
-                const prevElement = svgWrapper.querySelector(`#${activeRegionId}`);
-                if (prevElement) prevElement.classList.remove('jankx-map-active');
+                const prevRegion = regionMap.get(activeRegionId);
+                if (prevRegion && prevRegion.pathIds) {
+                    prevRegion.pathIds.forEach((pid: string) => {
+                        const el = svgWrapper.querySelector(`#${pid}`);
+                        if (el) el.classList.remove('jankx-map-active');
+                    });
+                }
             }
+
             activeRegionId = regionId;
-            const currElement = svgWrapper.querySelector(`#${regionId}`);
-            if (currElement) currElement.classList.add('jankx-map-active');
+            if (region.pathIds) {
+                region.pathIds.forEach((pid: string) => {
+                    const el = svgWrapper.querySelector(`#${pid}`);
+                    if (el) el.classList.add('jankx-map-active');
+                });
+            }
 
             // Find title in either container
             const titleEl = container.querySelector('.jankx-map-active-title') || (infoPanel.parentElement ? infoPanel.parentElement.querySelector('.jankx-map-active-title') : null);
@@ -93,14 +103,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (data.success) {
                     infoPanel.innerHTML = `
-                        <div class="w-full animate-fade-in">
-                           <div class="mb-6">
-                               <h2 class="text-3xl font-bold text-[#1E4D65] tracking-tight">${region.name || 'Thông tin'}</h2>
-                               ${region.description ? `<p class="text-slate-600 text-xs mt-2">${region.description}</p>` : ''}
-                           </div>
-                           <div class="space-y-4">
-                               ${data.data.html || '<p class="text-slate-400 text-sm italic">Chưa có bài viết nào.</p>'}
-                           </div>
+                        <div class="flex flex-col h-full justify-between animate-fade-in">
+                            <div>
+                                <h2 class="text-3xl font-sans font-bold text-slate-800 tracking-tight mb-1 flex items-center gap-2 m-0 p-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-800 shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                    \${region.name || 'Hạng mục'}
+                                </h2>
+                                <p class="text-slate-600/90 text-xs leading-relaxed mb-5 mt-1">
+                                    \${region.description || 'Thông tin chi tiết về khu vực di sản này.'}
+                                </p>
+                            </div>
+
+                            <div class="flex-1 overflow-y-auto space-y-4 max-h-[460px] pr-2 custom-scrollbar">
+                                \${data.data.html}
+                            </div>
+
+                            <div class="pt-4 mt-4 border-t border-sky-200/80 flex items-center justify-between text-[11px] text-sky-800 font-medium">
+                                <span>Tọa độ Dữ liệu SVG</span>
+                                <span class="bg-sky-200/60 px-2 py-0.5 rounded uppercase tracking-tighter">Bản đồ động</span>
+                            </div>
                         </div>
                     `;
                 } else {
@@ -115,14 +136,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Attach events to SVG paths
         regions.forEach((r: any) => {
-            const el = svgWrapper.querySelector(`#${r.id}`);
-            if (el) {
-                el.classList.add('jankx-map-region-clickable');
-                el.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    selectRegion(r.id);
+            if (r.pathIds) {
+                r.pathIds.forEach((pid: string) => {
+                    const el = svgWrapper.querySelector(`#\${pid}`);
+                    if (el) {
+                        el.classList.add('jankx-map-region-clickable');
+                        el.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            selectRegion(r.id);
+                        });
+                    }
                 });
             }
+        });
+
+        // Attach events to Markers
+        container.querySelectorAll('.jankx-marker-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const rid = btn.getAttribute('data-region-id');
+                if (rid) selectRegion(rid);
+            });
         });
     });
 });
