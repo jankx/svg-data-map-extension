@@ -223,41 +223,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const rid = markerBtn.getAttribute('data-region-id');
             const pathId = markerBtn.getAttribute('data-path-id');
 
-            // 1. Position the marker using stored config values (not recalculated from path)
-            const region = regionMap.get(rid);
-            if (region && region.marker) {
-                const marker = region.marker;
-                if (marker.x !== undefined && marker.y !== undefined) {
-                    markerBtn.style.left = `${marker.x}%`;
-                    markerBtn.style.top = `${marker.y}%`;
-                    markerBtn.style.display = 'flex';
-                    markerBtn.style.position = 'absolute';
-                    markerBtn.style.transform = 'translate(-50%, -50%)';
-                } else if (pathId) {
-                    // Fallback: calculate from path centroid if no stored position
-                    const pathEl = svgWrapper.querySelector(`#${pathId}`) as SVGGraphicsElement;
-                    if (pathEl && typeof pathEl.getBBox === 'function') {
-                        try {
-                            const bbox = pathEl.getBBox();
-                            const centerX = bbox.x + bbox.width / 2;
-                            const centerY = bbox.y + bbox.height / 2;
+            // 1. Position the marker using SVG path centroid (consistent with React component)
+            if (pathId) {
+                const pathEl = svgWrapper.querySelector(`#${pathId}`) as SVGGraphicsElement;
+                if (pathEl && typeof pathEl.getBBox === 'function') {
+                    try {
+                        const bbox = pathEl.getBBox();
+                        const centerX = bbox.x + bbox.width / 2;
+                        const centerY = bbox.y + bbox.height / 2;
 
-                            // We need the viewBox dimensions to calculate percentage
-                            const viewBox = svgWrapper.getAttribute('viewBox')?.split(' ').map(Number) || [0, 0, 1000, 1000];
-                            const vbW = viewBox[2];
-                            const vbH = viewBox[3];
+                        // We need the viewBox dimensions to calculate percentage
+                        const viewBox = svgWrapper.getAttribute('viewBox')?.split(' ').map(Number) || [0, 0, 1000, 1000];
+                        const vbW = viewBox[2];
+                        const vbH = viewBox[3];
 
-                            const leftPct = (centerX / vbW) * 100;
-                            const topPct = (centerY / vbH) * 100;
+                        const leftPct = (centerX / vbW) * 100;
+                        const topPct = (centerY / vbH) * 100;
 
-                            markerBtn.style.left = `${leftPct}%`;
-                            markerBtn.style.top = `${topPct}%`;
-                            markerBtn.style.display = 'flex';
-                            markerBtn.style.position = 'absolute';
-                            markerBtn.style.transform = 'translate(-50%, -50%)';
-                        } catch (e) {
-                            console.error('SVG Map: Failed to calculate bbox for', pathId, e);
-                        }
+                        markerBtn.style.left = `${leftPct}%`;
+                        markerBtn.style.top = `${topPct}%`;
+                        markerBtn.style.display = 'flex';
+                        markerBtn.style.position = 'absolute';
+                        markerBtn.style.transform = 'translate(-50%, -50%)';
+                    } catch (e) {
+                        console.error('SVG Map: Failed to calculate bbox for', pathId, e);
                     }
                 }
             }

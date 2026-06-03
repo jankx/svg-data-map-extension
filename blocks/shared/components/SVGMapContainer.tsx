@@ -379,14 +379,42 @@ export function SVGMapContainer({
             const isSelected = selectedRegionId === region.id;
             const markerColor = config.settings?.markerColor || '#f97316';
 
+            // Calculate position from SVG path centroid (consistent with frontend)
+            const pathId = region.pathIds?.[0];
+            let markerX = region.marker.x;
+            let markerY = region.marker.y;
+
+            if (pathId && svgWrapperRef.current) {
+              const svgElement = svgWrapperRef.current.querySelector('svg');
+              if (svgElement) {
+                const pathEl = svgElement.querySelector(`#${pathId}`);
+                if (pathEl && typeof (pathEl as SVGGraphicsElement).getBBox === 'function') {
+                  try {
+                    const bbox = (pathEl as SVGGraphicsElement).getBBox();
+                    const centerX = bbox.x + bbox.width / 2;
+                    const centerY = bbox.y + bbox.height / 2;
+
+                    const viewBox = svgElement.getAttribute('viewBox')?.split(' ').map(Number) || [0, 0, 1000, 1000];
+                    const vbW = viewBox[2];
+                    const vbH = viewBox[3];
+
+                    markerX = (centerX / vbW) * 100;
+                    markerY = (centerY / vbH) * 100;
+                  } catch (e) {
+                    console.error('Failed to calculate bbox for', pathId, e);
+                  }
+                }
+              }
+            }
+
             return (
               <button
                 key={region.marker.id}
                 id={`marker-btn-${region.marker.id}`}
                 className={`absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag ${region.marker.showAnimation ? 'jankx-marker-pulse' : ''}`}
                 style={{
-                  left: `${region.marker.x}%`,
-                  top: `${region.marker.y}%`,
+                  left: `${markerX}%`,
+                  top: `${markerY}%`,
                   zIndex: isSelected ? 40 : 20
                 }}
                 onClick={(e) => {
