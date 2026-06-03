@@ -262,6 +262,29 @@ export function SVGMapContainer({
         cursor: pointer;
       }
     `;
+    // 4. Marker Animations
+    if (config.settings.showMarkerAnimation) {
+      css += `
+        @keyframes jankx-mark-pulse {
+          0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+          100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+        .jankx-marker-pulse::before {
+          content: "";
+          position: absolute;
+          top: 18px;
+          left: 50%;
+          width: 36px;
+          height: 36px;
+          background-color: ${config.settings.markerColor || '#3b82f6'};
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          animation: jankx-mark-pulse 2s infinite;
+          opacity: 0;
+        }
+      `;
+    }
 
     return css;
   };
@@ -310,7 +333,7 @@ export function SVGMapContainer({
               <button
                 key={region.marker.id}
                 id={`marker-btn-${region.marker.id}`}
-                className={`absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag`}
+                className={`absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag ${config.settings.showMarkerAnimation ? 'jankx-marker-pulse' : ''}`}
                 style={{
                   left: `${region.marker.x}%`,
                   top: `${region.marker.y}%`,
@@ -341,8 +364,8 @@ export function SVGMapContainer({
                 {/* Micro Label */}
                 {region.marker.label && (
                   <div className={`mt-1 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-all border ${isSelected
-                      ? 'bg-blue-900 text-white border-blue-800 scale-105'
-                      : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100 group-hover/marker:scale-105'
+                    ? 'bg-blue-900 text-white border-blue-800 scale-105'
+                    : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100 group-hover/marker:scale-105'
                     }`}>
                     {region.marker.label}
                   </div>

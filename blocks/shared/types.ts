@@ -19,6 +19,7 @@ export interface MarkerConfig {
   y: number; // percentage y (0-100) on view space
   iconType: MarkerIconType;
   label?: string;
+  showAnimation?: boolean;
 }
 
 export interface RegionConfig {

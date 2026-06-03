@@ -158,7 +158,13 @@ class SvgDataMapBlock extends Block
                         <div class="jankx-markers-layer" style="position:absolute;inset:0;pointer-events:none;">
                             <?php foreach ($regions as $region): ?>
                                 <?php if (!empty($region['marker'])): $marker = $region['marker']; ?>
-                                    <button class="jankx-marker-btn"
+                                    <?php 
+                                    $markerClass = 'jankx-marker-btn';
+                                    if (!empty($marker['showAnimation'])) {
+                                        $markerClass .= ' jankx-marker-pulse';
+                                    }
+                                    ?>
+                                    <button class="<?php echo esc_attr($markerClass); ?>"
                                             style="display:none;flex-direction:column;align-items:center;pointer-events:auto;z-index:20;"
                                             data-region-id="<?php echo esc_attr($region['id']); ?>"
                                             data-path-id="<?php echo esc_attr($region['pathIds'][0] ?? ''); ?>">
@@ -235,7 +241,8 @@ class SvgDataMapBlock extends Block
                     transition: fill 0.2s ease;
                     vector-effect: non-scaling-stroke;
                 }
-                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>:hover {
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>:hover,
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-hover {
                     fill: <?php echo esc_attr($regionHoverFill); ?>;
                 }
                 .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-active {
@@ -258,6 +265,26 @@ class SvgDataMapBlock extends Block
                     z-index: 20;
                 }
                 .jankx-marker-btn:hover { transform: translate(-50%, -50%) scale(1.1); }
+
+                /* Pulsing animation */
+                .jankx-marker-pulse::before {
+                    content: '';
+                    position: absolute;
+                    top: 18px; /* Center of the 36px circle */
+                    left: 50%;
+                    width: 36px;
+                    height: 36px;
+                    background-color: <?php echo esc_attr($markerColor); ?>;
+                    border-radius: 50%;
+                    transform: translate(-50%, -50%);
+                    z-index: -1;
+                    animation: jankx-mark-pulse 2s infinite;
+                    opacity: 0;
+                }
+                @keyframes jankx-mark-pulse {
+                    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+                    100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+                }
             </style>
 
             <script>

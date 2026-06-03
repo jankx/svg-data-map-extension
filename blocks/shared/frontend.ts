@@ -134,6 +134,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        const setRegionHover = (regionId: string, active: boolean) => {
+            const region = regionMap.get(regionId);
+            if (!region) return;
+
+            // Toggle hover on all paths
+            if (region.pathIds) {
+                region.pathIds.forEach((pid: string) => {
+                    const el = svgWrapper.querySelector(`#${pid}`);
+                    if (el) {
+                        if (active) el.classList.add('jankx-map-hover');
+                        else el.classList.remove('jankx-map-hover');
+                    }
+                });
+            }
+
+            // Toggle hover on marker button if it exists
+            const markerBtn = container.querySelector(`.jankx-marker-btn[data-region-id="${regionId}"]`);
+            if (markerBtn) {
+                if (active) markerBtn.classList.add('jankx-map-marker-hover'); // For potential marker scale effects
+                else markerBtn.classList.remove('jankx-map-marker-hover');
+            }
+        };
+
         // Attach events to SVG paths
         regions.forEach((r: any) => {
             if (r.pathIds) {
@@ -145,6 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             e.preventDefault();
                             selectRegion(r.id);
                         });
+                        el.addEventListener('mouseenter', () => setRegionHover(r.id, true));
+                        el.addEventListener('mouseleave', () => setRegionHover(r.id, false));
                     }
                 });
             }
@@ -152,10 +177,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Attach events to Markers
         container.querySelectorAll('.jankx-marker-btn').forEach(btn => {
+            const rid = btn.getAttribute('data-region-id');
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
-                const rid = btn.getAttribute('data-region-id');
                 if (rid) selectRegion(rid);
+            });
+            btn.addEventListener('mouseenter', () => {
+                if (rid) setRegionHover(rid, true);
+            });
+            btn.addEventListener('mouseleave', () => {
+                if (rid) setRegionHover(rid, false);
             });
         });
     });

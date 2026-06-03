@@ -685,6 +685,7 @@ export function SVGMapperEditor({
                 <span className="text-xs font-mono">{config.settings.markerColor}</span>
               </div>
             </div>
+
           </div>
         </div>
       </div>
@@ -955,6 +956,19 @@ export function SVGMapperEditor({
                         />
                       </div>
 
+                      <div className="col-span-2 flex items-center gap-2 py-1">
+                        <input
+                          id={`marker-anim-${activeRegionObj.id}`}
+                          type="checkbox"
+                          className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500"
+                          checked={activeRegionObj.marker.showAnimation}
+                          onChange={(e) => handleUpdateRegionMarkerField('showAnimation', e.target.checked)}
+                        />
+                        <label htmlFor={`marker-anim-${activeRegionObj.id}`} className="text-[9px] font-bold text-slate-500 uppercase cursor-pointer">
+                          Bật hiệu ứng nhấp nháy cho Pin này
+                        </label>
+                      </div>
+
                       <button
                         id="btn-trigger-relocate-marker"
                         onClick={() => setIsPlacingMarker(true)}
@@ -1072,65 +1086,69 @@ export function SVGMapperEditor({
       </div>
 
       {/* JSON Import Overlay modal */}
-      {showJsonOverlay && (
-        <div id="json-modal-overlay" className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
-                <FileCode className="w-5 h-5 text-blue-600" />
-                Nhập Cấu hình Bản Đồ JSON
-              </h3>
-              <button
-                id="btn-close-json-modal"
-                onClick={() => setShowJsonOverlay(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 px-2.5 rounded hover:bg-slate-150 transition"
-              >
-                ×
-              </button>
-            </div>
+      {
+        showJsonOverlay && (
+          <div id="json-modal-overlay" className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <FileCode className="w-5 h-5 text-blue-600" />
+                  Nhập Cấu hình Bản Đồ JSON
+                </h3>
+                <button
+                  id="btn-close-json-modal"
+                  onClick={() => setShowJsonOverlay(false)}
+                  className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 px-2.5 rounded hover:bg-slate-150 transition"
+                >
+                  ×
+                </button>
+              </div>
 
-            <div className="p-5 flex-1 overflow-y-auto space-y-2 text-left">
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Địa chỉ tải các file JSON đã xuất trước đó để thiết lập nhanh, gán đè toàn bộ cấu trúc bản đồ, định danh và các markers:
-              </p>
+              <div className="p-5 flex-1 overflow-y-auto space-y-2 text-left">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Địa chỉ tải các file JSON đã xuất trước đó để thiết lập nhanh, gán đè toàn bộ cấu trúc bản đồ, định danh và các markers:
+                </p>
 
-              <textarea
-                id="textarea-json-paste"
-                className="w-full h-64 p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 bg-slate-50 font-mono text-[11px] leading-relaxed"
-                placeholder='Dán cấu trúc JSON chứa properties "svgContent", "regions" và "settings" tại đây...'
-                value={jsonPasteValue}
-                onChange={(e) => setJsonPasteValue(e.target.value)}
-              />
-            </div>
+                <textarea
+                  id="textarea-json-paste"
+                  className="w-full h-64 p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 bg-slate-50 font-mono text-[11px] leading-relaxed"
+                  placeholder='Dán cấu trúc JSON chứa properties "svgContent", "regions" và "settings" tại đây...'
+                  value={jsonPasteValue}
+                  onChange={(e) => setJsonPasteValue(e.target.value)}
+                />
+              </div>
 
-            <div className="p-5 border-t border-slate-150 bg-slate-50 flex justify-end gap-2 text-xs">
-              <button
-                id="btn-cancel-import-action"
-                onClick={() => setShowJsonOverlay(false)}
-                className="p-2 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 font-bold transition cursor-pointer"
-              >
-                Đóng
-              </button>
-              <button
-                id="btn-confirm-import-action"
-                onClick={handleImportJson}
-                disabled={!jsonPasteValue.trim()}
-                className="p-2 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition disabled:opacity-50 cursor-pointer shadow-sm shadow-blue-500/10"
-              >
-                Nhập Cấu Hình
-              </button>
+              <div className="p-5 border-t border-slate-150 bg-slate-50 flex justify-end gap-2 text-xs">
+                <button
+                  id="btn-cancel-import-action"
+                  onClick={() => setShowJsonOverlay(false)}
+                  className="p-2 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 font-bold transition cursor-pointer"
+                >
+                  Đóng
+                </button>
+                <button
+                  id="btn-confirm-import-action"
+                  onClick={handleImportJson}
+                  disabled={!jsonPasteValue.trim()}
+                  className="p-2 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition disabled:opacity-50 cursor-pointer shadow-sm shadow-blue-500/10"
+                >
+                  Nhập Cấu Hình
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Floating toast notification for copy/export events */}
-      {exportNotice && (
-        <div id="toast-notify" className="fixed bottom-6 right-6 z-[200] bg-slate-900 border border-slate-800 text-white p-3.5 px-5 rounded-xl shadow-2xl flex items-center gap-2.5 animate-slide-up text-xs font-semibold">
-          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>Sao chép / Xuất cấu hình JSON thành công!</span>
-        </div>
-      )}
-    </div>
+      {
+        exportNotice && (
+          <div id="toast-notify" className="fixed bottom-6 right-6 z-[200] bg-slate-900 border border-slate-800 text-white p-3.5 px-5 rounded-xl shadow-2xl flex items-center gap-2.5 animate-slide-up text-xs font-semibold">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Sao chép / Xuất cấu hình JSON thành công!</span>
+          </div>
+        )
+      }
+    </div >
   );
 }
