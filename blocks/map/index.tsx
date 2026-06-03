@@ -15,6 +15,14 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
         setAttributes({ config: newConfig });
     };
 
+    const handleZoomChange = (zoomState: { scale: number; positionX: number; positionY: number }) => {
+        setAttributes({
+            zoomScale: zoomState.scale,
+            zoomPositionX: zoomState.positionX,
+            zoomPositionY: zoomState.positionY
+        });
+    };
+
     // Emit event when builder mode changes to hide/show other blocks
     useEffect(() => {
         const event = new CustomEvent('jankx-svg-map-builder-mode', {
@@ -127,6 +135,10 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
                 isGutenberg={true}
                 activeTab={activeTab}
                 onActiveTabChange={setActiveTab}
+                zoomScale={attributes.zoomScale || 1}
+                zoomPositionX={attributes.zoomPositionX || 0}
+                zoomPositionY={attributes.zoomPositionY || 0}
+                onZoomChange={handleZoomChange}
             />
         </div>
     );

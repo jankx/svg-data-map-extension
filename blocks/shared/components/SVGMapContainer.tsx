@@ -32,6 +32,12 @@ interface SVGMapContainerProps {
   onPlaceMarkerCoords?: (coords: { x: number; y: number }) => void;
   selectedPathIdsForGrouping?: string[];
   isPlacingMarker?: boolean;
+  // Zoom state props for Gutenberg persistence
+  zoomScale?: number;
+  zoomPositionX?: number;
+  zoomPositionY?: number;
+  onZoomChange?: (zoomState: { scale: number; positionX: number; positionY: number }) => void;
+  isGutenberg?: boolean;
 }
 
 export function SVGMapContainer({
@@ -43,6 +49,11 @@ export function SVGMapContainer({
   onPlaceMarkerCoords,
   selectedPathIdsForGrouping = [],
   isPlacingMarker = false,
+  zoomScale = 1,
+  zoomPositionX = 0,
+  zoomPositionY = 0,
+  onZoomChange,
+  isGutenberg = false,
 }: SVGMapContainerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgWrapperRef = useRef<HTMLDivElement>(null);
@@ -51,16 +62,35 @@ export function SVGMapContainer({
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   // Pan and Zoom States
-  const [scale, setScale] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(zoomScale);
+  const [position, setPosition] = useState({ x: zoomPositionX, y: zoomPositionY });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // Reset pan and zoom when svg change
+  // Sync zoom state with props when in Gutenberg mode
   useEffect(() => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-  }, [config.svgContent]);
+    if (isGutenberg) {
+      setScale(zoomScale);
+      setPosition({ x: zoomPositionX, y: zoomPositionY });
+    }
+  }, [zoomScale, zoomPositionX, zoomPositionY, isGutenberg]);
+
+  // Save zoom state to block attributes when in Gutenberg mode
+  const handleZoomStateChange = (newScale: number, newPosition: { x: number; y: number }) => {
+    setScale(newScale);
+    setPosition(newPosition);
+    if (isGutenberg && onZoomChange) {
+      onZoomChange({ scale: newScale, positionX: newPosition.x, positionY: newPosition.y });
+    }
+  };
+
+  // Reset pan and zoom when svg change (only in non-Gutenberg mode or when not persisted)
+  useEffect(() => {
+    if (!isGutenberg) {
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
+    }
+  }, [config.svgContent, isGutenberg]);
 
   // Find region by path ID
   const findRegionByPathId = (pathId: string): RegionConfig | null => {
@@ -156,10 +186,11 @@ export function SVGMapContainer({
 
   const handleDragMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-    setPosition({
+    const newPosition = {
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y
-    });
+    };
+    handleZoomStateChange(scale, newPosition);
   };
 
   const handleMouseUp = () => {
@@ -171,14 +202,13 @@ export function SVGMapContainer({
     const zoomFactor = 0.05;
     let newScale = scale + (e.deltaY < 0 ? zoomFactor : -zoomFactor);
     newScale = Math.max(0.5, Math.min(5, newScale));
-    setScale(newScale);
+    handleZoomStateChange(newScale, position);
   };
 
-  const handleZoomIn = () => setScale(prev => Math.min(5, prev + 0.25));
-  const handleZoomOut = () => setScale(prev => Math.max(0.5, prev - 0.25));
+  const handleZoomIn = () => handleZoomStateChange(Math.min(5, scale + 0.25), position);
+  const handleZoomOut = () => handleZoomStateChange(Math.max(0.5, scale - 0.25), position);
   const handleResetView = () => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
+    handleZoomStateChange(1, { x: 0, y: 0 });
   };
 
   const getMarkerIcon = (type: MarkerIconType) => {
@@ -404,26 +434,28 @@ export function SVGMapContainer({
         </button>
       </div>
 
-      {/* Helper legend overlay in corner */}
-      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-2.5 py-2 rounded-lg border border-slate-100 shadow-md no-drag max-w-xs text-[11px] text-slate-500 flex flex-col gap-1.5">
-        <span className="font-bold text-slate-700 uppercase tracking-wide text-[10px] flex items-center gap-1">
-          <HelpCircle className="w-3.5 h-3.5 text-blue-500" /> Hướng dẫn thao tác
-        </span>
-        <div className="flex flex-col gap-0.5 leading-relaxed">
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2 rounded bg-blue-300"></span> Cuộn chuột: Phóng to / Thu nhỏ
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2 rounded bg-blue-300"></span> Kéo chuột: Di chuyển bản đồ
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2 rounded bg-blue-300"></span> Click địa danh: Xem chi tiết
+      {/* Helper legend overlay in corner (only in Gutenberg/Builder mode) */}
+      {isGutenberg && (
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-2.5 py-2 rounded-lg border border-slate-100 shadow-md no-drag max-w-xs text-[11px] text-slate-500 flex flex-col gap-1.5">
+          <span className="font-bold text-slate-700 uppercase tracking-wide text-[10px] flex items-center gap-1">
+            <HelpCircle className="w-3.5 h-3.5 text-blue-500" /> Hướng dẫn thao tác
+          </span>
+          <div className="flex flex-col gap-0.5 leading-relaxed">
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2 rounded bg-blue-300"></span> Cuộn chuột: Phóng to / Thu nhỏ
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2 rounded bg-blue-300"></span> Kéo chuột: Di chuyển bản đồ
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2 rounded bg-blue-300"></span> Click địa danh: Xem chi tiết
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* 5. Rich Hover Tooltip info card */}
-      {(hoveredPathId || hoveredRegion) && (
+      {/* 5. Rich Hover Tooltip info card (only in Gutenberg/Builder mode) */}
+      {isGutenberg && (hoveredPathId || hoveredRegion) && (
         <div
           id="svg-map-tooltip"
           className="absolute z-50 pointer-events-none p-3 bg-slate-900/95 backdrop-blur-sm text-white rounded-lg shadow-xl border border-slate-800 max-w-xs transition-opacity duration-150 text-xs"

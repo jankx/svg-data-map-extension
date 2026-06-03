@@ -29,6 +29,10 @@ interface AppProps {
   isGutenberg?: boolean;
   activeTab?: 'viewer' | 'builder';
   onActiveTabChange?: (tab: 'viewer' | 'builder') => void;
+  zoomScale?: number;
+  zoomPositionX?: number;
+  zoomPositionY?: number;
+  onZoomChange?: (zoomState: { scale: number; positionX: number; positionY: number }) => void;
 }
 
 export default function App({
@@ -38,7 +42,11 @@ export default function App({
   onBlockConfigChange,
   isGutenberg = false,
   activeTab: externalActiveTab,
-  onActiveTabChange: externalOnActiveTabChange
+  onActiveTabChange: externalOnActiveTabChange,
+  zoomScale = 1,
+  zoomPositionX = 0,
+  zoomPositionY = 0,
+  onZoomChange
 }: AppProps) {
   // Global active tab state ('viewer' mode or 'builder' mode)
   const [internalActiveTab, setInternalActiveTab] = useState<'viewer' | 'builder'>('viewer');
@@ -161,63 +169,55 @@ export default function App({
   return (
     <div id="app-root-container" className={`${isGutenberg && activeTab === 'builder' ? 'fixed inset-0 z-[999999] bg-white' : 'min-h-screen bg-slate-50/50'} flex flex-col font-sans`}>
 
-      {/* 1. Header Toolbar navigation element */}
-      <header className={`${isGutenberg && activeTab === 'builder' ? 'px-4 py-3' : 'sticky top-0 z-50 px-6 py-4'} bg-white/95 backdrop-blur-md border-b border-indigo-50/50 shadow-sm`}>
-        <div className={`${isGutenberg && activeTab === 'builder' ? '' : 'max-w-7xl mx-auto'} flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-              <Map className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-extrabold text-slate-800 tracking-tight">SVG Data Map</h1>
-                <span className="text-[10px] font-bold bg-amber-500 text-white rounded-full px-1.5 py-0.5 animate-pulse flex items-center gap-0.5">
-                  <Sparkles className="w-2.5 h-2.5" /> v1.0
-                </span>
+      {/* 1. Header Toolbar navigation element (only in Gutenberg/Builder mode) */}
+      {isGutenberg && (
+        <header className={`${activeTab === 'builder' ? 'px-4 py-3' : 'sticky top-0 z-50 px-6 py-4'} bg-white/95 backdrop-blur-md border-b border-indigo-50/50 shadow-sm`}>
+          <div className={`${activeTab === 'builder' ? '' : 'max-w-7xl mx-auto'} flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                <Map className="w-5 h-5" />
               </div>
-              <p className="text-[11px] text-slate-400 font-medium font-mono">Hệ thống Soạn thảo & Định vị Địa lý dựa trên Vector SVG</p>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h1 className="text-lg font-extrabold text-slate-800 tracking-tight">SVG Data Map</h1>
+                  <span className="text-[10px] font-bold bg-amber-500 text-white rounded-full px-1.5 py-0.5 animate-pulse flex items-center gap-0.5">
+                    <Sparkles className="w-2.5 h-2.5" /> v1.0
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-medium font-mono">Hệ thống Soạn thảo & Định vị Địa lý dựa trên Vector SVG</p>
+              </div>
+            </div>
+
+            {/* Quick utility actions */}
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              {activeTab === 'viewer' && blockId === 'jankx/svg-data-map' && (
+                <button
+                  onClick={() => setActiveTab('builder')}
+                  className="p-2 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-500/20"
+                  title="Mở bộ công cụ thiết kế bản đồ"
+                >
+                  <Settings className="w-3.5 h-3.5" /> Chỉnh sửa bản đồ (Full)
+                </button>
+              )}
+              {activeTab === 'builder' && (
+                <button
+                  onClick={() => setActiveTab('viewer')}
+                  className="p-2 px-3 text-xs bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+                  title="Thoát chế độ toàn màn hình"
+                >
+                  <Eye className="w-3.5 h-3.5" /> Xem kết quả
+                </button>
+              )}
+
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 border-l border-slate-200 pl-3">
+                <span>Màn hình:</span>
+                <span className={`w-2.5 h-2.5 rounded-full inline-block ${activeTab === 'viewer' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                <span className="font-bold text-slate-600 capitalize">{activeTab === 'viewer' ? 'Live' : 'Edit'}</span>
+              </div>
             </div>
           </div>
-
-          {/* Quick utility actions */}
-          <div className="flex items-center gap-2 self-start md:self-auto">
-            {isGutenberg && activeTab === 'viewer' && blockId === 'jankx/svg-data-map' && (
-              <button
-                onClick={() => setActiveTab('builder')}
-                className="p-2 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-500/20"
-                title="Mở bộ công cụ thiết kế bản đồ"
-              >
-                <Settings className="w-3.5 h-3.5" /> Chỉnh sửa bản đồ (Full)
-              </button>
-            )}
-            {isGutenberg && activeTab === 'builder' && (
-              <button
-                onClick={() => setActiveTab('viewer')}
-                className="p-2 px-3 text-xs bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-                title="Thoát chế độ toàn màn hình"
-              >
-                <Eye className="w-3.5 h-3.5" /> Xem kết quả
-              </button>
-            )}
-            {!isGutenberg && (
-              <button
-                id="global-reset-btn"
-                onClick={handleResetCurrent}
-                className="p-2 px-3 text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-                title="Đặt lại bản đồ hiện tại về dữ liệu mặc định ban đầu"
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> Khôi phục mẫu
-              </button>
-            )}
-
-            <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 border-l border-slate-200 pl-3">
-              <span>Màn hình:</span>
-              <span className={`w-2.5 h-2.5 rounded-full inline-block ${activeTab === 'viewer' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-              <span className="font-bold text-slate-600 capitalize">{activeTab === 'viewer' ? 'Live' : 'Edit'}</span>
-            </div>
-          </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* 2. Main Content viewport wrapper */}
       <main className={`${isGutenberg && activeTab === 'builder' ? 'flex-1 overflow-auto p-4' : 'flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8'}`}>
@@ -232,6 +232,11 @@ export default function App({
               onLoadPreset={handleLoadPreset}
               displayMode="info-only"
               mapId={mapId}
+              zoomScale={zoomScale}
+              zoomPositionX={zoomPositionX}
+              zoomPositionY={zoomPositionY}
+              onZoomChange={onZoomChange}
+              isGutenberg={isGutenberg}
             />
           </div>
         ) : (
@@ -245,6 +250,11 @@ export default function App({
                 onLoadPreset={handleLoadPreset}
                 displayMode="map-only"
                 mapId={mapId}
+                zoomScale={zoomScale}
+                zoomPositionX={zoomPositionX}
+                zoomPositionY={zoomPositionY}
+                onZoomChange={onZoomChange}
+                isGutenberg={isGutenberg}
               />
             </div>
           ) : (

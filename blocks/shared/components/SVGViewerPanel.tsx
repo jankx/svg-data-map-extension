@@ -23,6 +23,11 @@ interface SVGViewerPanelProps {
   onLoadPreset: (presetName: 'vietnam' | 'exhibition') => void;
   displayMode?: 'full' | 'map-only' | 'info-only';
   mapId?: string;
+  zoomScale?: number;
+  zoomPositionX?: number;
+  zoomPositionY?: number;
+  onZoomChange?: (zoomState: { scale: number; positionX: number; positionY: number }) => void;
+  isGutenberg?: boolean;
 }
 
 export function SVGViewerPanel({
@@ -32,6 +37,11 @@ export function SVGViewerPanel({
   onLoadPreset,
   displayMode = 'full',
   mapId = 'default-map',
+  zoomScale = 1,
+  zoomPositionX = 0,
+  zoomPositionY = 0,
+  onZoomChange,
+  isGutenberg = false,
 }: SVGViewerPanelProps) {
 
   // Find currently active region details
@@ -51,40 +61,42 @@ export function SVGViewerPanel({
       {(displayMode === 'full' || displayMode === 'map-only') && (
         <div className={`${displayMode === 'full' ? 'lg:col-span-7 xl:col-span-8' : 'w-full'} flex flex-col gap-4`}>
 
-          {/* Info header of map */}
-          <div className="bg-white border border-indigo-50/70 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="p-1 px-2 rounded bg-indigo-50 text-indigo-600 font-bold text-[10px] uppercase tracking-wider font-mono">Bản đồ hiện tại</span>
-                <h1 className="text-xl font-bold text-slate-800">{config.title || 'Bản đồ chưa đặt tên'}</h1>
+          {/* Info header of map (only in Gutenberg/Builder mode) */}
+          {isGutenberg && (
+            <div className="bg-white border border-indigo-50/70 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-1 px-2 rounded bg-indigo-50 text-indigo-600 font-bold text-[10px] uppercase tracking-wider font-mono">Bản đồ hiện tại</span>
+                  <h1 className="text-xl font-bold text-slate-800">{config.title || 'Bản đồ chưa đặt tên'}</h1>
+                </div>
+                <p className="text-slate-500 text-xs mt-1">{config.description || 'Chưa cung cấp mô tả trực quan cho bản đồ này.'}</p>
               </div>
-              <p className="text-slate-500 text-xs mt-1">{config.description || 'Chưa cung cấp mô tả trực quan cho bản đồ này.'}</p>
-            </div>
 
-            <div className="flex items-center gap-1.5 self-start sm:self-center">
-              <span className="text-xs text-slate-400 mr-1.5">Bản mẫu:</span>
-              <button
-                id="preset-vietnam-btn"
-                onClick={() => onLoadPreset('vietnam')}
-                className={`p-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition ${config.title.includes('Việt Nam')
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                  }`}
-              >
-                Việt Nam
-              </button>
-              <button
-                id="preset-exhibition-btn"
-                onClick={() => onLoadPreset('exhibition')}
-                className={`p-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition ${config.title.includes('Triển Lãm')
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                  }`}
-              >
-                Hội Chợ Triển Lãm
-              </button>
+              <div className="flex items-center gap-1.5 self-start sm:self-center">
+                <span className="text-xs text-slate-400 mr-1.5">Bản mẫu:</span>
+                <button
+                  id="preset-vietnam-btn"
+                  onClick={() => onLoadPreset('vietnam')}
+                  className={`p-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition ${config.title.includes('Việt Nam')
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
+                >
+                  Việt Nam
+                </button>
+                <button
+                  id="preset-exhibition-btn"
+                  onClick={() => onLoadPreset('exhibition')}
+                  className={`p-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition ${config.title.includes('Triển Lãm')
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
+                >
+                  Hội Chợ Triển Lãm
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* The map visual canvas container */}
           <div className="relative h-[620px] shadow-sm">
@@ -92,31 +104,38 @@ export function SVGViewerPanel({
               config={config}
               selectedRegionId={selectedRegionId}
               onSelectRegion={onSelectRegion}
+              zoomScale={zoomScale}
+              zoomPositionX={zoomPositionX}
+              zoomPositionY={zoomPositionY}
+              onZoomChange={onZoomChange}
+              isGutenberg={isGutenberg}
             />
           </div>
 
-          {/* Micro status legend */}
-          <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span className="font-semibold text-slate-600">Chú thích bản đồ:</span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3.5 h-3.5 rounded bg-indigo-600 inline-block border border-white shadow-sm"></span>
-                Địa danh được chọn
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3.5 h-3.5 rounded bg-indigo-200 inline-block border border-white shadow-sm"></span>
-                Di chuột qua
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-4 h-4 rounded-full bg-orange-500 border border-white flex items-center justify-center text-white text-[8px] font-bold">●</span>
-                Điểm mốc / Markers (Địa điểm chi tiết)
-              </span>
-            </div>
+          {/* Micro status legend (only in Gutenberg/Builder mode) */}
+          {isGutenberg && (
+            <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
+              <div className="flex items-center gap-4 flex-wrap">
+                <span className="font-semibold text-slate-600">Chú thích bản đồ:</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 rounded bg-indigo-600 inline-block border border-white shadow-sm"></span>
+                  Địa danh được chọn
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 rounded bg-indigo-200 inline-block border border-white shadow-sm"></span>
+                  Di chuột qua
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-orange-500 border border-white flex items-center justify-center text-white text-[8px] font-bold">●</span>
+                  Điểm mốc / Markers (Địa điểm chi tiết)
+                </span>
+              </div>
 
-            <div className="text-[11px] text-slate-400">
-              Tổng số địa danh đã gán data: <span className="font-bold text-slate-600">{config.regions.length}</span>
+              <div className="text-[11px] text-slate-400">
+                Tổng số địa danh đã gán data: <span className="font-bold text-slate-600">{config.regions.length}</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

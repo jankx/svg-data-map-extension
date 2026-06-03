@@ -116,31 +116,11 @@ class SvgDataMapBlock extends Block
         // SSR Skeleton
         ob_start();
         ?>
-        <div class="jankx-svg-data-map-runtime font-sans flex flex-col gap-4" 
+        <div class="jankx-svg-data-map-runtime font-sans flex flex-col gap-4"
              id="svg-map-<?php echo esc_attr(uniqid()); ?>"
              data-config="<?php echo esc_attr(json_encode($jsConfig)); ?>"
              data-map-id="<?php echo esc_attr($mapId); ?>"
              data-ssr="yes">
-            
-            <!-- 1. Info header of map -->
-            <div class="bg-white border border-indigo-50/70 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="p-1 px-2 rounded bg-indigo-50 text-indigo-600 font-bold text-[10px] uppercase tracking-wider font-mono">Bản đồ</span>
-                        <h1 class="text-xl font-bold text-slate-800 m-0"><?php echo esc_html($title); ?></h1>
-                    </div>
-                    <?php if ($description): ?>
-                        <p class="text-slate-500 text-xs mt-1 mb-0"><?php echo esc_html($description); ?></p>
-                    <?php endif; ?>
-                </div>
-
-                <div class="flex items-center gap-1.5 self-start sm:self-center">
-                    <span class="text-xs text-slate-400 mr-1.5">Trạng thái:</span>
-                    <span class="p-1.5 px-3 rounded-lg text-xs font-semibold bg-emerald-600 text-white shadow-md shadow-emerald-500/10">
-                        Live
-                    </span>
-                </div>
-            </div>
 
             <div class="relative bg-[#F1F7FA] rounded-[2rem] overflow-hidden shadow-2xl border border-white/50 min-h-[600px] flex items-center justify-center" id="map-container-root">
                 <div id="svg-viewport" class="w-full h-full flex items-center justify-center transition-transform duration-75">
@@ -186,29 +166,6 @@ class SvgDataMapBlock extends Block
                 </div>
             </div>
 
-            <!-- 3. Micro status legend -->
-            <div class="bg-slate-50 border border-slate-200/60 p-3 rounded-xl flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
-                <div class="flex items-center gap-4 flex-wrap">
-                    <span class="font-semibold text-slate-600">Chú thích:</span>
-                    <span class="flex items-center gap-1.5">
-                        <span class="w-3.5 h-3.5 rounded-full bg-orange-500 border border-white shadow-sm"></span>
-                        Điểm mốc (Markers)
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                        <span class="w-3.5 h-3.5 rounded bg-indigo-600 inline-block border border-white shadow-sm"></span>
-                        Đã chọn
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                        <span class="w-3.5 h-3.5 rounded bg-indigo-200 inline-block border border-white shadow-sm"></span>
-                        Vùng di sản
-                    </span>
-                </div>
-
-                <div class="text-[11px] text-slate-400">
-                    Dữ liệu: <span class="font-bold text-slate-600"><?php echo count($regions); ?> vùng</span>
-                </div>
-            </div>
-            
             <style>
                 .jankx-svg-map-wrapper {
                     position: relative;
