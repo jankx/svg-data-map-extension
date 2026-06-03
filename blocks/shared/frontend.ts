@@ -73,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (el) el.classList.remove('jankx-map-active');
                     });
                 }
+                const prevMarker = container.querySelector(`.jankx-marker-btn[data-region-id="${activeRegionId}"]`);
+                if (prevMarker) prevMarker.classList.remove('jankx-map-active');
             }
 
             activeRegionId = regionId;
@@ -82,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (el) el.classList.add('jankx-map-active');
                 });
             }
+            const activeMarker = container.querySelector(`.jankx-marker-btn[data-region-id="${regionId}"]`);
+            if (activeMarker) activeMarker.classList.add('jankx-map-active');
 
             // Find title in either container
             const titleEl = container.querySelector('.jankx-map-active-title') || (infoPanel.parentElement ? infoPanel.parentElement.querySelector('.jankx-map-active-title') : null);

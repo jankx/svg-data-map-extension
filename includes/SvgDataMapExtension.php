@@ -91,17 +91,26 @@ class SvgDataMapExtension extends AbstractExtension
             wp_send_json_error(['message' => 'Invalid parameters']);
         }
 
-        $args = [
-            'post_type' => $post_type,
-            'posts_per_page' => 5,
-            'tax_query' => [
-                [
-                    'taxonomy' => $taxonomy,
-                    'field' => 'term_id',
-                    'terms' => $term_id
-                ]
-            ]
+        $filters = [
+            $taxonomy => $term_id
         ];
+        $base_attributes = [
+            'postType' => $post_type,
+            'postsPerPage' => 5,
+        ];
+
+        // Use Jankx Query Helper as requested
+        $attributes = \Jankx\Query\DynamicDataLayoutQueryHelper::applyFiltersToAttributes($base_attributes, $filters);
+        
+        $args = [
+            'post_type' => $attributes['postType'],
+            'posts_per_page' => $attributes['postsPerPage'],
+            'post_status' => 'publish',
+        ];
+
+        if (!empty($attributes['taxQuery'])) {
+            $args['tax_query'] = $attributes['taxQuery'];
+        }
 
         $query = new \WP_Query($args);
         $html = '';
