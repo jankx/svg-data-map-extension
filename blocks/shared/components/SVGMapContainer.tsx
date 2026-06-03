@@ -138,9 +138,10 @@ export function SVGMapContainer({
 
   // Click handler using event delegation
   const handleSvgClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Stop propagation to prevent Gutenberg conflicts
+    // Stop propagation and prevent default to prevent Gutenberg conflicts
     if (isGutenberg) {
       e.stopPropagation();
+      e.preventDefault();
     }
 
     // If placing marker in builder mode, capture click coordinates first!
@@ -178,9 +179,10 @@ export function SVGMapContainer({
 
   // Drag listeners for Map Pan & Zoom
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Stop propagation to prevent Gutenberg from dragging the whole block
+    // Stop propagation and prevent default to prevent Gutenberg from dragging the whole block
     if (isGutenberg) {
       e.stopPropagation();
+      e.preventDefault();
     }
 
     // Only permit dragging if we are NOT in marker placement mode, or if clicking middle mouse / space
@@ -199,6 +201,7 @@ export function SVGMapContainer({
 
     if (isGutenberg) {
       e.stopPropagation();
+      e.preventDefault();
     }
 
     const newPosition = {
@@ -214,6 +217,10 @@ export function SVGMapContainer({
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
+    // Stop propagation to prevent Gutenberg conflicts
+    if (isGutenberg) {
+      e.stopPropagation();
+    }
     const zoomFactor = 0.05;
     let newScale = scale + (e.deltaY < 0 ? zoomFactor : -zoomFactor);
     newScale = Math.max(0.5, Math.min(5, newScale));
