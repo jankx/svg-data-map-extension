@@ -217,9 +217,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Track current zoom scale and update marker sizes
+        let currentScale = 1;
+        const allMarkerBtns = Array.from(container.querySelectorAll('.jankx-marker-btn')) as HTMLButtonElement[];
+
+        const applyScaleToMarkers = () => {
+            allMarkerBtns.forEach(btn => {
+                btn.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+                btn.style.transformOrigin = 'center bottom';
+            });
+        };
+
         // Attach events to Markers and position them
-        container.querySelectorAll('.jankx-marker-btn').forEach(btn => {
-            const markerBtn = btn as HTMLButtonElement;
+        allMarkerBtns.forEach(markerBtn => {
             const rid = markerBtn.getAttribute('data-region-id');
             const pathId = markerBtn.getAttribute('data-path-id');
 
@@ -249,7 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 markerBtn.style.left = `${relX}px`;
                                 markerBtn.style.top = `${relY}px`;
-                                markerBtn.style.transform = 'translate(-50%, -50%)';
+                                markerBtn.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+                                markerBtn.style.transformOrigin = 'center bottom';
                                 markerBtn.style.display = 'flex';
                                 markerBtn.style.position = 'absolute';
                             }
@@ -261,13 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             computePosition();
-            window.addEventListener('resize', computePosition);
+            window.addEventListener('resize', () => { computePosition(); });
 
             // 2. Attach events
             markerBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('SVG Map: Marker clicked for region:', rid);
                 if (rid) selectRegion(rid);
             });
             markerBtn.addEventListener('mouseenter', () => {
@@ -277,5 +287,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (rid) setRegionHover(rid, false);
             });
         });
+
+        // Hook into wheel zoom to update marker scale
+        const mapViewport = container.querySelector('#map-container-root') || container;
+        mapViewport.addEventListener('wheel', (e: any) => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 0.05 : -0.05;
+            currentScale = Math.max(0.5, Math.min(5, currentScale + delta));
+            applyScaleToMarkers();
+        }, { passive: false });
     });
 });

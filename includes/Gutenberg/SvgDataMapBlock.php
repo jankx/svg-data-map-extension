@@ -74,19 +74,20 @@ class SvgDataMapBlock extends Block
         }
     }
 
-    private function getMarkerIcon($type)
+    private function getMarkerIcon($type, $size = 20)
     {
+        $s = (int) $size;
         switch ($type) {
             case 'transport':
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-white"><rect x="2" y="10" width="20" height="8" rx="2" ry="2"/><path d="M7 22l3-3"/><path d="M17 22l-3-3"/><path d="M15 13a3 3 0 0 0-3-3"/><path d="M15 2l-2 8H7L5 2"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $s . '" height="' . $s . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><rect x="2" y="10" width="20" height="8" rx="2" ry="2"/><path d="M7 22l3-3"/><path d="M17 22l-3-3"/><path d="M15 13a3 3 0 0 0-3-3"/><path d="M15 2l-2 8H7L5 2"/></svg>';
             case 'hotel':
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-white"><path d="M3 7v11"/><path d="M21 7v11"/><path d="M3 11h18"/><path d="M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"/><path d="M15 5v2"/><path d="M9 5v2"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $s . '" height="' . $s . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M3 7v11"/><path d="M21 7v11"/><path d="M3 11h18"/><path d="M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"/><path d="M15 5v2"/><path d="M9 5v2"/></svg>';
             case 'food':
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-white"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $s . '" height="' . $s . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
             case 'scenic':
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-white"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $s . '" height="' . $s . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
             default:
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-white"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $s . '" height="' . $s . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
     }
 
@@ -145,16 +146,16 @@ class SvgDataMapBlock extends Block
                                     }
                                     ?>
                                     <button class="<?php echo esc_attr($markerClass); ?>"
-                                            style="display:none;flex-direction:column;align-items:center;pointer-events:auto;z-index:20;"
+                                            style="display:none;flex-direction:column;align-items:center;pointer-events:auto;z-index:20;transform:translate(-50%,-50%) scale(1);transform-origin:center bottom;transition:transform 0.15s ease;"
                                             data-region-id="<?php echo esc_attr($region['id']); ?>"
                                             data-path-id="<?php echo esc_attr($region['pathIds'][0] ?? ''); ?>">
                                         
-                                        <div class="marker-icon-wrapper" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.1);border:2px solid white;background-color:<?php echo esc_attr($markerColor); ?>;transition:all 0.3s ease;">
-                                            <?php echo $this->getMarkerIcon($marker['iconType'] ?? 'pin'); ?>
+                                        <div class="marker-icon-wrapper" style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2);border:2px solid white;background-color:<?php echo esc_attr($markerColor); ?>;transition:all 0.2s ease;">
+                                            <?php echo $this->getMarkerIcon($marker['iconType'] ?? 'pin', 13); ?>
                                         </div>
 
                                         <?php if (!empty($marker['label']) && (!isset($settings['showMarkerLabels']) || $settings['showMarkerLabels'] !== false)): ?>
-                                            <div class="marker-label" style="margin-top:4px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#fff;color:#1e293b;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.1);white-space:nowrap;opacity:0.9;transition:all 0.3s ease;">
+                                            <div class="marker-label" style="margin-top:2px;font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;background:#fff;color:#1e293b;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.1);white-space:nowrap;opacity:0.9;transition:all 0.2s ease;max-width:72px;overflow:hidden;text-overflow:ellipsis;">
                                                 <?php echo esc_html($marker['label']); ?>
                                             </div>
                                         <?php endif; ?>

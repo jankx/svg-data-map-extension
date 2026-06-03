@@ -233,19 +233,20 @@ export function SVGMapContainer({
     handleZoomStateChange(1, { x: 0, y: 0 });
   };
 
-  const getMarkerIcon = (type: MarkerIconType) => {
+  const getMarkerIcon = (type: MarkerIconType, size = 20) => {
+    const s = size;
     switch (type) {
       case 'transport':
-        return <Bus className="w-5 h-5 text-white" id="icon-bus" />;
+        return <Bus style={{ width: s, height: s }} className="text-white" id="icon-bus" />;
       case 'hotel':
-        return <Bed className="w-5 h-5 text-white" id="icon-bed" />;
+        return <Bed style={{ width: s, height: s }} className="text-white" id="icon-bed" />;
       case 'food':
-        return <Utensils className="w-5 h-5 text-white" id="icon-food" />;
+        return <Utensils style={{ width: s, height: s }} className="text-white" id="icon-food" />;
       case 'scenic':
-        return <Camera className="w-5 h-5 text-white" id="icon-camera" />;
+        return <Camera style={{ width: s, height: s }} className="text-white" id="icon-camera" />;
       case 'pin':
       default:
-        return <MapPin className="w-5 h-5 text-white" id="icon-pin" />;
+        return <MapPin style={{ width: s, height: s }} className="text-white" id="icon-pin" />;
     }
   };
 
@@ -533,11 +534,14 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
     <button
       ref={markerRef}
       id={`marker-btn-${region.marker.id}`}
-      className={`absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag ${region.marker.showAnimation ? 'jankx-marker-pulse' : ''}`}
+      className={`absolute pointer-events-auto flex flex-col items-center group/marker no-drag ${region.marker.showAnimation ? 'jankx-marker-pulse' : ''}`}
       style={{
         left: '-9999px',
         top: '-9999px',
-        zIndex: isSelected ? 40 : 20
+        zIndex: isSelected ? 40 : 20,
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        transformOrigin: 'center bottom',
+        transition: 'transform 0.15s ease',
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -546,23 +550,31 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
     >
       {isSelected && (
         <span
-          className="absolute inline-flex h-10 w-10 rounded-full opacity-60 animate-ping"
-          style={{ backgroundColor: markerColor }}
+          className="absolute inline-flex rounded-full opacity-60 animate-ping"
+          style={{ width: 26, height: 26, backgroundColor: markerColor }}
         />
       )}
 
+      {/* Base pin size: 26x26 at scale=1 */}
       <div
-        className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all border-2 border-white cursor-pointer ${isSelected ? 'scale-115 shadow-lg shadow-orange-500/20' : 'group-hover/marker:scale-110 shadow-sm'}`}
-        style={{ backgroundColor: isSelected ? '#1e3a8a' : markerColor }}
+        className={`flex items-center justify-center border-2 border-white cursor-pointer transition-all duration-200 ${isSelected ? 'shadow-lg' : 'group-hover/marker:brightness-110 shadow-sm'}`}
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: '50%',
+          boxShadow: isSelected ? '0 4px 12px rgba(30,58,138,0.4)' : '0 2px 6px rgba(0,0,0,0.2)',
+          backgroundColor: isSelected ? '#1e3a8a' : markerColor,
+        }}
       >
-        {getMarkerIcon(region.marker.iconType)}
+        {getMarkerIcon(region.marker.iconType, 13)}
       </div>
 
-      {config.settings.showMarkerLabels !== false && region.marker.label && (
-        <div className={`mt-1 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-all border ${isSelected
-          ? 'bg-blue-900 text-white border-blue-800 scale-105'
-          : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100 group-hover/marker:scale-105'
-          }`}>
+      {config.settings?.showMarkerLabels !== false && region.marker.label && (
+        <div className={`mt-0.5 font-sans font-bold rounded shadow-sm transition-all border ${isSelected
+          ? 'bg-blue-900 text-white border-blue-800'
+          : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100'
+          }`}
+          style={{ fontSize: 9, padding: '1px 4px', whiteSpace: 'nowrap', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {region.marker.label}
         </div>
       )}
