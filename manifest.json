@@ -11,7 +11,7 @@
         "rest"
     ],
     "caller": {
-        "file": "includes/SvgDataMapExtension.php",
+        "file": "SvgDataMapExtension.php",
         "class": "Puleeno\\Extensions\\SvgDataMap\\SvgDataMapExtension",
         "method": "init"
     },

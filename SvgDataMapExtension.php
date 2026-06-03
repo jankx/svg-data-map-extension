@@ -19,7 +19,7 @@ class SvgDataMapExtension extends AbstractExtension
     {
         spl_autoload_register(function ($class) {
             $prefix = 'Puleeno\\Extensions\\SvgDataMap\\';
-            $base_dir = __DIR__ . '/'; // Current file is already in includes/
+            $base_dir = __DIR__ . '/includes/'; // Classes are in includes/
 
             $len = strlen($prefix);
             if (strncmp($prefix, $class, $len) !== 0) {
