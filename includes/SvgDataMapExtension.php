@@ -1,9 +1,9 @@
 <?php
-namespace Jankx\Extensions\SvgDataMap;
+namespace Puleeno\Extensions\SvgDataMap;
 
 use Jankx\Extensions\AbstractExtension;
-use Jankx\Extensions\SvgDataMap\Gutenberg\SvgDataMapBlock;
-use Jankx\Extensions\SvgDataMap\Gutenberg\SvgDataMapInfoBlock;
+use Puleeno\Extensions\SvgDataMap\Gutenberg\SvgDataMapBlock;
+use Puleeno\Extensions\SvgDataMap\Gutenberg\SvgDataMapInfoBlock;
 
 class SvgDataMapExtension extends AbstractExtension
 {
@@ -18,8 +18,8 @@ class SvgDataMapExtension extends AbstractExtension
     protected function register_autoloader()
     {
         spl_autoload_register(function ($class) {
-            $prefix = 'Jankx\\Extensions\\SvgDataMap\\';
-            $base_dir = __DIR__ . '/'; // Current file is in includes/
+            $prefix = 'Puleeno\\Extensions\\SvgDataMap\\';
+            $base_dir = __DIR__ . '/'; // Current file is already in includes/
 
             $len = strlen($prefix);
             if (strncmp($prefix, $class, $len) !== 0) {

@@ -53,10 +53,10 @@ namespace {
     }
 }
 
-namespace Jankx\Extensions\SvgDataMap\Tests {
+namespace Puleeno\Extensions\SvgDataMap\Tests {
     use PHPUnit\Framework\TestCase;
-    use Jankx\Extensions\SvgDataMap\SvgDataMapExtension;
-    use Jankx\Extensions\SvgDataMap\Gutenberg\SvgDataMapBlock;
+    use Puleeno\Extensions\SvgDataMap\SvgDataMapExtension;
+    use Puleeno\Extensions\SvgDataMap\Gutenberg\SvgDataMapBlock;
 
     class ExtensionTest extends TestCase
     {

@@ -5,11 +5,14 @@
     "author": "Puleeno",
     "extension_id": "svg-data-map",
     "context": [
-        "always"
+        "admin",
+        "frontend",
+        "ajax",
+        "rest"
     ],
     "caller": {
         "file": "includes/SvgDataMapExtension.php",
-        "class": "Jankx\\Extensions\\SvgDataMap\\SvgDataMapExtension",
+        "class": "Puleeno\\Extensions\\SvgDataMap\\SvgDataMapExtension",
         "method": "init"
     },
     "requirements": {

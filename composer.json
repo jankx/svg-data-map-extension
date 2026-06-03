@@ -5,7 +5,10 @@
     "license": "GPL-3.0-or-later",
     "autoload": {
         "psr-4": {
-            "Jankx\\Extensions\\SvgDataMap\\": "includes/"
+            "Puleeno\\Extensions\\SvgDataMap\\": [
+                "",
+                "includes/"
+            ]
         }
     },
     "authors": [

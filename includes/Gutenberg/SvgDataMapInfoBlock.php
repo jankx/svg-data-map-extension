@@ -1,5 +1,5 @@
 <?php
-namespace Jankx\Extensions\SvgDataMap\Gutenberg;
+namespace Puleeno\Extensions\SvgDataMap\Gutenberg;
 
 use Jankx\Gutenberg\Block;
 
@@ -15,7 +15,7 @@ class SvgDataMapInfoBlock extends Block
             'version' => '1.0.0'
         ];
 
-        $extension = \Jankx\Extensions\SvgDataMap\SvgDataMapExtension::get_instance();
+        $extension = \Puleeno\Extensions\SvgDataMap\SvgDataMapExtension::get_instance();
         if (!$extension) return;
 
         $scriptUrl = $extension->get_extension_url() . '/dist/assets/index.js';
@@ -34,7 +34,7 @@ class SvgDataMapInfoBlock extends Block
 
     protected function registerFrontendAssets(): void
     {
-        $extension = \Jankx\Extensions\SvgDataMap\SvgDataMapExtension::get_instance();
+        $extension = \Puleeno\Extensions\SvgDataMap\SvgDataMapExtension::get_instance();
         if (!$extension) return;
 
         // Styles are handled by block.json ("style")
