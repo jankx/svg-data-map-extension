@@ -37,14 +37,7 @@ class SvgDataMapBlock extends Block
             true
         );
 
-        if (file_exists(dirname(dirname($this->blockPath)) . '/dist/assets/index.css')) {
-            wp_enqueue_style(
-                'jankx-svg-data-map-editor',
-                $styleUrl,
-                [],
-                $assets['version']
-            );
-        }
+        // Styles are handled by block.json ("editorStyle")
     }
 
     /**
@@ -58,18 +51,8 @@ class SvgDataMapBlock extends Block
         $extension = \Jankx\Extensions\SvgDataMap\SvgDataMapExtension::get_instance();
         if (!$extension) return;
 
-        // Enqueue TailwindCSS/Main styles
+        // Styles are handled by block.json ("style")
         $rootPath = dirname(dirname($this->blockPath));
-        $cssPath = $rootPath . '/dist/assets/index.css';
-        if (file_exists($cssPath)) {
-            $styleUrl = $extension->get_extension_url() . '/dist/assets/index.css';
-            wp_enqueue_style(
-                'jankx-svg-data-map',
-                $styleUrl,
-                [],
-                '1.0.0'
-            );
-        }
 
         // Enqueue frontend.js for interactivity
         $jsPath = $rootPath . '/dist/assets/frontend.js';

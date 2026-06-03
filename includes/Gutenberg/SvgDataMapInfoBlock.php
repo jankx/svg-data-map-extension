@@ -29,12 +29,7 @@ class SvgDataMapInfoBlock extends Block
             true
         );
 
-        wp_enqueue_style(
-            'jankx-svg-data-map-info-editor',
-            $styleUrl,
-            [],
-            '999.9.9'
-        );
+        // Styles are handled by block.json ("editorStyle")
     }
 
     protected function registerFrontendAssets(): void
@@ -42,13 +37,7 @@ class SvgDataMapInfoBlock extends Block
         $extension = \Jankx\Extensions\SvgDataMap\SvgDataMapExtension::get_instance();
         if (!$extension) return;
 
-        $styleUrl = $extension->get_extension_url() . '/dist/assets/index.css';
-        wp_enqueue_style(
-            'jankx-svg-data-map-info',
-            $styleUrl,
-            [],
-            '1.0.0'
-        );
+        // Styles are handled by block.json ("style")
 
         $scriptUrl = $extension->get_extension_url() . '/dist/assets/frontend.js';
         wp_enqueue_script(
