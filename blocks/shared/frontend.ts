@@ -107,15 +107,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div>
                                 <h2 class="text-3xl font-sans font-bold text-slate-800 tracking-tight mb-1 flex items-center gap-2 m-0 p-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-800 shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                                    \${region.name || 'Hạng mục'}
+                                    ${region.name || 'Hạng mục'}
                                 </h2>
                                 <p class="text-slate-600/90 text-xs leading-relaxed mb-5 mt-1">
-                                    \${region.description || 'Thông tin chi tiết về khu vực di sản này.'}
+                                    ${region.description || 'Thông tin chi tiết về khu vực di sản này.'}
                                 </p>
                             </div>
 
                             <div class="flex-1 overflow-y-auto space-y-4 max-h-[460px] pr-2 custom-scrollbar">
-                                \${data.data.html}
+                                ${data.data.html}
                             </div>
 
                             <div class="pt-4 mt-4 border-t border-sky-200/80 flex items-center justify-between text-[11px] text-sky-800 font-medium">
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         regions.forEach((r: any) => {
             if (r.pathIds) {
                 r.pathIds.forEach((pid: string) => {
-                    const el = svgWrapper.querySelector(`#\${pid}`);
+                    const el = svgWrapper.querySelector(`#${pid}`);
                     if (el) {
                         el.classList.add('jankx-map-region-clickable');
                         el.addEventListener('click', (e) => {

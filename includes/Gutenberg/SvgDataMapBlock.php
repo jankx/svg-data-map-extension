@@ -142,27 +142,33 @@ class SvgDataMapBlock extends Block
                 </div>
             </div>
 
-            <!-- 2. The map visual canvas container -->
-            <div class="relative bg-[#F1F7FA] rounded-[2rem] overflow-hidden shadow-2xl border border-white/50 p-8 min-h-[600px] flex items-center justify-center" id="map-container-root">
+            <div class="relative bg-[#F1F7FA] rounded-[2rem] overflow-hidden shadow-2xl border border-white/50 min-h-[600px] flex items-center justify-center" id="map-container-root">
                 <div id="svg-viewport" class="w-full h-full flex items-center justify-center transition-transform duration-75">
-                    <div class="jankx-svg-map-wrapper relative w-full h-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[800px] [&>svg]:w-auto [&>svg]:h-auto pointer-events-auto">
-                        <?php echo $config['svgContent'] ?? ''; ?>
+                    <div class="jankx-svg-map-wrapper relative w-full h-full flex items-center justify-center pointer-events-auto" style="min-height: 500px;">
+                        <?php 
+                        $svgRender = $config['svgContent'] ?? '';
+                        // Defensive fix: if SVG was saved escaped in database, decode it
+                        if (strpos($svgRender, '&lt;svg') !== false) {
+                            $svgRender = html_entity_decode($svgRender);
+                        }
+                        echo $svgRender; 
+                        ?>
 
-                        <!-- Markers Layer -->
-                        <div class="absolute inset-0 pointer-events-none">
+                        <!-- Markers Layer: JS will reposition each marker at its vector path's centroid -->
+                        <div class="jankx-markers-layer" style="position:absolute;inset:0;pointer-events:none;">
                             <?php foreach ($regions as $region): ?>
                                 <?php if (!empty($region['marker'])): $marker = $region['marker']; ?>
-                                    <button class="absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag jankx-marker-btn"
-                                            style="left: <?php echo esc_attr($marker['x']); ?>%; top: <?php echo esc_attr($marker['y']); ?>%; z-index: 20;"
-                                            data-region-id="<?php echo esc_attr($region['id']); ?>">
+                                    <button class="jankx-marker-btn"
+                                            style="display:none;flex-direction:column;align-items:center;pointer-events:auto;z-index:20;"
+                                            data-region-id="<?php echo esc_attr($region['id']); ?>"
+                                            data-path-id="<?php echo esc_attr($region['pathIds'][0] ?? ''); ?>">
                                         
-                                        <div class="w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all border-2 border-white cursor-pointer hover:scale-110"
-                                             style="background-color: <?php echo esc_attr($markerColor); ?>;">
+                                        <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(0,0,0,.2);border:2px solid white;background-color:<?php echo esc_attr($markerColor); ?>;">
                                             <?php echo $this->getMarkerIcon($marker['iconType'] ?? 'pin'); ?>
                                         </div>
 
                                         <?php if (!empty($marker['label'])): ?>
-                                            <div class="mt-1 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm bg-white text-slate-800 border border-slate-100 opacity-90 group-hover/marker:opacity-100 group-hover/marker:scale-105 whitespace-nowrap">
+                                            <div style="margin-top:4px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#fff;color:#1e293b;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.1);white-space:nowrap;">
                                                 <?php echo esc_html($marker['label']); ?>
                                             </div>
                                         <?php endif; ?>
@@ -198,29 +204,121 @@ class SvgDataMapBlock extends Block
             </div>
             
             <style>
-                .jankx-svg-map-wrapper svg { display: block; margin: 0 auto; }
-                .jankx-svg-map-wrapper svg path, .jankx-svg-map-wrapper svg g {
-                    fill: <?php echo $settings['defaultFillColor'] ?? '#e2edf5'; ?>;
-                    stroke: #ffffff; stroke-width: 0.5px; transition: all 0.2s ease;
-                    cursor: pointer; vector-effect: non-scaling-stroke;
+                .jankx-svg-map-wrapper {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
                 }
-                .jankx-svg-map-wrapper svg path:hover, .jankx-svg-map-wrapper svg g:hover {
-                    fill: <?php echo $settings['hoverFillColor'] ?? '#93c5fd'; ?> !important;
+                .jankx-svg-map-wrapper svg { 
+                    display: block; 
+                    margin: 0 auto;
+                    max-width: 100%;
+                    height: auto;
                 }
-                .jankx-svg-map-wrapper svg .jankx-map-active {
-                    fill: <?php echo $settings['selectedFillColor'] ?? '#3b82f6'; ?> !important;
-                    stroke-width: 2px !important;
-                }
-                
-                <?php foreach ($regions as $region): if (!empty($region['fillColor'])): ?>
-                    <?php foreach ($region['pathIds'] as $pathId): ?>
-                        #<?php echo esc_attr($pathId); ?> { fill: <?php echo esc_attr($region['fillColor']); ?>; }
-                    <?php endforeach; ?>
-                <?php endif; endforeach; ?>
 
-                .jankx-marker-btn { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+                /* Only style CONFIGURED region paths. CSS ID selectors override SVG presentation attributes by specificity — no !important needed. */
+                <?php 
+                $defaultFill = $settings['defaultFillColor'] ?? '#a8c5da';
+                $hoverFill   = $settings['hoverFillColor']   ?? '#93c5fd';
+                $activeFill  = $settings['selectedFillColor'] ?? '#3b82f6';
+                foreach ($regions as $region):
+                    $regionFill = !empty($region['fillColor']) ? $region['fillColor'] : $defaultFill;
+                    foreach ($region['pathIds'] as $pathId):
+                        $pid = esc_attr($pathId);
+                ?>
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?> {
+                    fill: <?php echo esc_attr($regionFill); ?>;
+                    cursor: pointer;
+                    transition: fill 0.2s ease;
+                    vector-effect: non-scaling-stroke;
+                }
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>:hover {
+                    fill: <?php echo esc_attr($hoverFill); ?>;
+                }
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-active {
+                    fill: <?php echo esc_attr($activeFill); ?>;
+                    stroke: #1d4ed8;
+                    stroke-width: 2px;
+                }
+                <?php endforeach; endforeach; ?>
+
+                /* Markers layer */
+                .jankx-markers-layer { position: absolute; inset: 0; pointer-events: none; }
+                .jankx-marker-btn {
+                    position: absolute;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    pointer-events: auto;
+                    transform: translate(-50%, -50%);
+                    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    z-index: 20;
+                }
                 .jankx-marker-btn:hover { transform: translate(-50%, -50%) scale(1.1); }
             </style>
+
+            <script>
+            /* Position each marker at the centroid of its associated SVG path using getBBox() */
+            (function() {
+                function placeMarkers(wrapper) {
+                    var svgEl = wrapper.querySelector('svg');
+                    var layer = wrapper.querySelector('.jankx-markers-layer');
+                    if (!svgEl || !layer) return;
+
+                    var layerRect = layer.getBoundingClientRect();
+                    var ctm = svgEl.getScreenCTM();
+                    if (!ctm) return;
+
+                    layer.querySelectorAll('.jankx-marker-btn').forEach(function(btn) {
+                        var pathId = btn.getAttribute('data-path-id');
+                        if (!pathId) return;
+
+                        var pathEl = svgEl.getElementById(pathId);
+                        if (!pathEl || typeof pathEl.getBBox !== 'function') return;
+
+                        try {
+                            var bbox   = pathEl.getBBox();
+                            var cx     = bbox.x + bbox.width  / 2;
+                            var cy     = bbox.y + bbox.height / 2;
+
+                            // Convert SVG user-space coords → screen coords
+                            var pt = svgEl.createSVGPoint();
+                            pt.x = cx;
+                            pt.y = cy;
+                            var screenPt = pt.matrixTransform(ctm);
+
+                            // Convert screen coords → layer-relative coords
+                            var relX = screenPt.x - layerRect.left;
+                            var relY = screenPt.y - layerRect.top;
+
+                            btn.style.position  = 'absolute';
+                            btn.style.left      = relX + 'px';
+                            btn.style.top       = relY + 'px';
+                            btn.style.transform = 'translate(-50%, -50%)';
+                            btn.style.display   = 'flex';
+                        } catch(e) {
+                            // getBBox can fail for invisible elements; skip
+                        }
+                    });
+                }
+
+                function initAll() {
+                    document.querySelectorAll('.jankx-svg-map-wrapper').forEach(placeMarkers);
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initAll);
+                } else {
+                    setTimeout(initAll, 60); // Let SVG paint first
+                }
+                window.addEventListener('resize', function() {
+                    // Re-run on resize since layer rect and CTM change
+                    setTimeout(initAll, 50);
+                });
+            })();
+            </script>
         </div>
         <?php
         return ob_get_clean();
