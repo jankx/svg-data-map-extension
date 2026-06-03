@@ -32,8 +32,8 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
     }, [activeTab, mapId]);
 
     useEffect(() => {
-        const hasValidConfig = config && Array.isArray(config.regions) && config.regions.length > 0;
-        if (!hasValidConfig) {
+        const hasSvgContent = config && config.svgContent && config.svgContent.trim().length > 0;
+        if (!hasSvgContent) {
             setAttributes({ config: VIETNAM_MAP_PRESET });
         }
     }, []);
