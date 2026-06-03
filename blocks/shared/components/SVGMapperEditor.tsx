@@ -75,12 +75,24 @@ export function SVGMapperEditor({
   // WP Taxonomy/Term data
 
   // WP Taxonomy/Term data
+  const postTypes = useSelect ? useSelect((select: any) => {
+    return select('core').getPostTypes({ per_page: -1 });
+  }, []) : [];
+
   const taxonomies = useSelect ? useSelect((select: any) => {
     return select('core').getTaxonomies({ per_page: -1 });
   }, []) : [];
 
-  const selectedTaxonomy = activeRegionObj?.taxonomy || 'category';
+  const selectedPostType = activeRegionObj?.postType || 'post';
+  const selectedTaxonomy = activeRegionObj?.taxonomy || '';
+
+  // Filter taxonomies based on selected post type
+  const filteredTaxonomies = taxonomies ? taxonomies.filter((tax: any) => {
+    return tax.types && tax.types.includes(selectedPostType);
+  }) : [];
+
   const terms = useSelect ? useSelect((select: any) => {
+    if (!selectedTaxonomy) return [];
     return select('core').getEntityRecords('taxonomy', selectedTaxonomy, { per_page: -1 });
   }, [selectedTaxonomy]) : [];
 
@@ -782,15 +794,33 @@ export function SVGMapperEditor({
 
                     <div className="space-y-2">
                       <div>
+                        <label className="text-[9px] text-slate-400 block mb-1">Chọn Post Type:</label>
+                        <select
+                          className="w-full text-xs p-1.5 border border-slate-200 rounded-lg focus:outline-none bg-white"
+                          value={selectedPostType}
+                          onChange={(e) => updateActiveRegion(r => ({
+                            ...r,
+                            postType: e.target.value,
+                            taxonomy: '', // Reset taxonomy when post type changes
+                            termId: undefined
+                          }))}
+                        >
+                          <option value="">-- Chọn post type --</option>
+                          {postTypes?.filter((pt: any) => pt.viewable).map((pt: any) => (
+                            <option key={pt.slug} value={pt.slug}>{pt.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
                         <label className="text-[9px] text-slate-400 block mb-1">Chọn Phân loại (Taxonomy):</label>
                         <select
                           className="w-full text-xs p-1.5 border border-slate-200 rounded-lg focus:outline-none bg-white"
                           value={selectedTaxonomy}
                           onChange={(e) => updateActiveRegion(r => ({ ...r, taxonomy: e.target.value, termId: undefined }))}
                         >
-                          <option value="category">Chuyên mục (Category)</option>
-                          <option value="post_tag">Thẻ (Tag)</option>
-                          {taxonomies?.filter((tax: any) => !['category', 'post_tag'].includes(tax.slug)).map((tax: any) => (
+                          <option value="">-- Chọn taxonomy --</option>
+                          {filteredTaxonomies.map((tax: any) => (
                             <option key={tax.slug} value={tax.slug}>{tax.name}</option>
                           ))}
                         </select>
@@ -798,7 +828,7 @@ export function SVGMapperEditor({
 
                       <div>
                         <label className="text-[9px] text-slate-400 block mb-1">Chọn Term (Địa danh / Mốc):</label>
-                        {!terms ? (
+                        {!terms && selectedTaxonomy ? (
                           <div className="py-2 text-center text-[10px] text-slate-400 italic">Đang tải dữ liệu...</div>
                         ) : (
                           <select
@@ -807,7 +837,7 @@ export function SVGMapperEditor({
                             onChange={(e) => updateActiveRegion(r => ({ ...r, termId: parseInt(e.target.value) }))}
                           >
                             <option value="">-- Chọn một term --</option>
-                            {terms.map((term: any) => (
+                            {terms?.map((term: any) => (
                               <option key={term.id} value={term.id}>{term.name}</option>
                             ))}
                           </select>

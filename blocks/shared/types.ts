@@ -31,6 +31,7 @@ export interface RegionConfig {
   description?: string; // Quick summary
   termId?: number; // WordPress taxonomy term ID
   taxonomy?: string; // WordPress taxonomy slug
+  postType?: string; // WordPress post type slug
 }
 
 export interface MapSettings {
