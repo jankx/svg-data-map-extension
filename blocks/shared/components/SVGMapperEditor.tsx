@@ -377,8 +377,8 @@ export function SVGMapperEditor({
       <div className="xl:col-span-3 flex flex-col gap-5">
 
         {/* Workspace details & import */}
-        <div className="bg-white border border-indigo-50/50 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+        <div className="bg-white border border-indigo-50/50 rounded-xl p-4 shadow-sm">
+          <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2.5 flex items-center gap-2">
             <Upload className="w-4 h-4 text-indigo-600" />
             Nguồn Bản Đồ (SVG)
           </h3>
@@ -442,9 +442,9 @@ export function SVGMapperEditor({
         </div>
 
         {/* Vector Element path checklist selection */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-[300px]">
-          <div className="flex items-center justify-between mb-3 border-b border-slate-50 pb-2">
-            <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex-1 flex flex-col min-h-[300px]">
+          <div className="flex items-center justify-between mb-2.5 border-b border-slate-50 pb-1.5">
+            <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight flex items-center gap-2">
               <Layers className="w-4 h-4 text-purple-600" />
               Các Vector Khả Dụng ({availablePathIds.length})
             </h3>
@@ -535,11 +535,11 @@ export function SVGMapperEditor({
         <div className="bg-white border border-indigo-50/50 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-1 px-1.5 rounded bg-amber-50 text-amber-600 font-bold text-[10px]">BUILDER WORKSPACE</span>
+              <span className="p-0.5 px-1.5 rounded bg-amber-50 text-amber-600 font-bold text-[9px]">BUILDER WORKSPACE</span>
               <input
                 id="edit-map-title"
                 type="text"
-                className="font-bold text-lg text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none focus:bg-slate-50 px-1 rounded transition"
+                className="font-bold text-base text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none focus:bg-slate-50 px-1 rounded transition"
                 value={config.title}
                 onChange={(e) => onChangeConfig({ ...config, title: e.target.value })}
               />
@@ -603,10 +603,10 @@ export function SVGMapperEditor({
         </div>
 
         {/* Settings options panel */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+          <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2.5 flex items-center gap-2">
             <Settings className="w-4 h-4 text-slate-500" />
-            Cấu Hình Màu Sắc & Hiệu ứng Bản Đồ (Global Theme)
+            Cấu Hình Màu Sắc & Hiệu ứng (Global Theme)
           </h3>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -681,8 +681,8 @@ export function SVGMapperEditor({
       <div className="xl:col-span-3 flex flex-col gap-5">
 
         {/* Regions list sidebar quick select */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider mb-2 flex items-center gap-2">
+        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+          <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2 flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-500" />
             Danh Sách Địa Danh ({config.regions.length})
           </h3>
@@ -738,7 +738,7 @@ export function SVGMapperEditor({
                   <input
                     id="edit-region-title"
                     type="text"
-                    className="w-full text-lg font-bold text-slate-800 focus:outline-none border-b border-transparent hover:border-slate-200 focus:border-indigo-500 mt-2 px-1 rounded bg-slate-50/50"
+                    className="w-full text-base font-bold text-slate-800 focus:outline-none border-b border-transparent hover:border-slate-200 focus:border-indigo-500 mt-1.5 px-1 rounded bg-slate-50/50"
                     value={activeRegionObj.name}
                     onChange={(e) => updateActiveRegion(r => ({ ...r, name: e.target.value }))}
                   />
