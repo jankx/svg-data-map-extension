@@ -846,7 +846,45 @@ export function SVGMapperEditor({
                     </div>
                   </div>
                 )}
-
+                {/* Region appearance overrides */}
+                <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-3">
+                  <span className="text-[10px] font-bold text-slate-700 uppercase flex items-center gap-1">
+                    <Settings className="w-3.5 h-3.5 text-slate-500" />
+                    Màu sắc riêng theo vùng
+                  </span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[9px] text-slate-400 block mb-1">Màu nền vùng:</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={activeRegionObj.fillColor || config.settings.defaultFillColor}
+                          onChange={(e) => updateActiveRegion(r => ({ ...r, fillColor: e.target.value }))}
+                          className="w-6 h-6 rounded border border-slate-200 cursor-pointer"
+                        />
+                        <button
+                          className="text-[9px] text-slate-400 hover:text-red-500"
+                          onClick={() => updateActiveRegion(r => ({ ...r, fillColor: undefined }))}
+                        >Reset</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[9px] text-slate-400 block mb-1">Màu Hover vùng:</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={activeRegionObj.hoverFillColor || config.settings.hoverFillColor}
+                          onChange={(e) => updateActiveRegion(r => ({ ...r, hoverFillColor: e.target.value }))}
+                          className="w-6 h-6 rounded border border-slate-200 cursor-pointer"
+                        />
+                        <button
+                          className="text-[9px] text-slate-400 hover:text-red-500"
+                          onClick={() => updateActiveRegion(r => ({ ...r, hoverFillColor: undefined }))}
+                        >Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Subtitle / summary */}
                 <div>

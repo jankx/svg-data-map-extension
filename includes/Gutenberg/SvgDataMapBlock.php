@@ -220,11 +220,12 @@ class SvgDataMapBlock extends Block
 
                 /* Only style CONFIGURED region paths. CSS ID selectors override SVG presentation attributes by specificity — no !important needed. */
                 <?php 
-                $defaultFill = $settings['defaultFillColor'] ?? '#a8c5da';
-                $hoverFill   = $settings['hoverFillColor']   ?? '#93c5fd';
-                $activeFill  = $settings['selectedFillColor'] ?? '#3b82f6';
+                $defaultFill      = $settings['defaultFillColor']  ?? '#a8c5da';
+                $defaultHoverFill = $settings['hoverFillColor']    ?? '#93c5fd';
+                $activeFill       = $settings['selectedFillColor'] ?? '#3b82f6';
                 foreach ($regions as $region):
-                    $regionFill = !empty($region['fillColor']) ? $region['fillColor'] : $defaultFill;
+                    $regionFill      = !empty($region['fillColor'])      ? $region['fillColor']      : $defaultFill;
+                    $regionHoverFill = !empty($region['hoverFillColor']) ? $region['hoverFillColor'] : $defaultHoverFill;
                     foreach ($region['pathIds'] as $pathId):
                         $pid = esc_attr($pathId);
                 ?>
@@ -235,7 +236,7 @@ class SvgDataMapBlock extends Block
                     vector-effect: non-scaling-stroke;
                 }
                 .jankx-svg-map-wrapper svg #<?php echo $pid; ?>:hover {
-                    fill: <?php echo esc_attr($hoverFill); ?>;
+                    fill: <?php echo esc_attr($regionHoverFill); ?>;
                 }
                 .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-active {
                     fill: <?php echo esc_attr($activeFill); ?>;

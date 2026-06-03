@@ -26,6 +26,7 @@ export interface RegionConfig {
   name: string;
   pathIds: string[]; // SVG element path/polygon IDs grouped together
   fillColor?: string; // Custom region background color override
+  hoverFillColor?: string; // Custom region hover color override
   marker?: MarkerConfig; // Optional interactive pin marker on the map
   items: DataItem[]; // Dynamic lists/articles to show (exactly like in the screenshot)
   description?: string; // Quick summary

@@ -4,20 +4,20 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  SVGMapConfig, 
-  RegionConfig, 
-  MarkerIconType 
+import {
+  SVGMapConfig,
+  RegionConfig,
+  MarkerIconType
 } from '../types';
-import { 
-  Bus, 
-  Bed, 
-  Utensils, 
-  Camera, 
-  MapPin, 
-  ZoomIn, 
-  ZoomOut, 
-  RotateCcw, 
+import {
+  Bus,
+  Bed,
+  Utensils,
+  Camera,
+  MapPin,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
   HelpCircle,
   Maximize2
 } from 'lucide-react';
@@ -76,7 +76,7 @@ export function SVGMapContainer({
       setHoveredPathId(pathId);
       const region = findRegionByPathId(pathId);
       setHoveredRegion(region);
-      
+
       // Calculate tooltip position relative to container
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
@@ -145,7 +145,7 @@ export function SVGMapContainer({
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only permit dragging if we are NOT in marker placement mode, or if clicking middle mouse / space
     if (isPlacingMarker) return;
-    
+
     // Check if target is a button or input to not disrupt UI
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('.no-drag')) return;
@@ -213,6 +213,7 @@ export function SVGMapContainer({
     config.regions.forEach(region => {
       const isSelected = selectedRegionId === region.id;
       const baseColor = region.fillColor || defaultColor;
+      const regionHoverColor = region.hoverFillColor || hoverColor;
 
       region.pathIds.forEach(pathId => {
         if (isSelected) {
@@ -229,6 +230,10 @@ export function SVGMapContainer({
             #${pathId} {
               fill: ${baseColor} !important;
               opacity: 0.85;
+            }
+            #${pathId}:hover {
+              fill: ${regionHoverColor} !important;
+              opacity: 1 !important;
             }
           `;
         }
@@ -249,12 +254,9 @@ export function SVGMapContainer({
       });
     }
 
-    // 3. Hover global logic
+    // 3. Hover global logic (fallback for non-mapped paths)
     css += `
-      #vietnam-regions path:hover, 
-      #vietnam-regions circle:hover, 
-      #exhibition-zones rect:hover,
-      #exhibition-zones path:hover {
+      path:hover, circle:hover, rect:hover {
         fill: ${hoverColor} !important;
         opacity: 1 !important;
         cursor: pointer;
@@ -265,7 +267,7 @@ export function SVGMapContainer({
   };
 
   return (
-    <div 
+    <div
       id="map-container-root"
       ref={containerRef}
       className="relative w-full h-full select-none overflow-hidden bg-slate-50 border border-slate-200/80 rounded-2xl shadow-inner min-h-[500px]"
@@ -280,7 +282,7 @@ export function SVGMapContainer({
       <style dangerouslySetInnerHTML={{ __html: generateStyleSheets() }} />
 
       {/* 2. Interactive SVG Canvas Frame with zoom and pan transform applied */}
-      <div 
+      <div
         id="svg-viewport"
         ref={svgWrapperRef}
         className="w-full h-full flex items-center justify-center origin-center transition-transform duration-75"
@@ -292,7 +294,7 @@ export function SVGMapContainer({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        <div 
+        <div
           className="relative w-full h-full max-w-full max-h-full flex items-center justify-center p-4 pointer-events-auto"
           dangerouslySetInnerHTML={{ __html: config.svgContent }}
         />
@@ -321,17 +323,16 @@ export function SVGMapContainer({
               >
                 {/* Ping wave animation for active/selected marker */}
                 {isSelected && (
-                  <span 
+                  <span
                     className="absolute inline-flex h-10 w-10 rounded-full opacity-60 animate-ping"
                     style={{ backgroundColor: markerColor }}
                   />
                 )}
-                
+
                 {/* Standard badge */}
-                <div 
-                  className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all border-2 border-white cursor-pointer ${
-                    isSelected ? 'scale-115 shadow-lg shadow-orange-500/20' : 'group-hover/marker:scale-110 shadow-sm'
-                  }`}
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all border-2 border-white cursor-pointer ${isSelected ? 'scale-115 shadow-lg shadow-orange-500/20' : 'group-hover/marker:scale-110 shadow-sm'
+                    }`}
                   style={{ backgroundColor: isSelected ? '#1e3a8a' : markerColor }}
                 >
                   {getMarkerIcon(region.marker.iconType)}
@@ -339,11 +340,10 @@ export function SVGMapContainer({
 
                 {/* Micro Label */}
                 {region.marker.label && (
-                  <div className={`mt-1 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-all border ${
-                    isSelected 
-                      ? 'bg-blue-900 text-white border-blue-800 scale-105' 
+                  <div className={`mt-1 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-all border ${isSelected
+                      ? 'bg-blue-900 text-white border-blue-800 scale-105'
                       : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100 group-hover/marker:scale-105'
-                  }`}>
+                    }`}>
                     {region.marker.label}
                   </div>
                 )}
@@ -355,7 +355,7 @@ export function SVGMapContainer({
 
       {/* 4. Controls overlays in corner */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 bg-white/95 backdrop-blur-sm p-1.5 rounded-lg border border-slate-100 shadow-md no-drag">
-        <button 
+        <button
           id="btn-zoom-in"
           onClick={handleZoomIn}
           className="p-1.5 rounded hover:bg-slate-100 text-slate-700 transition"
@@ -363,7 +363,7 @@ export function SVGMapContainer({
         >
           <ZoomIn className="w-4 h-4" />
         </button>
-        <button 
+        <button
           id="btn-zoom-out"
           onClick={handleZoomOut}
           className="p-1.5 rounded hover:bg-slate-100 text-slate-700 transition"
@@ -371,7 +371,7 @@ export function SVGMapContainer({
         >
           <ZoomOut className="w-4 h-4" />
         </button>
-        <button 
+        <button
           id="btn-zoom-reset"
           onClick={handleResetView}
           className="p-1.5 rounded hover:bg-slate-100 text-slate-700 transition border-t border-slate-100"
@@ -401,7 +401,7 @@ export function SVGMapContainer({
 
       {/* 5. Rich Hover Tooltip info card */}
       {(hoveredPathId || hoveredRegion) && (
-        <div 
+        <div
           id="svg-map-tooltip"
           className="absolute z-50 pointer-events-none p-3 bg-slate-900/95 backdrop-blur-sm text-white rounded-lg shadow-xl border border-slate-800 max-w-xs transition-opacity duration-150 text-xs"
           style={{
@@ -415,7 +415,7 @@ export function SVGMapContainer({
               <span className="text-[10px] bg-slate-800 px-1 py-0.5 rounded text-slate-400">Đã định danh</span>
             )}
           </div>
-          
+
           {hoveredRegion?.description ? (
             <p className="mt-1 text-slate-300 text-[11px] line-clamp-3 leading-relaxed">{hoveredRegion.description}</p>
           ) : (
