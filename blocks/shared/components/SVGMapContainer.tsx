@@ -379,76 +379,20 @@ export function SVGMapContainer({
             const isSelected = selectedRegionId === region.id;
             const markerColor = config.settings?.markerColor || '#f97316';
 
-            // Calculate position from SVG path centroid (consistent with frontend)
             const pathId = region.pathIds?.[0];
-            let markerX = region.marker.x;
-            let markerY = region.marker.y;
-
-            if (pathId && svgWrapperRef.current) {
-              const svgElement = svgWrapperRef.current.querySelector('svg');
-              if (svgElement) {
-                const pathEl = svgElement.querySelector(`#${pathId}`);
-                if (pathEl && typeof (pathEl as SVGGraphicsElement).getBBox === 'function') {
-                  try {
-                    const bbox = (pathEl as SVGGraphicsElement).getBBox();
-                    const centerX = bbox.x + bbox.width / 2;
-                    const centerY = bbox.y + bbox.height / 2;
-
-                    const viewBox = svgElement.getAttribute('viewBox')?.split(' ').map(Number) || [0, 0, 1000, 1000];
-                    const vbW = viewBox[2];
-                    const vbH = viewBox[3];
-
-                    markerX = (centerX / vbW) * 100;
-                    markerY = (centerY / vbH) * 100;
-                  } catch (e) {
-                    console.error('Failed to calculate bbox for', pathId, e);
-                  }
-                }
-              }
-            }
 
             return (
-              <button
+              <MarkerDataComponent
                 key={region.marker.id}
-                id={`marker-btn-${region.marker.id}`}
-                className={`absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag ${region.marker.showAnimation ? 'jankx-marker-pulse' : ''}`}
-                style={{
-                  left: `${markerX}%`,
-                  top: `${markerY}%`,
-                  zIndex: isSelected ? 40 : 20
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectRegion(region.id === selectedRegionId ? null : region.id);
-                }}
-              >
-                {/* Ping wave animation for active/selected marker */}
-                {isSelected && (
-                  <span
-                    className="absolute inline-flex h-10 w-10 rounded-full opacity-60 animate-ping"
-                    style={{ backgroundColor: markerColor }}
-                  />
-                )}
-
-                {/* Standard badge */}
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all border-2 border-white cursor-pointer ${isSelected ? 'scale-115 shadow-lg shadow-orange-500/20' : 'group-hover/marker:scale-110 shadow-sm'
-                    }`}
-                  style={{ backgroundColor: isSelected ? '#1e3a8a' : markerColor }}
-                >
-                  {getMarkerIcon(region.marker.iconType)}
-                </div>
-
-                {/* Micro Label */}
-                {config.settings.showMarkerLabels !== false && region.marker.label && (
-                  <div className={`mt-1 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-all border ${isSelected
-                    ? 'bg-blue-900 text-white border-blue-800 scale-105'
-                    : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100 group-hover/marker:scale-105'
-                    }`}>
-                    {region.marker.label}
-                  </div>
-                )}
-              </button>
+                region={region}
+                pathId={pathId}
+                isSelected={isSelected}
+                markerColor={markerColor}
+                config={config}
+                svgWrapperRef={svgWrapperRef}
+                onSelectRegion={onSelectRegion}
+                getMarkerIcon={getMarkerIcon}
+              />
             );
           })}
         </div>
@@ -538,3 +482,88 @@ export function SVGMapContainer({
     </div>
   );
 }
+
+const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, svgWrapperRef, onSelectRegion, getMarkerIcon }: any) => {
+  const markerRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useLayoutEffect(() => {
+    const updatePosition = () => {
+      if (!pathId || !svgWrapperRef.current || !markerRef.current) return;
+      const svgElement = svgWrapperRef.current.querySelector('svg');
+      const layer = markerRef.current.parentElement;
+      if (!svgElement || !layer) return;
+
+      const pathEl = svgElement.querySelector(`#${pathId}`);
+      if (pathEl && typeof (pathEl as any).getBBox === 'function') {
+        try {
+          const bbox = (pathEl as any).getBBox();
+          const cx = bbox.x + bbox.width / 2;
+          const cy = bbox.y + bbox.height / 2;
+
+          const ctm = svgElement.getScreenCTM();
+          if (ctm) {
+            const pt = (svgElement as any).createSVGPoint();
+            pt.x = cx;
+            pt.y = cy;
+            const screenPt = pt.matrixTransform(ctm);
+            const layerRect = layer.getBoundingClientRect();
+
+            const relX = screenPt.x - layerRect.left;
+            const relY = screenPt.y - layerRect.top;
+
+            markerRef.current.style.left = `${relX}px`;
+            markerRef.current.style.top = `${relY}px`;
+          }
+        } catch (e) {
+          console.warn('Failed to align marker precisely:', e);
+        }
+      }
+    };
+
+    updatePosition();
+    const observer = new ResizeObserver(updatePosition);
+    if (svgWrapperRef.current) observer.observe(svgWrapperRef.current);
+
+    return () => observer.disconnect();
+  });
+
+  return (
+    <button
+      ref={markerRef}
+      id={`marker-btn-${region.marker.id}`}
+      className={`absolute pointer-events-auto transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/marker no-drag ${region.marker.showAnimation ? 'jankx-marker-pulse' : ''}`}
+      style={{
+        left: '-9999px',
+        top: '-9999px',
+        zIndex: isSelected ? 40 : 20
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelectRegion(isSelected ? null : region.id);
+      }}
+    >
+      {isSelected && (
+        <span
+          className="absolute inline-flex h-10 w-10 rounded-full opacity-60 animate-ping"
+          style={{ backgroundColor: markerColor }}
+        />
+      )}
+
+      <div
+        className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all border-2 border-white cursor-pointer ${isSelected ? 'scale-115 shadow-lg shadow-orange-500/20' : 'group-hover/marker:scale-110 shadow-sm'}`}
+        style={{ backgroundColor: isSelected ? '#1e3a8a' : markerColor }}
+      >
+        {getMarkerIcon(region.marker.iconType)}
+      </div>
+
+      {config.settings.showMarkerLabels !== false && region.marker.label && (
+        <div className={`mt-1 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-all border ${isSelected
+          ? 'bg-blue-900 text-white border-blue-800 scale-105'
+          : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100 group-hover/marker:scale-105'
+          }`}>
+          {region.marker.label}
+        </div>
+      )}
+    </button>
+  );
+};

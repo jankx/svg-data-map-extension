@@ -223,33 +223,45 @@ document.addEventListener('DOMContentLoaded', () => {
             const rid = markerBtn.getAttribute('data-region-id');
             const pathId = markerBtn.getAttribute('data-path-id');
 
-            // 1. Position the marker using SVG path centroid (consistent with React component)
-            if (pathId) {
-                const pathEl = svgWrapper.querySelector(`#${pathId}`) as SVGGraphicsElement;
-                if (pathEl && typeof pathEl.getBBox === 'function') {
-                    try {
-                        const bbox = pathEl.getBBox();
-                        const centerX = bbox.x + bbox.width / 2;
-                        const centerY = bbox.y + bbox.height / 2;
+            // 1. Position the marker using exact SVG space mapping
+            const computePosition = () => {
+                if (pathId) {
+                    const svgEl = svgWrapper as SVGGraphicsElement;
+                    const pathEl = svgEl.querySelector(`#${pathId}`) as SVGGraphicsElement;
+                    const layer = container.querySelector('.jankx-markers-layer') as HTMLElement;
 
-                        // We need the viewBox dimensions to calculate percentage
-                        const viewBox = svgWrapper.getAttribute('viewBox')?.split(' ').map(Number) || [0, 0, 1000, 1000];
-                        const vbW = viewBox[2];
-                        const vbH = viewBox[3];
+                    if (pathEl && layer && typeof pathEl.getBBox === 'function') {
+                        try {
+                            const bbox = pathEl.getBBox();
+                            const cx = bbox.x + bbox.width / 2;
+                            const cy = bbox.y + bbox.height / 2;
 
-                        const leftPct = (centerX / vbW) * 100;
-                        const topPct = (centerY / vbH) * 100;
+                            const ctm = svgEl.getScreenCTM();
+                            if (ctm) {
+                                const pt = (svgEl as any).createSVGPoint();
+                                pt.x = cx;
+                                pt.y = cy;
+                                const screenPt = pt.matrixTransform(ctm);
+                                const layerRect = layer.getBoundingClientRect();
 
-                        markerBtn.style.left = `${leftPct}%`;
-                        markerBtn.style.top = `${topPct}%`;
-                        markerBtn.style.display = 'flex';
-                        markerBtn.style.position = 'absolute';
-                        markerBtn.style.transform = 'translate(-50%, -50%)';
-                    } catch (e) {
-                        console.error('SVG Map: Failed to calculate bbox for', pathId, e);
+                                const relX = screenPt.x - layerRect.left;
+                                const relY = screenPt.y - layerRect.top;
+
+                                markerBtn.style.left = `${relX}px`;
+                                markerBtn.style.top = `${relY}px`;
+                                markerBtn.style.transform = 'translate(-50%, -50%)';
+                                markerBtn.style.display = 'flex';
+                                markerBtn.style.position = 'absolute';
+                            }
+                        } catch (e) {
+                            console.error('SVG Map: Failed to calculate bbox for', pathId, e);
+                        }
                     }
                 }
-            }
+            };
+
+            computePosition();
+            window.addEventListener('resize', computePosition);
 
             // 2. Attach events
             markerBtn.addEventListener('click', (e) => {
