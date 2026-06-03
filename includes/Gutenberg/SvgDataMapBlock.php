@@ -149,12 +149,12 @@ class SvgDataMapBlock extends Block
                                             data-region-id="<?php echo esc_attr($region['id']); ?>"
                                             data-path-id="<?php echo esc_attr($region['pathIds'][0] ?? ''); ?>">
                                         
-                                        <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(0,0,0,.2);border:2px solid white;background-color:<?php echo esc_attr($markerColor); ?>;">
+                                        <div class="marker-icon-wrapper" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.1);border:2px solid white;background-color:<?php echo esc_attr($markerColor); ?>;transition:all 0.3s ease;">
                                             <?php echo $this->getMarkerIcon($marker['iconType'] ?? 'pin'); ?>
                                         </div>
 
                                         <?php if (!empty($marker['label']) && (!isset($settings['showMarkerLabels']) || $settings['showMarkerLabels'] !== false)): ?>
-                                            <div style="margin-top:4px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#fff;color:#1e293b;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.1);white-space:nowrap;">
+                                            <div class="marker-label" style="margin-top:4px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#fff;color:#1e293b;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.1);white-space:nowrap;opacity:0.9;transition:all 0.3s ease;">
                                                 <?php echo esc_html($marker['label']); ?>
                                             </div>
                                         <?php endif; ?>
@@ -218,10 +218,21 @@ class SvgDataMapBlock extends Block
                     align-items: center;
                     pointer-events: auto;
                     transform: translate(-50%, -50%);
-                    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                     z-index: 20;
                 }
-                .jankx-marker-btn:hover { transform: translate(-50%, -50%) scale(1.1); }
+                .jankx-marker-btn:hover {
+                    z-index: 50;
+                }
+                .jankx-marker-btn:hover .marker-icon-wrapper,
+                .jankx-map-marker-hover .marker-icon-wrapper {
+                    transform: scale(1.15);
+                    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.4);
+                }
+                .jankx-marker-btn:hover .marker-label,
+                .jankx-map-marker-hover .marker-label {
+                    transform: scale(1.05);
+                    opacity: 1 !important;
+                }
 
                 /* Pulsing animation */
                 .jankx-marker-pulse::before {
