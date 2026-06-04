@@ -262,8 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 // Apply stored drag offset from config if available
                                 const region = regionMap.get(rid);
-                                const offX = (region?.marker?.markerOffsetX ?? 0) / currentScale;
-                                const offY = (region?.marker?.markerOffsetY ?? 0) / currentScale;
+                                const offX = region?.marker?.markerOffsetX ?? 0;
+                                const offY = region?.marker?.markerOffsetY ?? 0;
 
                                 markerBtn.style.left = `${relX + offX}px`;
                                 markerBtn.style.top = `${relY + offY}px`;

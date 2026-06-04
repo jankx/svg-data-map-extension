@@ -529,8 +529,8 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
             centroidRef.current = { left: relX, top: relY };
 
             // Apply stored drag offset (if user has dragged it before)
-            const offX = (region.marker.markerOffsetX ?? 0) / scale;
-            const offY = (region.marker.markerOffsetY ?? 0) / scale;
+            const offX = region.marker.markerOffsetX ?? 0;
+            const offY = region.marker.markerOffsetY ?? 0;
 
             markerRef.current.style.left = `${relX + offX}px`;
             markerRef.current.style.top = `${relY + offY}px`;
@@ -591,9 +591,9 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
 
       const dx = (e.clientX - dragStartRef.current.mouseX) / scale;
       const dy = (e.clientY - dragStartRef.current.mouseY) / scale;
-      // Convert pixel offset back to screen pixels (scale=1 space) for storage
-      const storedOffX = ((region.marker.markerOffsetX ?? 0)) + dx * scale;
-      const storedOffY = ((region.marker.markerOffsetY ?? 0)) + dy * scale;
+      // Keep offset in local layer space (unscaled) for storage
+      const storedOffX = (region.marker.markerOffsetX ?? 0) + dx;
+      const storedOffY = (region.marker.markerOffsetY ?? 0) + dy;
 
       dragStartRef.current = null;
       setDragOffset(null);
