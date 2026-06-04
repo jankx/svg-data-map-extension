@@ -539,7 +539,7 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
         left: '-9999px',
         top: '-9999px',
         zIndex: isSelected ? 40 : 20,
-        transform: `translate(-50%, -50%) scale(${scale})`,
+        transform: `translate(-50%, -50%)`,
         transformOrigin: 'center bottom',
         transition: 'transform 0.15s ease',
       }}

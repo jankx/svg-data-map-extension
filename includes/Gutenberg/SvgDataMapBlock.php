@@ -301,7 +301,7 @@ class SvgDataMapBlock extends Block
                             btn.style.position  = 'absolute';
                             btn.style.left      = relX + 'px';
                             btn.style.top       = relY + 'px';
-                            btn.style.transform = 'translate(-50%, -50%) scale(' + currentScale + ')';
+                            btn.style.transform = 'translate(-50%, -50%)';
                             btn.style.transformOrigin = 'center bottom';
                             btn.style.display   = 'flex';
                         } catch(e) {

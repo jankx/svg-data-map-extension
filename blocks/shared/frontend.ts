@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 markerBtn.style.left = `${relX}px`;
                                 markerBtn.style.top = `${relY}px`;
-                                markerBtn.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+                                markerBtn.style.transform = `translate(-50%, -50%)`;
                                 markerBtn.style.transformOrigin = 'center bottom';
                                 markerBtn.style.display = 'flex';
                                 markerBtn.style.position = 'absolute';

@@ -185,11 +185,11 @@ describe('Marker Position Calculation', () => {
   });
 
   describe('Transform application', () => {
-    it('should apply correct transform string for marker', () => {
-      const scale = 1.5;
-      const transform = `translate(-50%, -50%) scale(${scale})`;
+    it('should apply correct transform string for marker (no scale)', () => {
+      // After fix: marker no longer scales with zoom to prevent becoming huge
+      const transform = `translate(-50%, -50%)`;
 
-      expect(transform).toBe('translate(-50%, -50%) scale(1.5)');
+      expect(transform).toBe('translate(-50%, -50%)');
     });
 
     it('should set correct transform origin', () => {
@@ -197,12 +197,14 @@ describe('Marker Position Calculation', () => {
       expect(transformOrigin).toBe('center bottom');
     });
 
-    it('transform should compensate for scale to maintain visual size', () => {
+    it('transform should NOT include scale to prevent marker becoming huge when zoomed', () => {
       const scale = 2;
-      const transform = `translate(-50%, -50%) scale(${scale})`;
+      // Marker should NOT scale with zoom to prevent becoming huge
+      const transform = `translate(-50%, -50%)`;
 
-      // The transform scale should match the zoom scale to keep marker size consistent
-      expect(transform).toContain('scale(2)');
+      // Transform should NOT contain scale
+      expect(transform).not.toContain('scale');
+      expect(transform).not.toContain('scale(2)');
     });
   });
 
@@ -256,22 +258,18 @@ describe('Marker Position Calculation', () => {
       });
     });
 
-    it('all three modes should apply identical transform strings', () => {
-      const scales = [1, 1.5, 2, 0.5, 3];
+    it('all three modes should apply identical transform strings (no scale)', () => {
+      // After fix: marker transform should NOT include scale to prevent becoming huge
+      const editorTransform = `translate(-50%, -50%)`;
+      const frontendTransform = `translate(-50%, -50%)`;
+      const phpTransform = `translate(-50%, -50%)`;
 
-      scales.forEach(scale => {
-        // Editor Mode (SVGMapContainer.tsx)
-        const editorTransform = `translate(-50%, -50%) scale(${scale})`;
-
-        // Frontend Mode (frontend.ts)
-        const frontendTransform = `translate(-50%, -50%) scale(${scale})`;
-
-        // PHP Mode (SVG inline script in SvgDataMapBlock.php)
-        const phpTransform = `translate(-50%, -50%) scale(${scale})`;
-
-        expect(editorTransform).toBe(frontendTransform);
-        expect(frontendTransform).toBe(phpTransform);
-      });
+      expect(editorTransform).toBe(frontendTransform);
+      expect(frontendTransform).toBe(phpTransform);
+      // None should contain scale
+      expect(editorTransform).not.toContain('scale');
+      expect(frontendTransform).not.toContain('scale');
+      expect(phpTransform).not.toContain('scale');
     });
 
     it('all three modes should use same transform origin', () => {
