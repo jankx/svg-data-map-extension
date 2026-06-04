@@ -144,6 +144,7 @@ export default function App({
   const handleConfigChange = (newConfig: SVGMapConfig) => {
     setMapConfig(newConfig);
     if (onBlockConfigChange) {
+      // Call with the full config object - the parent component will handle serialization
       onBlockConfigChange(newConfig);
     }
   };

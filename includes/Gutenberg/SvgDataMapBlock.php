@@ -95,7 +95,7 @@ class SvgDataMapBlock extends Block
     {
         $config = $attributes['config'] ?? [];
         $mapId = $attributes['mapId'] ?? 'default-map';
-        
+
         // Load default SVG using absolute path to be safe
         if (empty($config['svgContent'])) {
             $svg_path = '/home/puleeno/Projects/baotanghanghai.vn/wp-content/themes/baotanghanghai/Ban do.svg';
