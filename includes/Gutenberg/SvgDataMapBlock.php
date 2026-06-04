@@ -298,12 +298,10 @@ class SvgDataMapBlock extends Block
                             var relX = (screenPt.x - layerRect.left) / currentScale;
                             var relY = (screenPt.y - layerRect.top) / currentScale;
 
-                            btn.style.position  = 'absolute';
+                            // Only set position and opacity - other styles are in HTML
                             btn.style.left      = relX + 'px';
                             btn.style.top       = relY + 'px';
-                            btn.style.transform = 'translate(-50%, -50%)';
-                            btn.style.transformOrigin = 'center bottom';
-                            btn.style.display   = 'flex';
+                            btn.style.opacity   = '1'; // Make marker visible
                         } catch(e) {
                             // getBBox can fail for invisible elements; skip
                         }
@@ -314,17 +312,17 @@ class SvgDataMapBlock extends Block
                     document.querySelectorAll('.jankx-svg-map-wrapper').forEach(placeMarkers);
                 }
 
-                // Ensure markers are rendered on load
+                // Ensure markers are rendered on load - run multiple times to be safe
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function() {
                         initAll();
-                        // Re-run after a short delay to ensure SVG is fully rendered
-                        setTimeout(initAll, 100);
+                        setTimeout(initAll, 50);
+                        setTimeout(initAll, 150);
                     });
                 } else {
                     initAll();
-                    // Re-run after a short delay to ensure SVG is fully rendered
-                    setTimeout(initAll, 100);
+                    setTimeout(initAll, 50);
+                    setTimeout(initAll, 150);
                 }
 
                 window.addEventListener('resize', function() {
