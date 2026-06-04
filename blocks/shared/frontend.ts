@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pathId = markerBtn.getAttribute('data-path-id');
 
             // 1. Position the marker using exact SVG space mapping
-            const computePosition = () => {
+            const computePosition = (retries = 5) => {
                 if (pathId) {
                     const svgEl = svgWrapper as SVGGraphicsElement;
                     const pathEl = svgEl.querySelector(`#${pathId}`) as SVGGraphicsElement;
@@ -267,14 +267,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 markerBtn.style.left = `${relX + offX}px`;
                                 markerBtn.style.top = `${relY + offY}px`;
-                                markerBtn.style.transform = `translate(-50%, -50%)`;
+                                markerBtn.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
                                 markerBtn.style.transformOrigin = 'center bottom';
                                 markerBtn.style.display = 'flex';
                                 markerBtn.style.position = 'absolute';
+                            } else if (retries > 0) {
+                                setTimeout(() => computePosition(retries - 1), 100);
                             }
                         } catch (e) {
                             console.error('SVG Map: Failed to calculate bbox for', pathId, e);
                         }
+                    } else if (retries > 0) {
+                        setTimeout(() => computePosition(retries - 1), 100);
                     }
                 }
             };
