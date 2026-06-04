@@ -135,21 +135,24 @@ class SvgDataMapBlock extends Block
                         echo $svgRender; 
                         ?>
 
-                        <!-- Markers Layer: JS will reposition each marker at its vector path's centroid -->
+                        <!-- Markers Layer: JS will reposition each marker at its vector path's centroid.
+                             Position is calculated by dividing by scale to match Editor mode behavior. -->
                         <div class="jankx-markers-layer" style="position:absolute;inset:0;pointer-events:none;">
                             <?php foreach ($regions as $region): ?>
                                 <?php if (!empty($region['marker'])): $marker = $region['marker']; ?>
-                                    <?php 
+                                    <?php
                                     $markerClass = 'jankx-marker-btn';
                                     if (!empty($marker['showAnimation'])) {
                                         $markerClass .= ' jankx-marker-pulse';
                                     }
                                     ?>
                                     <button class="<?php echo esc_attr($markerClass); ?>"
-                                            style="display:none;flex-direction:column;align-items:center;pointer-events:auto;z-index:20;transform:translate(-50%,-50%) scale(1);transform-origin:center bottom;transition:transform 0.15s ease;"
+                                            style="display:none;flex-direction:column;align-items:center;pointer-events:auto;z-index:20;transform:translate(-50%, -50%) scale(1);transform-origin:center bottom;transition:transform 0.15s ease;"
                                             data-region-id="<?php echo esc_attr($region['id']); ?>"
-                                            data-path-id="<?php echo esc_attr($region['pathIds'][0] ?? ''); ?>">
-                                        
+                                            data-path-id="<?php echo esc_attr($region['pathIds'][0] ?? ''); ?>"
+                                            data-marker-x="<?php echo esc_attr($marker['x'] ?? ''); ?>"
+                                            data-marker-y="<?php echo esc_attr($marker['y'] ?? ''); ?>">
+
                                         <div class="marker-icon-wrapper" style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2);border:2px solid white;background-color:<?php echo esc_attr($markerColor); ?>;transition:all 0.2s ease;">
                                             <?php echo $this->getMarkerIcon($marker['iconType'] ?? 'pin', 13); ?>
                                         </div>
@@ -257,7 +260,8 @@ class SvgDataMapBlock extends Block
             </style>
 
             <script>
-            /* Position each marker at the centroid of its associated SVG path using getBBox() */
+            /* Position each marker at the centroid of its associated SVG path using getBBox()
+               Position is calculated by dividing by scale to match Editor/Frontend JS behavior */
             (function() {
                 function placeMarkers(wrapper) {
                     var svgEl = wrapper.querySelector('svg');
@@ -267,6 +271,9 @@ class SvgDataMapBlock extends Block
                     var layerRect = layer.getBoundingClientRect();
                     var ctm = svgEl.getScreenCTM();
                     if (!ctm) return;
+
+                    // Track current zoom scale (default = 1)
+                    var currentScale = 1;
 
                     layer.querySelectorAll('.jankx-marker-btn').forEach(function(btn) {
                         var pathId = btn.getAttribute('data-path-id');
@@ -286,14 +293,16 @@ class SvgDataMapBlock extends Block
                             pt.y = cy;
                             var screenPt = pt.matrixTransform(ctm);
 
-                            // Convert screen coords → layer-relative coords
-                            var relX = screenPt.x - layerRect.left;
-                            var relY = screenPt.y - layerRect.top;
+                            // Correct coordinate for internal CSS space which is scaled by CSS transform
+                            // Divide by currentScale to match Editor/Frontend JS behavior
+                            var relX = (screenPt.x - layerRect.left) / currentScale;
+                            var relY = (screenPt.y - layerRect.top) / currentScale;
 
                             btn.style.position  = 'absolute';
                             btn.style.left      = relX + 'px';
                             btn.style.top       = relY + 'px';
-                            btn.style.transform = 'translate(-50%, -50%)';
+                            btn.style.transform = 'translate(-50%, -50%) scale(' + currentScale + ')';
+                            btn.style.transformOrigin = 'center bottom';
                             btn.style.display   = 'flex';
                         } catch(e) {
                             // getBBox can fail for invisible elements; skip

@@ -254,8 +254,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const screenPt = pt.matrixTransform(ctm);
                                 const layerRect = layer.getBoundingClientRect();
 
-                                const relX = screenPt.x - layerRect.left;
-                                const relY = screenPt.y - layerRect.top;
+                                // Correct coordinate for internal CSS space which is scaled by CSS transform
+                                // Divide by currentScale to match Editor mode behavior
+                                const relX = (screenPt.x - layerRect.left) / currentScale;
+                                const relY = (screenPt.y - layerRect.top) / currentScale;
 
                                 markerBtn.style.left = `${relX}px`;
                                 markerBtn.style.top = `${relY}px`;
