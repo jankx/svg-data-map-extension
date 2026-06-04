@@ -510,12 +510,15 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
       const pathEl = svgElement.querySelector(`#${pathId}`);
       if (pathEl && typeof (pathEl as any).getBBox === 'function') {
         try {
+          // Find the parent group element containing the path
+          const groupEl = (pathEl as any).closest('g') || svgElement;
+
           const bbox = (pathEl as any).getBBox();
           const cx = bbox.x + bbox.width / 2;
           const cy = bbox.y + bbox.height / 2;
 
-          // Use svg element's CTM for stability across zoom operations
-          const ctm = svgElement.getScreenCTM();
+          // Use group element's CTM to base on the group containing the path
+          const ctm = groupEl.getCTM() || svgElement.getScreenCTM();
           if (ctm) {
             const pt = (svgElement as any).createSVGPoint();
             pt.x = cx;

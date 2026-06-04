@@ -64,24 +64,28 @@ class SvgDataMapInfoBlock extends Block
                 
                 <div class="jankx-svg-map-info-content h-full">
                      <!-- This will be populated by frontend.js when a region is selected -->
-                     <div class="flex flex-col items-center justify-center text-center h-full min-h-[450px]">
-                        <div class="relative mb-4">
-                            <div class="absolute inset-0 bg-indigo-100 rounded-full blur-xl opacity-60 animate-pulse"></div>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1E4D65" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="relative opacity-80 animate-spin-slow" style="animation: spin 8s linear infinite;"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                     <?php if (trim($content)) : ?>
+                        <?php echo $content; ?>
+                     <?php else : ?>
+                        <div class="flex flex-col items-center justify-center text-center h-full min-h-[450px]">
+                            <div class="relative mb-4">
+                                <div class="absolute inset-0 bg-indigo-100 rounded-full blur-xl opacity-60 animate-pulse"></div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1E4D65" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="relative opacity-80 animate-spin-slow" style="animation: spin 8s linear infinite;"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                            </div>
+
+                            <h3 class="text-lg font-bold text-slate-800 leading-snug m-0">
+                                Bắt đầu Hành Trình Khám Phá
+                            </h3>
+
+                            <p class="text-slate-600 text-xs mt-2 max-w-xs leading-relaxed m-0">
+                                Vui lòng hover và nhấp chuột chọn bất kỳ địa danh nào trên bản đồ để hiển thị thông tin dữ liệu chi tiết.
+                            </p>
+
+                            <div class="mt-8 bg-white/50 border border-sky-200/40 p-3 rounded-lg max-w-xs text-[11px] text-slate-500">
+                                <span class="font-semibold text-slate-700 block mb-0.5">💡 Gợi ý nhanh</span> Chọn các vùng có màu xanh đậm trên bản đồ để xem nội dung di sản liên quan!
+                            </div>
                         </div>
-
-                        <h3 class="text-lg font-bold text-slate-800 leading-snug m-0">
-                            Bắt đầu Hành Trình Khám Phá
-                        </h3>
-
-                        <p class="text-slate-600 text-xs mt-2 max-w-xs leading-relaxed m-0">
-                            Vui lòng hover và nhấp chuột chọn bất kỳ địa danh nào trên bản đồ để hiển thị thông tin dữ liệu chi tiết.
-                        </p>
-
-                        <div class="mt-8 bg-white/50 border border-sky-200/40 p-3 rounded-lg max-w-xs text-[11px] text-slate-500">
-                            <span class="font-semibold text-slate-700 block mb-0.5">💡 Gợi ý nhanh</span> Chọn các vùng có màu xanh đậm trên bản đồ để xem nội dung di sản liên quan!
-                        </div>
-                     </div>
+                     <?php endif; ?>
                 </div>
             </div>
             <style>
