@@ -337,6 +337,17 @@ export function SVGMapperEditor({
     });
   };
 
+  // Handle drag-to-reposition marker: save the pixel offset on the marker config
+  const handleMarkerDragged = (regionId: string, offsetX: number, offsetY: number) => {
+    onChangeConfig({
+      ...config,
+      regions: config.regions.map(r =>
+        r.id === regionId && r.marker
+          ? { ...r, marker: { ...r.marker, markerOffsetX: offsetX, markerOffsetY: offsetY } }
+          : r
+      )
+    });
+  };
 
   // Export full mapping setup to a JSON file (downloadable)
   const handleExportJson = () => {
@@ -595,6 +606,7 @@ export function SVGMapperEditor({
             isBuilderMode={true}
             onSelectPathId={handleSelectPathId}
             onPlaceMarkerCoords={handleMapMarkerCoordsPlaced}
+            onMarkerDragged={handleMarkerDragged}
             selectedPathIdsForGrouping={selectedPathsForNewRegion}
             isPlacingMarker={isPlacingMarker}
           />

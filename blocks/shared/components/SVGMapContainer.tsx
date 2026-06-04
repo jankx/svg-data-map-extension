@@ -30,6 +30,7 @@ interface SVGMapContainerProps {
   isBuilderMode?: boolean;
   onSelectPathId?: (pathId: string) => void;
   onPlaceMarkerCoords?: (coords: { x: number; y: number }) => void;
+  onMarkerDragged?: (regionId: string, offsetX: number, offsetY: number) => void;
   selectedPathIdsForGrouping?: string[];
   isPlacingMarker?: boolean;
   // Zoom state props for Gutenberg persistence
@@ -47,6 +48,7 @@ export function SVGMapContainer({
   isBuilderMode = false,
   onSelectPathId,
   onPlaceMarkerCoords,
+  onMarkerDragged,
   selectedPathIdsForGrouping = [],
   isPlacingMarker = false,
   zoomScale = 1,
@@ -394,6 +396,8 @@ export function SVGMapContainer({
                 onSelectRegion={onSelectRegion}
                 getMarkerIcon={getMarkerIcon}
                 scale={scale}
+                isBuilderMode={isBuilderMode}
+                onMarkerDragged={onMarkerDragged}
               />
             );
           })}
@@ -485,8 +489,16 @@ export function SVGMapContainer({
   );
 }
 
-const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, svgWrapperRef, onSelectRegion, getMarkerIcon, scale = 1 }: any) => {
+const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, svgWrapperRef, onSelectRegion, getMarkerIcon, scale = 1, isBuilderMode = false, onMarkerDragged }: any) => {
   const markerRef = React.useRef<HTMLButtonElement>(null);
+
+  // Drag state: pixel offset relative to the centroid position
+  const [dragOffset, setDragOffset] = React.useState<{ x: number; y: number } | null>(null);
+  const isDraggingRef = React.useRef(false);
+  const dragStartRef = React.useRef<{ mouseX: number; mouseY: number; baseLeft: number; baseTop: number } | null>(null);
+
+  // Computed centroid position (px in layer space)
+  const centroidRef = React.useRef<{ left: number; top: number } | null>(null);
 
   React.useLayoutEffect(() => {
     const updatePosition = () => {
@@ -510,12 +522,17 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
             const screenPt = pt.matrixTransform(ctm);
             const layerRect = layer.getBoundingClientRect();
 
-            // Correct coordinate for internal CSS space which is scaled by CSS transform
             const relX = (screenPt.x - layerRect.left) / scale;
             const relY = (screenPt.y - layerRect.top) / scale;
 
-            markerRef.current.style.left = `${relX}px`;
-            markerRef.current.style.top = `${relY}px`;
+            centroidRef.current = { left: relX, top: relY };
+
+            // Apply stored drag offset (if user has dragged it before)
+            const offX = (region.marker.markerOffsetX ?? 0) / scale;
+            const offY = (region.marker.markerOffsetY ?? 0) / scale;
+
+            markerRef.current.style.left = `${relX + offX}px`;
+            markerRef.current.style.top = `${relY + offY}px`;
           }
         } catch (e) {
           console.warn('Failed to align marker precisely:', e);
@@ -523,32 +540,106 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
       }
     };
 
-    updatePosition();
-    const observer = new ResizeObserver(updatePosition);
+    if (!isDraggingRef.current) {
+      updatePosition();
+    }
+    const observer = new ResizeObserver(() => { if (!isDraggingRef.current) updatePosition(); });
     if (svgWrapperRef.current) observer.observe(svgWrapperRef.current);
 
     return () => observer.disconnect();
-  }, [scale, pathId, region]);
+  }, [scale, pathId, region, region.marker.markerOffsetX, region.marker.markerOffsetY]);
+
+  // --- Drag handlers (builder mode only) ---
+  const handleMarkerMouseDown = (e: React.MouseEvent) => {
+    if (!isBuilderMode) return;
+    e.stopPropagation();
+    e.preventDefault();
+    isDraggingRef.current = true;
+
+    const curLeft = parseFloat(markerRef.current?.style.left || '0');
+    const curTop = parseFloat(markerRef.current?.style.top || '0');
+    dragStartRef.current = { mouseX: e.clientX, mouseY: e.clientY, baseLeft: curLeft, baseTop: curTop };
+  };
+
+  React.useEffect(() => {
+    if (!isBuilderMode) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current || !dragStartRef.current || !markerRef.current) return;
+      const dx = (e.clientX - dragStartRef.current.mouseX) / scale;
+      const dy = (e.clientY - dragStartRef.current.mouseY) / scale;
+      const newLeft = dragStartRef.current.baseLeft + dx;
+      const newTop = dragStartRef.current.baseTop + dy;
+      markerRef.current.style.left = `${newLeft}px`;
+      markerRef.current.style.top = `${newTop}px`;
+      markerRef.current.style.cursor = 'grabbing';
+      setDragOffset({ x: dx, y: dy }); // force re-render for visual feedback
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (!isDraggingRef.current || !dragStartRef.current || !centroidRef.current) return;
+      isDraggingRef.current = false;
+      markerRef.current && (markerRef.current.style.cursor = '');
+
+      const dx = (e.clientX - dragStartRef.current.mouseX) / scale;
+      const dy = (e.clientY - dragStartRef.current.mouseY) / scale;
+      // Convert pixel offset back to screen pixels (scale=1 space) for storage
+      const storedOffX = ((region.marker.markerOffsetX ?? 0)) + dx * scale;
+      const storedOffY = ((region.marker.markerOffsetY ?? 0)) + dy * scale;
+
+      dragStartRef.current = null;
+      setDragOffset(null);
+
+      if (onMarkerDragged) {
+        onMarkerDragged(region.id, storedOffX, storedOffY);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isBuilderMode, scale, region.id, region.marker.markerOffsetX, region.marker.markerOffsetY]);
+
+  const isDraggingNow = isDraggingRef.current;
 
   return (
     <button
       ref={markerRef}
       id={`marker-btn-${region.marker.id}`}
-      className={`absolute pointer-events-auto flex flex-col items-center group/marker no-drag ${region.marker.showAnimation ? 'jankx-marker-pulse' : ''}`}
+      className={`absolute pointer-events-auto flex flex-col items-center group/marker no-drag ${region.marker.showAnimation && !isDraggingNow ? 'jankx-marker-pulse' : ''}`}
       style={{
         left: '-9999px',
         top: '-9999px',
         zIndex: isSelected ? 40 : 20,
-        transform: `translate(-50%, -50%)`,
+        transform: `translate(-50%, -50%) scale(${1 / scale})`,
         transformOrigin: 'center bottom',
-        transition: 'transform 0.15s ease',
+        transition: isDraggingNow ? 'none' : 'transform 0.15s ease',
+        cursor: isBuilderMode ? (isDraggingNow ? 'grabbing' : 'grab') : 'pointer',
       }}
+      onMouseDown={handleMarkerMouseDown}
       onClick={(e) => {
         e.stopPropagation();
-        onSelectRegion(isSelected ? null : region.id);
+        if (!isDraggingNow) {
+          onSelectRegion(isSelected ? null : region.id);
+        }
       }}
     >
-      {isSelected && (
+      {/* Drag handle hint in builder mode */}
+      {isBuilderMode && (
+        <div
+          title="Kéo để di chuyển pin"
+          className={`absolute -top-4 text-[8px] font-bold px-1 py-0.5 rounded transition-opacity ${dragOffset ? 'opacity-100 bg-violet-600 text-white' : 'opacity-0 group-hover/marker:opacity-100 bg-slate-700 text-white'
+            }`}
+          style={{ whiteSpace: 'nowrap', pointerEvents: 'none' }}
+        >
+          {dragOffset ? '⤢ Đang di chuyển' : '✥ Kéo để di chuyển'}
+        </div>
+      )}
+
+      {isSelected && !isDraggingNow && (
         <span
           className="absolute inline-flex rounded-full opacity-60 animate-ping"
           style={{ width: 26, height: 26, backgroundColor: markerColor }}
@@ -557,22 +648,33 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
 
       {/* Base pin size: 26x26 at scale=1 */}
       <div
-        className={`flex items-center justify-center border-2 border-white cursor-pointer transition-all duration-200 ${isSelected ? 'shadow-lg' : 'group-hover/marker:brightness-110 shadow-sm'}`}
+        className={`flex items-center justify-center border-2 cursor-pointer transition-all duration-200 ${isDraggingNow
+            ? 'border-violet-400 shadow-xl shadow-violet-500/40'
+            : isSelected
+              ? 'border-white shadow-lg'
+              : 'border-white group-hover/marker:brightness-110 shadow-sm'
+          }`}
         style={{
           width: 26,
           height: 26,
           borderRadius: '50%',
-          boxShadow: isSelected ? '0 4px 12px rgba(30,58,138,0.4)' : '0 2px 6px rgba(0,0,0,0.2)',
-          backgroundColor: isSelected ? '#1e3a8a' : markerColor,
+          boxShadow: isDraggingNow
+            ? '0 8px 24px rgba(139,92,246,0.5)'
+            : isSelected
+              ? '0 4px 12px rgba(30,58,138,0.4)'
+              : '0 2px 6px rgba(0,0,0,0.2)',
+          backgroundColor: isDraggingNow ? '#7c3aed' : isSelected ? '#1e3a8a' : markerColor,
         }}
       >
         {getMarkerIcon(region.marker.iconType, 13)}
       </div>
 
       {config.settings?.showMarkerLabels !== false && region.marker.label && (
-        <div className={`mt-0.5 font-sans font-bold rounded shadow-sm transition-all border ${isSelected
-          ? 'bg-blue-900 text-white border-blue-800'
-          : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100'
+        <div className={`mt-0.5 font-sans font-bold rounded shadow-sm transition-all border ${isDraggingNow
+            ? 'bg-violet-700 text-white border-violet-600'
+            : isSelected
+              ? 'bg-blue-900 text-white border-blue-800'
+              : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100'
           }`}
           style={{ fontSize: 9, padding: '1px 4px', whiteSpace: 'nowrap', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {region.marker.label}

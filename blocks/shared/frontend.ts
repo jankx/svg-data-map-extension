@@ -259,8 +259,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const relX = (screenPt.x - layerRect.left) / currentScale;
                                 const relY = (screenPt.y - layerRect.top) / currentScale;
 
-                                markerBtn.style.left = `${relX}px`;
-                                markerBtn.style.top = `${relY}px`;
+                                // Apply stored drag offset from config if available
+                                const region = regionMap.get(rid);
+                                const offX = (region?.marker?.markerOffsetX ?? 0) / currentScale;
+                                const offY = (region?.marker?.markerOffsetY ?? 0) / currentScale;
+
+                                markerBtn.style.left = `${relX + offX}px`;
+                                markerBtn.style.top = `${relY + offY}px`;
                                 markerBtn.style.transform = `translate(-50%, -50%)`;
                                 markerBtn.style.transformOrigin = 'center bottom';
                                 markerBtn.style.display = 'flex';

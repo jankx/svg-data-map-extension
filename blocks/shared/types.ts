@@ -20,6 +20,8 @@ export interface MarkerConfig {
   iconType: MarkerIconType;
   label?: string;
   showAnimation?: boolean;
+  markerOffsetX?: number; // pixel offset from centroid (screen px at scale=1), saved after drag
+  markerOffsetY?: number; // pixel offset from centroid (screen px at scale=1), saved after drag
 }
 
 export interface RegionConfig {
