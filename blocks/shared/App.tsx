@@ -171,7 +171,7 @@ export default function App({
 
       {/* 1. Header Toolbar navigation element (only in Gutenberg/Builder mode) */}
       {isGutenberg && (
-        <header className={`${activeTab === 'builder' ? 'px-4 py-3' : 'sticky top-0 z-50 px-6 py-4'} bg-white/95 backdrop-blur-md border-b border-indigo-50/50 shadow-sm`}>
+        <header className={`${activeTab === 'builder' ? 'px-4 py-3' : 'px-6 py-4'} bg-white/95 backdrop-blur-md border-b border-indigo-50/50 shadow-sm`}>
           <div className={`${activeTab === 'builder' ? '' : 'max-w-7xl mx-auto'} flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
