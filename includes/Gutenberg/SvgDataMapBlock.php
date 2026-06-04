@@ -266,22 +266,20 @@ class SvgDataMapBlock extends Block
                     var svgEl = wrapper.querySelector('svg');
                     var layer = wrapper.querySelector('.jankx-markers-layer');
                     if (!svgEl || !layer) {
-                        console.log('SVG or layer not found, skipping');
+                        console && console.log && console.log('[SVG Map] SVG or layer not found, skipping');
                         return;
                     }
 
                     var layerRect = layer.getBoundingClientRect();
                     var ctm = svgEl.getScreenCTM();
                     if (!ctm) {
-                        console.log('SVG getScreenCTM() returned null, SVG may not be ready');
+                        console && console.log && console.log('[SVG Map] SVG getScreenCTM() returned null, SVG may not be ready');
                         return;
                     }
 
-                    // Track current zoom scale (default = 1)
                     var currentScale = 1;
-
                     var markers = layer.querySelectorAll('.jankx-marker-btn');
-                    console.log('Found ' + markers.length + ' markers to position');
+                    console && console.log && console.log('[SVG Map] Found ' + markers.length + ' markers to position');
 
                     markers.forEach(function(btn) {
                         var pathId = btn.getAttribute('data-path-id');
@@ -307,28 +305,26 @@ class SvgDataMapBlock extends Block
                             btn.style.top       = relY + 'px';
                             btn.style.transform = 'translate(-50%, -50%) scale(' + currentScale + ')';
                             btn.style.opacity   = '1';
-                            console.log('Positioned marker for path: ' + pathId);
+                            console && console.log && console.log('[SVG Map] Positioned marker for path: ' + pathId);
                         } catch(e) {
-                            console.warn('Failed to place marker for path: ' + pathId, e);
+                            console && console.log && console.log('[SVG Map] Failed to place marker for path: ' + pathId, e);
                         }
                     });
                 }
 
                 function initAll() {
-                    console.log('Initializing markers...');
+                    console && console.log && console.log('[SVG Map] Initializing markers...');
                     var wrappers = document.querySelectorAll('.jankx-svg-map-wrapper');
-                    console.log('Found ' + wrappers.length + ' wrappers');
+                    console && console.log && console.log('[SVG Map] Found ' + wrappers.length + ' wrappers');
                     wrappers.forEach(placeMarkers);
                 }
 
-                // Run immediately if DOM is ready, otherwise wait
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', initAll);
                 } else {
                     initAll();
                 }
 
-                // Re-run with delays to ensure SVG is fully rendered
                 setTimeout(initAll, 100);
                 setTimeout(initAll, 300);
                 setTimeout(initAll, 500);
