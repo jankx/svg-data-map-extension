@@ -260,20 +260,30 @@ class SvgDataMapBlock extends Block
             </style>
 
             <script>
-            /* Position each marker at the centroid of its associated SVG path using getBBox()
-               Position is calculated by dividing by scale to match Editor/Frontend JS behavior */
+            /* Position each marker at the centroid of its associated SVG path using getBBox() */
             (function() {
                 function placeMarkers(wrapper) {
                     var svgEl = wrapper.querySelector('svg');
                     var layer = wrapper.querySelector('.jankx-markers-layer');
-                    if (!svgEl || !layer) return;
+                    if (!svgEl || !layer) {
+                        console.log('SVG or layer not found, skipping');
+                        return;
+                    }
 
                     var layerRect = layer.getBoundingClientRect();
+                    var ctm = svgEl.getScreenCTM();
+                    if (!ctm) {
+                        console.log('SVG getScreenCTM() returned null, SVG may not be ready');
+                        return;
+                    }
 
                     // Track current zoom scale (default = 1)
                     var currentScale = 1;
 
-                    layer.querySelectorAll('.jankx-marker-btn').forEach(function(btn) {
+                    var markers = layer.querySelectorAll('.jankx-marker-btn');
+                    console.log('Found ' + markers.length + ' markers to position');
+
+                    markers.forEach(function(btn) {
                         var pathId = btn.getAttribute('data-path-id');
                         if (!pathId) return;
 
@@ -285,47 +295,45 @@ class SvgDataMapBlock extends Block
                             var cx     = bbox.x + bbox.width  / 2;
                             var cy     = bbox.y + bbox.height / 2;
 
-                            // Convert SVG user-space coords → screen coords
-                            // Use svg element's CTM for stability - group detection may fail in some cases
                             var pt = svgEl.createSVGPoint();
                             pt.x = cx;
                             pt.y = cy;
-                            var screenPt = pt.matrixTransform(svgEl.getScreenCTM());
+                            var screenPt = pt.matrixTransform(ctm);
 
-                            // Correct coordinate for internal CSS space which is scaled by CSS transform
-                            // Divide by currentScale to match Editor/Frontend JS behavior
                             var relX = (screenPt.x - layerRect.left) / currentScale;
                             var relY = (screenPt.y - layerRect.top) / currentScale;
 
-                            // Only set position and opacity - other styles are in HTML
                             btn.style.left      = relX + 'px';
                             btn.style.top       = relY + 'px';
-                            btn.style.opacity   = '1'; // Make marker visible
+                            btn.style.transform = 'translate(-50%, -50%) scale(' + currentScale + ')';
+                            btn.style.opacity   = '1';
+                            console.log('Positioned marker for path: ' + pathId);
                         } catch(e) {
-                            // getBBox can fail for invisible elements; skip
+                            console.warn('Failed to place marker for path: ' + pathId, e);
                         }
                     });
                 }
 
                 function initAll() {
-                    document.querySelectorAll('.jankx-svg-map-wrapper').forEach(placeMarkers);
+                    console.log('Initializing markers...');
+                    var wrappers = document.querySelectorAll('.jankx-svg-map-wrapper');
+                    console.log('Found ' + wrappers.length + ' wrappers');
+                    wrappers.forEach(placeMarkers);
                 }
 
-                // Ensure markers are rendered on load - run multiple times to be safe
+                // Run immediately if DOM is ready, otherwise wait
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        initAll();
-                        setTimeout(initAll, 50);
-                        setTimeout(initAll, 150);
-                    });
+                    document.addEventListener('DOMContentLoaded', initAll);
                 } else {
                     initAll();
-                    setTimeout(initAll, 50);
-                    setTimeout(initAll, 150);
                 }
 
+                // Re-run with delays to ensure SVG is fully rendered
+                setTimeout(initAll, 100);
+                setTimeout(initAll, 300);
+                setTimeout(initAll, 500);
+
                 window.addEventListener('resize', function() {
-                    // Re-run on resize since layer rect and CTM change
                     setTimeout(initAll, 50);
                 });
             })();
