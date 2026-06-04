@@ -510,15 +510,12 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
       const pathEl = svgElement.querySelector(`#${pathId}`);
       if (pathEl && typeof (pathEl as any).getBBox === 'function') {
         try {
-          // Find the parent group element containing the path
-          const groupEl = (pathEl as any).closest('g') || svgElement;
-
           const bbox = (pathEl as any).getBBox();
           const cx = bbox.x + bbox.width / 2;
           const cy = bbox.y + bbox.height / 2;
 
-          // Use group element's CTM to base on the group containing the path
-          const ctm = groupEl.getCTM() || svgElement.getScreenCTM();
+          // Use svg element's CTM for stability - group detection may fail in some cases
+          const ctm = svgElement.getScreenCTM();
           if (ctm) {
             const pt = (svgElement as any).createSVGPoint();
             pt.x = cx;
@@ -680,7 +677,7 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
         {getMarkerIcon(region.marker.iconType, 13)}
       </div>
 
-      {config.settings?.showMarkerLabels !== false && region.marker.label && (
+      {((region.marker.showLabel !== false) || config.settings?.showMarkerLabels !== false) && region.marker.label && (
         <div className={`mt-0.5 font-sans font-bold rounded shadow-sm transition-all border ${isDraggingNow
           ? 'bg-violet-700 text-white border-violet-600'
           : isSelected

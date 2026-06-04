@@ -157,7 +157,7 @@ class SvgDataMapBlock extends Block
                                             <?php echo $this->getMarkerIcon($marker['iconType'] ?? 'pin', 13); ?>
                                         </div>
 
-                                        <?php if (!empty($marker['label']) && (!isset($settings['showMarkerLabels']) || $settings['showMarkerLabels'] !== false)): ?>
+                                        <?php if (!empty($marker['label']) && (!isset($settings['showMarkerLabels']) || $settings['showMarkerLabels'] !== false) && (!isset($marker['showLabel']) || $marker['showLabel'] !== false)): ?>
                                             <div class="marker-label" style="margin-top:2px;font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;background:#fff;color:#1e293b;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.1);white-space:nowrap;opacity:0.9;transition:all 0.2s ease;max-width:72px;overflow:hidden;text-overflow:ellipsis;">
                                                 <?php echo esc_html($marker['label']); ?>
                                             </div>
@@ -281,19 +281,16 @@ class SvgDataMapBlock extends Block
                         if (!pathEl || typeof pathEl.getBBox !== 'function') return;
 
                         try {
-                            // Find the parent group element containing the path
-                            var groupEl = pathEl.closest('g') || svgEl;
-
                             var bbox   = pathEl.getBBox();
                             var cx     = bbox.x + bbox.width  / 2;
                             var cy     = bbox.y + bbox.height / 2;
 
                             // Convert SVG user-space coords → screen coords
-                            // Use group element's CTM to base on the group containing the path
+                            // Use svg element's CTM for stability - group detection may fail in some cases
                             var pt = svgEl.createSVGPoint();
                             pt.x = cx;
                             pt.y = cy;
-                            var screenPt = pt.matrixTransform(groupEl.getCTM() || svgEl.getScreenCTM());
+                            var screenPt = pt.matrixTransform(svgEl.getScreenCTM());
 
                             // Correct coordinate for internal CSS space which is scaled by CSS transform
                             // Divide by currentScale to match Editor/Frontend JS behavior

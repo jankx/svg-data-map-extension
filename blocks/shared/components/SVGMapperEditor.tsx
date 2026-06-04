@@ -987,6 +987,19 @@ export function SVGMapperEditor({
 
                       <div className="col-span-2 flex items-center gap-2 py-1">
                         <input
+                          id={`marker-show-label-${activeRegionObj.id}`}
+                          type="checkbox"
+                          className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500"
+                          checked={activeRegionObj.marker.showLabel !== false}
+                          onChange={(e) => handleUpdateRegionMarkerField('showLabel', e.target.checked ? true : false)}
+                        />
+                        <label htmlFor={`marker-show-label-${activeRegionObj.id}`} className="text-[9px] font-bold text-slate-500 uppercase cursor-pointer">
+                          Hiện nhãn cho Pin này
+                        </label>
+                      </div>
+
+                      <div className="col-span-2 flex items-center gap-2 py-1">
+                        <input
                           id={`marker-anim-${activeRegionObj.id}`}
                           type="checkbox"
                           className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500"

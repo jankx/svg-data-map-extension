@@ -242,15 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (pathEl && layer && typeof pathEl.getBBox === 'function') {
                         try {
-                            // Find the parent group element containing the path
-                            const groupEl = pathEl.closest('g') || svgEl;
-
                             const bbox = pathEl.getBBox();
                             const cx = bbox.x + bbox.width / 2;
                             const cy = bbox.y + bbox.height / 2;
 
-                            // Use group element's CTM to base on the group containing the path
-                            const ctm = groupEl.getCTM() || svgEl.getScreenCTM();
+                            // Use svg element's CTM for stability - group detection may fail in some cases
+                            const ctm = svgEl.getScreenCTM();
                             if (ctm) {
                                 const pt = (svgEl as any).createSVGPoint();
                                 pt.x = cx;
