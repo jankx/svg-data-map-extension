@@ -514,10 +514,10 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
           const cx = bbox.x + bbox.width / 2;
           const cy = bbox.y + bbox.height / 2;
 
-          // Use path element's CTM to base on the selected path, not the svg
-          const ctm = pathEl.getCTM();
+          // Use svg element's CTM for stability across zoom operations
+          const ctm = svgElement.getScreenCTM();
           if (ctm) {
-            const pt = svgElement.createSVGPoint();
+            const pt = (svgElement as any).createSVGPoint();
             pt.x = cx;
             pt.y = cy;
             const screenPt = pt.matrixTransform(ctm);
