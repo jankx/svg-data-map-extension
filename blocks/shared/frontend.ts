@@ -246,7 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const cx = bbox.x + bbox.width / 2;
                             const cy = bbox.y + bbox.height / 2;
 
-                            const ctm = svgEl.getScreenCTM();
+                            // Use path element's CTM to base on the selected path, not the svg
+                            const ctm = pathEl.getCTM();
                             if (ctm) {
                                 const pt = (svgEl as any).createSVGPoint();
                                 pt.x = cx;

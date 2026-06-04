@@ -269,8 +269,6 @@ class SvgDataMapBlock extends Block
                     if (!svgEl || !layer) return;
 
                     var layerRect = layer.getBoundingClientRect();
-                    var ctm = svgEl.getScreenCTM();
-                    if (!ctm) return;
 
                     // Track current zoom scale (default = 1)
                     var currentScale = 1;
@@ -288,10 +286,11 @@ class SvgDataMapBlock extends Block
                             var cy     = bbox.y + bbox.height / 2;
 
                             // Convert SVG user-space coords → screen coords
+                            // Use path element's CTM to base on the selected path, not the svg
                             var pt = svgEl.createSVGPoint();
                             pt.x = cx;
                             pt.y = cy;
-                            var screenPt = pt.matrixTransform(ctm);
+                            var screenPt = pt.matrixTransform(pathEl.getCTM());
 
                             // Correct coordinate for internal CSS space which is scaled by CSS transform
                             // Divide by currentScale to match Editor/Frontend JS behavior
