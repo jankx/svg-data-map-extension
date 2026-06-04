@@ -542,12 +542,19 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
 
     if (!isDraggingRef.current) {
       updatePosition();
+      // Second pass after a tiny delay for cases where SVG parsing/rendering is async
+      const timer = setTimeout(updatePosition, 100);
+      const timerLong = setTimeout(updatePosition, 500);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(timerLong);
+      };
     }
     const observer = new ResizeObserver(() => { if (!isDraggingRef.current) updatePosition(); });
     if (svgWrapperRef.current) observer.observe(svgWrapperRef.current);
 
     return () => observer.disconnect();
-  }, [scale, pathId, region, region.marker.markerOffsetX, region.marker.markerOffsetY]);
+  }, [scale, pathId, region, region.marker.markerOffsetX, region.marker.markerOffsetY, config.svgContent]);
 
   // --- Drag handlers (builder mode only) ---
   const handleMarkerMouseDown = (e: React.MouseEvent) => {
@@ -649,10 +656,10 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
       {/* Base pin size: 26x26 at scale=1 */}
       <div
         className={`flex items-center justify-center border-2 cursor-pointer transition-all duration-200 ${isDraggingNow
-            ? 'border-violet-400 shadow-xl shadow-violet-500/40'
-            : isSelected
-              ? 'border-white shadow-lg'
-              : 'border-white group-hover/marker:brightness-110 shadow-sm'
+          ? 'border-violet-400 shadow-xl shadow-violet-500/40'
+          : isSelected
+            ? 'border-white shadow-lg'
+            : 'border-white group-hover/marker:brightness-110 shadow-sm'
           }`}
         style={{
           width: 26,
@@ -671,10 +678,10 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
 
       {config.settings?.showMarkerLabels !== false && region.marker.label && (
         <div className={`mt-0.5 font-sans font-bold rounded shadow-sm transition-all border ${isDraggingNow
-            ? 'bg-violet-700 text-white border-violet-600'
-            : isSelected
-              ? 'bg-blue-900 text-white border-blue-800'
-              : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100'
+          ? 'bg-violet-700 text-white border-violet-600'
+          : isSelected
+            ? 'bg-blue-900 text-white border-blue-800'
+            : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100'
           }`}
           style={{ fontSize: 9, padding: '1px 4px', whiteSpace: 'nowrap', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {region.marker.label}
