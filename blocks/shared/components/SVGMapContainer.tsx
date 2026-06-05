@@ -259,7 +259,9 @@ export function SVGMapContainer({
     const selectedColor = config.settings?.selectedFillColor || '#3b82f6';
 
     let css = `
-      #vietnam-regions path, #vietnam-regions circle, #exhibition-zones rect, #exhibition-zones path {
+      #vietnam-regions path, #vietnam-regions circle, #exhibition-zones rect, #exhibition-zones path,
+      svg path, svg circle, svg rect, svg polygon {
+        fill: ${defaultColor} !important;
         transition: fill 0.2s ease, opacity 0.2s ease, stroke-width 0.2s ease;
       }
     `;
