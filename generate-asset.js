@@ -12,16 +12,18 @@ if (existsSync(srcCss)) {
     console.log('Copied CSS to', dstCss);
 }
 
+const version = Date.now().toString();
+
 // Write index.asset.php (editor script - requires WP libs)
 writeFileSync(
     join(__dirname, 'dist/assets/index.asset.php'),
-    `<?php return array('dependencies' => array('wp-blocks', 'wp-element', 'wp-components', 'wp-i18n', 'wp-block-editor'), 'version' => '1.0.0');`
+    `<?php return array('dependencies' => array('wp-blocks', 'wp-element', 'wp-components', 'wp-i18n', 'wp-block-editor'), 'version' => '${version}');`
 );
 
 // Write frontend.asset.php (no WP dependencies — pure vanilla JS)
 writeFileSync(
     join(__dirname, 'dist/assets/frontend.asset.php'),
-    `<?php return array('dependencies' => array(), 'version' => '1.0.0');`
+    `<?php return array('dependencies' => array(), 'version' => '${version}');`
 );
 
 console.log('Asset PHP files generated.');
