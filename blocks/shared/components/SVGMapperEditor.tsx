@@ -513,42 +513,49 @@ export function SVGMapperEditor({
               </div>
             )}
           </div>
+        </div>
 
-          {/* Quick Grouping form */}
-          {selectedPathsForNewRegion.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-100">
-              <div className="bg-purple-50 rounded-xl p-3 border border-purple-100">
-                <span className="text-[10px] font-bold text-purple-700 uppercase block mb-1">Gom Nhóm Mới ({selectedPathsForNewRegion.length} vectors)</span>
-                <input
-                  id="input-new-region-name"
-                  type="text"
-                  placeholder="Nhập tên địa danh..."
-                  className="w-full text-xs p-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
-                  value={newRegionName}
-                  onChange={(e) => setNewRegionName(e.target.value)}
-                />
-
-                <div className="mt-2 flex gap-1.5">
-                  <button
-                    id="btn-confirm-group"
-                    onClick={handleCreateRegion}
-                    disabled={!newRegionName.trim()}
-                    className="flex-1 bg-purple-600 disabled:opacity-50 hover:bg-purple-700 text-white font-bold text-xs p-1.5 rounded-lg text-center cursor-pointer transition"
-                  >
-                    Định vị nhóm
-                  </button>
-                  <button
-                    id="btn-cancel-group"
-                    onClick={() => setSelectedPathsForNewRegion([])}
-                    className="bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold text-xs p-1.5 rounded-lg text-center cursor-pointer"
-                  >
-                    Hùy
-                  </button>
-                </div>
+        {/* Sticky Quick Grouping panel — outside the scrollable list, anchored to bottom of card */}
+        {selectedPathsForNewRegion.length > 0 && (
+          <div className="sticky bottom-0 z-20 mt-2">
+            <div className="bg-purple-50/95 backdrop-blur-sm rounded-xl p-3 border border-purple-200 shadow-lg shadow-purple-100/60">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-purple-700 uppercase flex items-center gap-1">
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-600 text-white text-[8px] font-bold">{selectedPathsForNewRegion.length}</span>
+                  Gom Nhóm Mới
+                </span>
+                <span className="text-[9px] text-purple-500 italic">{selectedPathsForNewRegion.join(', ').slice(0, 40)}{selectedPathsForNewRegion.join(', ').length > 40 ? '...' : ''}</span>
+              </div>
+              <input
+                id="input-new-region-name"
+                type="text"
+                placeholder="Nhập tên địa danh..."
+                className="w-full text-xs p-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white shadow-sm"
+                value={newRegionName}
+                onChange={(e) => setNewRegionName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && newRegionName.trim()) handleCreateRegion(); }}
+                autoFocus
+              />
+              <div className="mt-2 flex gap-1.5">
+                <button
+                  id="btn-confirm-group"
+                  onClick={handleCreateRegion}
+                  disabled={!newRegionName.trim()}
+                  className="flex-1 bg-purple-600 disabled:opacity-50 hover:bg-purple-700 active:scale-95 text-white font-bold text-xs p-1.5 rounded-lg text-center cursor-pointer transition-all"
+                >
+                  ✓ Định vị nhóm
+                </button>
+                <button
+                  id="btn-cancel-group"
+                  onClick={() => setSelectedPathsForNewRegion([])}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold text-xs p-1.5 rounded-lg text-center cursor-pointer transition-all active:scale-95"
+                >
+                  ✕
+                </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* 2. Middle Interactive Map Builder Container */}
@@ -971,8 +978,24 @@ export function SVGMapperEditor({
                           <option value="hotel">🛌 Khách sạn</option>
                           <option value="food">🍽️ Ẩm thực</option>
                           <option value="scenic">📷 Danh thắng</option>
+                          <option value="jankx">🏛️ Jankx Library...</option>
                         </select>
                       </div>
+
+                      {activeRegionObj.marker.iconType === 'jankx' && (
+                        <div className="col-span-2">
+                          <span className="text-[9px] text-slate-400 block">Tên Icon (Jankx Library):</span>
+                          <input
+                            id="input-region-marker-custom-icon"
+                            type="text"
+                            placeholder="vd: bolt, home, mapMarker..."
+                            className="w-full p-1 px-2 border border-slate-200 text-[10px] rounded focus:outline-none bg-blue-50/30 font-mono"
+                            value={activeRegionObj.marker.customIconName || ''}
+                            onChange={(e) => handleUpdateRegionMarkerField('customIconName', e.target.value)}
+                          />
+                          <p className="text-[8px] text-slate-400 mt-0.5 italic">Nhập đúng tên biến icon trong bộ thư viện Jankx.</p>
+                        </div>
+                      )}
 
                       <div className="col-span-2">
                         <span className="text-[9px] text-slate-400 block">Nhãn hiển thị (Label):</span>

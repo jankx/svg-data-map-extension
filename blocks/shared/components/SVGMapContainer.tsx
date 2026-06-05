@@ -7,9 +7,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   SVGMapConfig,
   RegionConfig,
+  MarkerConfig,
   MarkerIconType
 } from '../types';
 import {
+  Hotel,
   Bus,
   Bed,
   Utensils,
@@ -235,20 +237,43 @@ export function SVGMapContainer({
     handleZoomStateChange(1, { x: 0, y: 0 });
   };
 
-  const getMarkerIcon = (type: MarkerIconType, size = 20) => {
+  const getMarkerIcon = (marker: MarkerConfig, size = 20) => {
     const s = size;
+    const type = marker.iconType;
+
+    // Handle Jankx/WordPress Core icons
+    if (type === 'jankx' && marker.customIconName) {
+      const wpIcons = (window as any).wp?.icons;
+      const jankxIcons = (window as any).jankxIcons;
+      const IconComponent = jankxIcons?.[marker.customIconName] || wpIcons?.[marker.customIconName];
+
+      if (IconComponent) {
+        // WordPress icons are often components or objects with a 'src' or just a function
+        const iconElement = typeof IconComponent === 'function' ? <IconComponent /> : IconComponent;
+        return <div style={{ width: s, height: s }} className="text-white flex items-center justify-center">{iconElement}</div>;
+      }
+    }
+
+    // Internal local icons
     switch (type) {
       case 'transport':
         return <Bus style={{ width: s, height: s }} className="text-white" id="icon-bus" />;
       case 'hotel':
-        return <Bed style={{ width: s, height: s }} className="text-white" id="icon-bed" />;
+        return <Hotel style={{ width: s, height: s }} className="text-white" id="icon-hotel" />;
       case 'food':
         return <Utensils style={{ width: s, height: s }} className="text-white" id="icon-food" />;
       case 'scenic':
-        return <Camera style={{ width: s, height: s }} className="text-white" id="icon-camera" />;
+        return <Camera style={{ width: s, height: s }} className="text-white" id="icon-scenic" />;
       case 'pin':
-      default:
         return <MapPin style={{ width: s, height: s }} className="text-white" id="icon-pin" />;
+      default:
+        // Try to resolve from global Jankx icons if type matches an icon name directly
+        const wpIcons = (window as any).wp?.icons;
+        if (wpIcons?.[type]) {
+          const IconComp = wpIcons[type];
+          return <div style={{ width: s, height: s }} className="text-white flex items-center justify-center"><IconComp /></div>;
+        }
+        return <MapPin style={{ width: s, height: s }} className="text-white" />;
     }
   };
 
@@ -697,7 +722,7 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
           backgroundColor: isDraggingNow ? '#7c3aed' : isSelected ? '#1e3a8a' : markerColor,
         }}
       >
-        {getMarkerIcon(region.marker.iconType, 13)}
+        {getMarkerIcon(region.marker, 13)}
       </div>
 
       {(() => {

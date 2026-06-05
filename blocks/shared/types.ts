@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type MarkerIconType = 'transport' | 'hotel' | 'food' | 'scenic' | 'pin' | 'default';
+export type MarkerIconType = string;
 
 export interface DataItem {
   id: string;
@@ -18,7 +18,9 @@ export interface MarkerConfig {
   x: number; // percentage x (0-100) on view space
   y: number; // percentage y (0-100) on view space
   iconType: MarkerIconType;
+  customIconName?: string;
   label?: string;
+  showLabel?: boolean;
   showAnimation?: boolean;
   markerOffsetX?: number; // pixel offset from centroid (screen px at scale=1), saved after drag
   markerOffsetY?: number; // pixel offset from centroid (screen px at scale=1), saved after drag
