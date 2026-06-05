@@ -56,33 +56,7 @@ class SvgDataMapInfoBlock extends Block
              data-map-id="<?php echo esc_attr($mapId); ?>">
 
             <div class="jankx-svg-map-info-container">
-
-                <?php if ($hasContent) : ?>
-                    <?php
-                    /**
-                     * The rendered inner blocks (advanced-filters + dynamic-data-layout)
-                     * are output here. frontend.js will listen to region-selected events
-                     * and update a taxQuery/meta on the dynamic-data-layout so the list
-                     * automatically filters to match the selected map region.
-                     */
-                    echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                    ?>
-                <?php else : ?>
-                    <!-- Placeholder shown when no inner blocks have been configured yet -->
-                    <div class="jankx-svg-map-info-placeholder">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24"
-                             fill="none" stroke="#1E4D65" stroke-width="1.5"
-                             stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
-                        </svg>
-
-                        <h3><?php esc_html_e('Bắt đầu Hành Trình Khám Phá', 'jankx'); ?></h3>
-
-                        <p><?php esc_html_e('Vui lòng nhấp chuột chọn bất kỳ địa danh nào trên bản đồ để hiển thị thông tin chi tiết.', 'jankx'); ?></p>
-                    </div>
-                <?php endif; ?>
-
+                <?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             </div><!-- .jankx-svg-map-info-container -->
 
         </div><!-- .jankx-svg-data-map-info-runtime -->

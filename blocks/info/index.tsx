@@ -10,6 +10,15 @@ import App from '../shared/App';
  */
 const INFO_TEMPLATE: any = [
     [
+        'core/heading',
+        {
+            level: 1,
+            content: 'Tất cả Địa Điểm',
+            className: 'jankx-map-active-title',
+            style: { typography: { fontSize: '42px', fontWeight: '700' }, color: { text: '#0B293C' } },
+        }
+    ],
+    [
         'jankx/advanced-filters',
         {
             filterType: 'keyword',

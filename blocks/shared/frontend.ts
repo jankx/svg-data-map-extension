@@ -232,9 +232,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (markerBtn) markerBtn.classList.toggle('jankx-map-marker-hover', active);
         };
 
+        // Save default title text
+        const titleEl =
+            container.querySelector('.jankx-map-active-title') ||
+            (infoRoot ? infoRoot.querySelector('.jankx-map-active-title') : null);
+        const defaultTitle = titleEl ? titleEl.textContent : 'Tất cả Địa Điểm';
+
         // ── selectRegion ───────────────────────────────────────────────────
 
-        const selectRegion = (regionId: string) => {
+        const selectRegion = (regionId: string | null) => {
             if (activeRegionId === regionId) return;
 
             // Deactivate previous
@@ -245,22 +251,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             activeRegionId = regionId;
-            setPathActive(regionId, true);
-            const activeMarker = container.querySelector(`.jankx-marker-btn[data-region-id="${regionId}"]`);
-            if (activeMarker) activeMarker.classList.add('jankx-map-active');
 
-            // Update title element if present
-            const region = regionMap.get(regionId);
-            const titleEl =
-                container.querySelector('.jankx-map-active-title') ||
-                (infoRoot ? infoRoot.querySelector('.jankx-map-active-title') : null);
-            if (titleEl) titleEl.textContent = region?.name || region?.label || 'Khu vực';
+            let region: any = null;
+
+            if (regionId) {
+                setPathActive(regionId, true);
+                const activeMarker = container.querySelector(`.jankx-marker-btn[data-region-id="${regionId}"]`);
+                if (activeMarker) activeMarker.classList.add('jankx-map-active');
+
+                region = regionMap.get(regionId);
+                // Update title element 
+                if (titleEl) titleEl.textContent = region?.name || region?.label || 'Khu vực';
+            } else {
+                // Deselect: restore title
+                if (titleEl) titleEl.textContent = defaultTitle;
+            }
 
             // ── Refresh dynamic-data-layout if available ──────────────────
-            if (infoRoot && region) {
+            if (infoRoot) {
                 const ddlBlock = findDynamicDataLayoutBlock(infoRoot);
                 if (ddlBlock) {
-                    refreshDynamicDataLayout(ddlBlock, region, postId);
+                    // Pass an empty object when deselected to clear filters
+                    refreshDynamicDataLayout(ddlBlock, region || {}, postId);
                     return; // skip legacy AJAX below
                 }
             }
@@ -297,10 +309,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const el = svgWrapper.querySelector(`#${pid}`);
                 if (!el) return;
                 el.classList.add('jankx-map-region-clickable');
-                el.addEventListener('click', e => { e.preventDefault(); selectRegion(r.id); });
+                el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); selectRegion(r.id); });
                 el.addEventListener('mouseenter', () => setRegionHover(r.id, true));
                 el.addEventListener('mouseleave', () => setRegionHover(r.id, false));
             });
+        });
+
+        // Click outside on SVG background to deselect
+        svgWrapper.addEventListener('click', () => {
+            selectRegion(null);
         });
 
         // ── Attach events + positioning to Markers ─────────────────────────
