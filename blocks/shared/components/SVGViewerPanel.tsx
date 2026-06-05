@@ -78,8 +78,8 @@ export function SVGViewerPanel({
                   id="preset-vietnam-btn"
                   onClick={() => onLoadPreset('vietnam')}
                   className={`p-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition ${config.title.includes('Việt Nam')
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                     }`}
                 >
                   Việt Nam
@@ -88,8 +88,8 @@ export function SVGViewerPanel({
                   id="preset-exhibition-btn"
                   onClick={() => onLoadPreset('exhibition')}
                   className={`p-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition ${config.title.includes('Triển Lãm')
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                     }`}
                 >
                   Hội Chợ Triển Lãm
@@ -207,26 +207,7 @@ export function SVGViewerPanel({
                 <span className="bg-sky-200/60 px-2 py-0.5 rounded">Bản đồ động</span>
               </div>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center h-full min-h-[450px]">
-              <div className="relative mb-4">
-                <div className="absolute inset-0 bg-indigo-100 rounded-full blur-xl opacity-60 animate-pulse"></div>
-                <Compass className="w-16 h-16 text-indigo-800 relative animate-spin-slow" />
-              </div>
-
-              <h3 className="text-lg font-bold text-slate-800 leading-snug">
-                Bắt đầu Hành Trình Khám Phá
-              </h3>
-
-              <p className="text-slate-600 text-xs mt-2 max-w-xs leading-relaxed">
-                Vui lòng hover và nhấp chuột chọn bất đẳng thức địa danh hoặc các biểu tượng điểm mốc trên bản đồ để hiển thị thông tin dữ liệu chi tiết.
-              </p>
-
-              <div className="mt-8 bg-white/50 border border-sky-200/40 p-3 rounded-lg max-w-xs text-[11px] text-slate-500">
-                <span className="font-semibold text-slate-700 block mb-0.5">💡 Gợi ý nhanh</span> Use standard presets above the map or jump into the **Builder Tab** to customize this with your own SVGs!
-              </div>
-            </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>
