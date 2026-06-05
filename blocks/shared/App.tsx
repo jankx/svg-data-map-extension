@@ -141,10 +141,53 @@ export default function App({
     };
   }, [mapId, blockId]);
 
-  const handleConfigChange = (newConfig: SVGMapConfig) => {
+  useEffect(() => {
+    // If the config has a file URL but the content is empty, fetch the SVG text
+    if (mapConfig.svgFileUrl && (!mapConfig.svgContent || mapConfig.svgContent.trim() === '')) {
+      fetch(mapConfig.svgFileUrl + '?t=' + Date.now())
+        .then(res => res.text())
+        .then(text => {
+          if (text.includes('<svg')) {
+            setMapConfig(prev => ({ ...prev, svgContent: text }));
+          }
+        })
+        .catch(err => console.error('Failed to load SVG from URL', err));
+    }
+  }, [mapConfig.svgFileUrl]);
+
+  const handleConfigChange = async (newConfig: SVGMapConfig) => {
+    // Immediately update local React state so UI stays responsive
     setMapConfig(newConfig);
+
     if (onBlockConfigChange) {
-      // Call with the full config object - the parent component will handle serialization
+      if (newConfig.svgContent && newConfig.svgContent.length > 100) {
+        try {
+          const formData = new FormData();
+          formData.append('action', 'svg_data_map_save_file');
+          formData.append('svgContent', newConfig.svgContent);
+
+          const ajaxUrl = (window as any).ajaxurl || '/wp-admin/admin-ajax.php';
+          const res = await fetch(ajaxUrl, {
+            method: 'POST',
+            body: formData
+          });
+          const result = await res.json();
+          if (result.success) {
+            // Strip the giant SVG string before passing to Gutenberg
+            const configToSave = {
+              ...newConfig,
+              svgFileUrl: result.data.url,
+              svgFilePath: result.data.path
+            };
+            delete configToSave.svgContent;
+            onBlockConfigChange(configToSave);
+            return;
+          }
+        } catch (e) {
+          console.error('[SVG Data Map] Failed to offload SVG content to server', e);
+        }
+      }
+
       onBlockConfigChange(newConfig);
     }
   };

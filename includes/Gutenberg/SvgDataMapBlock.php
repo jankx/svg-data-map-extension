@@ -107,9 +107,21 @@ class SvgDataMapBlock extends Block
 
         // Load default SVG using absolute path to be safe
         if (empty($config['svgContent'])) {
-            $svg_path = '/home/puleeno/Projects/baotanghanghai.vn/wp-content/themes/baotanghanghai/Ban do.svg';
-            if (file_exists($svg_path)) {
-                $config['svgContent'] = file_get_contents($svg_path);
+            if (!empty($config['svgFilePath']) && file_exists($config['svgFilePath'])) {
+                // Load from offloaded file uploaded via Gutenberg
+                $config['svgContent'] = file_get_contents($config['svgFilePath']);
+            } elseif (!empty($config['svgFileUrl'])) {
+                // Fallback to fetch from URL if path is completely missing
+                $response = wp_remote_get($config['svgFileUrl']);
+                if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                    $config['svgContent'] = wp_remote_retrieve_body($response);
+                }
+            } else {
+                // Hardcoded fallback
+                $svg_path = '/home/puleeno/Projects/baotanghanghai.vn/wp-content/themes/baotanghanghai/Ban do.svg';
+                if (file_exists($svg_path)) {
+                    $config['svgContent'] = file_get_contents($svg_path);
+                }
             }
         }
 

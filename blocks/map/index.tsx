@@ -144,31 +144,12 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
     );
 };
 
-const Save = ({ attributes }: any) => {
-    const config = attributes.config || {};
-    const mapId = attributes.mapId || 'default-map';
-
-    // Prepare config for JS without the large SVG content to save space
-    const jsConfig = { ...config };
-    delete jsConfig.svgContent;
-
-    return (
-        <div className="jankx-svg-data-map-runtime font-sans flex flex-col gap-4"
-            id="svg-map-runtime"
-            data-config={JSON.stringify(jsConfig)}
-            data-map-id={mapId}
-            data-ssr="yes">
-            <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border border-white/50 min-h-[600px] flex items-center justify-center" id="map-container-root">
-                <div id="svg-viewport" className="w-full h-full flex items-center justify-center transition-transform duration-75">
-                    <div className="jankx-svg-map-wrapper relative w-full h-full flex items-center justify-center pointer-events-auto" style={{ minHeight: '500px' }}>
-                        {config.svgContent && (
-                            <div dangerouslySetInnerHTML={{ __html: config.svgContent }} />
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+const Save = () => {
+    // Return null to ensure the block is 100% dynamic.
+    // The PHP SSR handler (SvgDataMapBlock::render) will output the HTML.
+    // This prevents massive multi-megabyte inline SVG strings from being saved
+    // into the wp_posts database layout.
+    return null;
 };
 
 if (typeof registerBlockType !== 'undefined') {

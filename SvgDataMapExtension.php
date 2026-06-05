@@ -40,6 +40,9 @@ class SvgDataMapExtension extends AbstractExtension
         self::$instance = $this;
         add_action('wp_ajax_svg_data_map_fetch_posts', [$this, 'ajax_fetch_posts']);
         add_action('wp_ajax_nopriv_svg_data_map_fetch_posts', [$this, 'ajax_fetch_posts']);
+        
+        // Handle saving SVG to file
+        add_action('wp_ajax_svg_data_map_save_file', [$this, 'ajax_save_svg_file']);
     }
 
     public static function get_instance(): ?self
@@ -146,4 +149,46 @@ class SvgDataMapExtension extends AbstractExtension
         wp_send_json_success(['html' => $html]);
     }
 
+    public function ajax_save_svg_file()
+    {
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+
+        $svg_content = isset($_POST['svgContent']) ? wp_unslash($_POST['svgContent']) : '';
+        if (empty($svg_content)) {
+            wp_send_json_error(['message' => 'Empty content']);
+        }
+
+        // Basic sanity check to ensure it's an SVG
+        if (strpos($svg_content, '<svg') === false) {
+            wp_send_json_error(['message' => 'Invalid SVG content']);
+        }
+
+        $upload_dir = wp_upload_dir();
+        $base_dir = $upload_dir['basedir'] . '/jankx-svg-maps';
+        $base_url = $upload_dir['baseurl'] . '/jankx-svg-maps';
+
+        if (!file_exists($base_dir)) {
+            wp_mkdir_p($base_dir);
+            // Protect dir from direct execution
+            file_put_contents($base_dir . '/.htaccess', "Deny from all\n<FilesMatch \"\.svg$\">\nAllow from all\n</FilesMatch>");
+        }
+
+        // Generate a hash based filename to avoid duplicates and collisions
+        $hash = md5($svg_content);
+        $filename = 'map-' . $hash . '.svg';
+        $file_path = $base_dir . '/' . $filename;
+        $file_url = $base_url . '/' . $filename;
+
+        // Save file
+        if (!file_put_contents($file_path, $svg_content)) {
+            wp_send_json_error(['message' => 'Failed to write SVG file to disk']);
+        }
+
+        wp_send_json_success([
+            'path' => $file_path,
+            'url' => $file_url,
+        ]);
+    }
 }

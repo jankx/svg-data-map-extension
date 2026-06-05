@@ -52,7 +52,9 @@ export interface MapSettings {
 export interface SVGMapConfig {
   title: string;
   description: string;
-  svgContent: string; // Normalized or original SVG code in string
+  svgContent?: string; // Loaded into React locally, but NOT saved back to WP Block Attribs
+  svgFileUrl?: string; // Read-only URL to the actual SVG file on the server
+  svgFilePath?: string; // Physical path on server uploaded to avoid huge strings in attributes
   regions: RegionConfig[];
   settings: MapSettings;
 }
