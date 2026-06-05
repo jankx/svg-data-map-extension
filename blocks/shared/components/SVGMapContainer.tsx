@@ -678,17 +678,23 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
         {getMarkerIcon(region.marker.iconType, 13)}
       </div>
 
-      {((region.marker.showLabel !== false) || config.settings?.showMarkerLabels !== false) && region.marker.label && (
-        <div className={`mt-0.5 font-sans font-bold rounded shadow-sm transition-all border ${isDraggingNow
-          ? 'bg-violet-700 text-white border-violet-600'
-          : isSelected
-            ? 'bg-blue-900 text-white border-blue-800'
-            : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100'
-          }`}
-          style={{ fontSize: 9, padding: '1px 4px', whiteSpace: 'nowrap', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {region.marker.label}
-        </div>
-      )}
+      {(() => {
+        const isLabelVisible = region.marker.showLabel !== undefined
+          ? region.marker.showLabel !== false
+          : config.settings?.showMarkerLabels !== false;
+
+        return isLabelVisible && region.marker.label && (
+          <div className={`mt-0.5 font-sans font-bold rounded shadow-sm transition-all border ${isDraggingNow
+            ? 'bg-violet-700 text-white border-violet-600'
+            : isSelected
+              ? 'bg-blue-900 text-white border-blue-800'
+              : 'bg-white text-slate-800 border-slate-100 opacity-90 group-hover/marker:opacity-100'
+            }`}
+            style={{ fontSize: 9, padding: '1px 4px', whiteSpace: 'nowrap', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {region.marker.label}
+          </div>
+        );
+      })()}
     </button>
   );
 };

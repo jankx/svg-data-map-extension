@@ -164,7 +164,12 @@ class SvgDataMapBlock extends Block
                                             <?php echo $this->getMarkerIcon($marker['iconType'] ?? 'pin', 13); ?>
                                         </div>
 
-                                        <?php if (!empty($marker['label']) && (!isset($settings['showMarkerLabels']) || $settings['showMarkerLabels'] !== false) && (!isset($marker['showLabel']) || $marker['showLabel'] !== false)): ?>
+                                        <?php 
+                                        $isLabelVisible = isset($marker['showLabel']) 
+                                            ? $marker['showLabel'] !== false 
+                                            : (!isset($settings['showMarkerLabels']) || $settings['showMarkerLabels'] !== false);
+                                        if (!empty($marker['label']) && $isLabelVisible): 
+                                        ?>
                                             <div class="marker-label" style="margin-top:2px;font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;background:#fff;color:#1e293b;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.1);white-space:nowrap;opacity:0.9;transition:all 0.2s ease;max-width:72px;overflow:hidden;text-overflow:ellipsis;">
                                                 <?php echo esc_html($marker['label']); ?>
                                             </div>
