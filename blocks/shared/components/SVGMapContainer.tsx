@@ -622,8 +622,8 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
         left: '-9999px',
         top: '-9999px',
         zIndex: isSelected ? 40 : 20,
-        // Marker size scales with zoom level to maintain proportion with SVG
-        transform: `translate(-50%, -50%) scale(${scale})`,
+        // Marker size counteracts the zoom level to maintain absolute size on screen (like standard maps)
+        transform: `translate(-50%, -50%) scale(${1 / scale})`,
         transformOrigin: 'center bottom',
         transition: isDraggingNow ? 'none' : 'transform 0.15s ease',
         cursor: isBuilderMode ? (isDraggingNow ? 'grabbing' : 'grab') : 'pointer',

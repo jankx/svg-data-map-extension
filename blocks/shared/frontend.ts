@@ -217,16 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Track current zoom scale and update marker sizes
-        let currentScale = 1;
         const allMarkerBtns = Array.from(container.querySelectorAll('.jankx-marker-btn')) as HTMLButtonElement[];
-
-        const applyScaleToMarkers = () => {
-            allMarkerBtns.forEach(btn => {
-                btn.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
-                btn.style.transformOrigin = 'center bottom';
-            });
-        };
 
         // Attach events to Markers and position them
         allMarkerBtns.forEach(markerBtn => {
@@ -234,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pathId = markerBtn.getAttribute('data-path-id');
 
             // 1. Position the marker using exact SVG space mapping
-            const computePosition = (retries = 5) => {
+            const computePosition = () => {
                 if (pathId) {
                     const svgEl = svgWrapper as SVGGraphicsElement;
                     const pathEl = svgEl.querySelector(`#${pathId}`) as SVGGraphicsElement;
@@ -248,17 +239,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             // Use svg element's CTM for stability - group detection may fail in some cases
                             const ctm = svgEl.getScreenCTM();
-                            if (ctm) {
+                            // Only proceed if CTM is valid (a, d != 0) indicating it's rendered
+                            if (ctm && ctm.a !== 0 && ctm.d !== 0) {
                                 const pt = (svgEl as any).createSVGPoint();
                                 pt.x = cx;
                                 pt.y = cy;
                                 const screenPt = pt.matrixTransform(ctm);
                                 const layerRect = layer.getBoundingClientRect();
 
-                                // Correct coordinate for internal CSS space which is scaled by CSS transform
-                                // Divide by currentScale to match Editor mode behavior
-                                const relX = (screenPt.x - layerRect.left) / currentScale;
-                                const relY = (screenPt.y - layerRect.top) / currentScale;
+                                const relX = (screenPt.x - layerRect.left);
+                                const relY = (screenPt.y - layerRect.top);
 
                                 // Apply stored drag offset from config if available
                                 const region = regionMap.get(rid);
@@ -267,24 +257,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 markerBtn.style.left = `${relX + offX}px`;
                                 markerBtn.style.top = `${relY + offY}px`;
-                                markerBtn.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+                                markerBtn.style.transform = `translate(-50%, -50%)`;
                                 markerBtn.style.transformOrigin = 'center bottom';
                                 markerBtn.style.display = 'flex';
                                 markerBtn.style.position = 'absolute';
-                            } else if (retries > 0) {
-                                setTimeout(() => computePosition(retries - 1), 100);
                             }
                         } catch (e) {
                             console.error('SVG Map: Failed to calculate bbox for', pathId, e);
                         }
-                    } else if (retries > 0) {
-                        setTimeout(() => computePosition(retries - 1), 100);
                     }
                 }
             };
 
             computePosition();
-            window.addEventListener('resize', () => { computePosition(); });
+            
+            // Use ResizeObserver to re-calculate whenever SVG container dimensions change (handles initial load delays & resize)
+            const observer = new ResizeObserver(() => {
+                computePosition();
+            });
+            observer.observe(svgWrapper);
 
             // 2. Attach events
             markerBtn.addEventListener('click', (e) => {
@@ -299,14 +290,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (rid) setRegionHover(rid, false);
             });
         });
-
-        // Hook into wheel zoom to update marker scale
-        const mapViewport = container.querySelector('#map-container-root') || container;
-        mapViewport.addEventListener('wheel', (e: any) => {
-            e.preventDefault();
-            const delta = e.deltaY < 0 ? 0.05 : -0.05;
-            currentScale = Math.max(0.5, Math.min(5, currentScale + delta));
-            applyScaleToMarkers();
-        }, { passive: false });
     });
 });

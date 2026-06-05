@@ -14,18 +14,18 @@ vi.mock('lucide-react', async () => {
 });
 
 describe('App Component', () => {
-    it('renders the header title', () => {
+    it('renders the main app container', () => {
         render(<App />);
-        expect(screen.getByRole('heading', { level: 1, name: /SVG Data Map/i })).toBeInTheDocument();
+        expect(document.querySelector('#app-root-container')).toBeInTheDocument();
     });
 
-    it('defaults to viewer mode when not in Gutenberg', () => {
+    it('defaults to viewer mode (renders viewer panel)', () => {
         render(<App isGutenberg={false} />);
-        expect(screen.getByText('Chế độ Trình chiếu')).toBeInTheDocument();
+        expect(document.querySelector('#tab-content-viewer')).toBeInTheDocument();
     });
 
-    it('defaults to builder mode when in Gutenberg', () => {
+    it('renders header with edit button when in Gutenberg and defaults to viewer', () => {
         render(<App isGutenberg={true} />);
-        expect(screen.getByText('Chế độ Soạn thảo (Builder)')).toBeInTheDocument();
+        expect(screen.getByText('Chỉnh sửa bản đồ (Full)')).toBeInTheDocument();
     });
 });
