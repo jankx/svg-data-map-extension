@@ -82,27 +82,25 @@ async function refreshDynamicDataLayout(
     const baseAttrs = readBlockAttributes(block) || {};
     const { url: ajaxUrl, nonce } = getAjaxConfig();
 
-    // ── Xây dựng filters từ marker config ──────────────────────────────────
-    // Hỗ trợ: region.termId + region.taxonomy, hoặc region.taxQuery (array)
+    // ── Xây dựng filters từ marker config chuẩn theo Jankx ────────────────
     const filters: Record<string, any> = {};
 
+    // 1. Array taxQuery gốc (nếu dùng giao diện nâng cao)
     if (Array.isArray(region.taxQuery) && region.taxQuery.length > 0) {
-        // Format: [{ taxonomy, terms, operator }]
-        filters.taxQuery = region.taxQuery;
-    } else if (region.termId) {
-        filters.taxQuery = [
-            {
-                taxonomy: region.taxonomy || 'category',
-                terms: [Number(region.termId)],
-                operator: 'IN',
-                field: 'term_id',
-            },
-        ];
+        region.taxQuery.forEach((tq: any) => {
+            if (tq.taxonomy && tq.terms && tq.terms.length > 0) {
+                filters[tq.taxonomy] = tq.terms;
+            }
+        });
+    }
+    // 2. Fallback: termId & taxonomy đơn lẻ
+    else if (region.termId && region.taxonomy) {
+        filters[region.taxonomy] = [Number(region.termId)];
     }
 
-    // Keyword / meta từ marker nếu có
+    // Keyword & Post type
     if (region.keyword) filters.keyword = region.keyword;
-    if (region.postType) filters.postType = region.postType;
+    if (region.postType) filters.post_type = region.postType;
 
     // Merge filters vào attributes (DynamicDataLayoutQueryHelper::applyFiltersToAttributes sẽ xử lý phía server)
     const mergedAttrs = { ...baseAttrs, queryId: blockId };
