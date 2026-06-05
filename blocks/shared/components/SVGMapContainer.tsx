@@ -346,7 +346,7 @@ export function SVGMapContainer({
     <div
       id="map-container-root"
       ref={containerRef}
-      className="relative w-full h-full select-none overflow-hidden bg-slate-50 border border-slate-200/80 rounded-2xl shadow-inner min-h-[500px]"
+      className="relative w-full h-full select-none overflow-hidden bg-slate-50 border border-slate-200/80 shadow-inner min-h-[500px]"
       onMouseDown={handleMouseDown}
       onMouseMove={handleDragMouseMove}
       onMouseUp={handleMouseUp}
