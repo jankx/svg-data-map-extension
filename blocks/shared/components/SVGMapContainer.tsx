@@ -254,15 +254,23 @@ export function SVGMapContainer({
 
   // Build reactive CSS styles to override SVG element fills according to configuration parameters
   const generateStyleSheets = (): string => {
-    const defaultColor = config.settings?.defaultFillColor || '#e2edf5';
+    const defaultColor = config.settings?.defaultFillColor || '#d1d5db'; // Slightly darker grey-blue default
     const hoverColor = config.settings?.hoverFillColor || '#93c5fd';
     const selectedColor = config.settings?.selectedFillColor || '#3b82f6';
 
     let css = `
-      #vietnam-regions path, #vietnam-regions circle, #exhibition-zones rect, #exhibition-zones path,
-      svg path, svg circle, svg rect, svg polygon {
-        fill: ${defaultColor} !important;
+      .jankx-svg-map-wrapper svg path, 
+      .jankx-svg-map-wrapper svg circle, 
+      .jankx-svg-map-wrapper svg rect, 
+      .jankx-svg-map-wrapper svg polygon {
+        stroke: #ffffff !important;
+        stroke-width: 0.5px !important;
         transition: fill 0.2s ease, opacity 0.2s ease, stroke-width 0.2s ease;
+      }
+      
+      /* Only apply default fill if there is no internal SVG fill or if specifically requested */
+      .jankx-svg-map-wrapper svg [id] {
+        cursor: pointer;
       }
     `;
 
