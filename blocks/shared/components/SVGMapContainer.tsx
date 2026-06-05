@@ -492,8 +492,8 @@ export function SVGMapContainer({
 const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, svgWrapperRef, onSelectRegion, getMarkerIcon, scale = 1, isBuilderMode = false, onMarkerDragged }: any) => {
   const markerRef = React.useRef<HTMLButtonElement>(null);
 
-  // Drag state: pixel offset relative to the centroid position
-  const [dragOffset, setDragOffset] = React.useState<{ x: number; y: number } | null>(null);
+  // Drag state for UI feedback (only 2 renders per drag action: start & end)
+  const [isDraggingNow, setIsDraggingNow] = React.useState(false);
   const isDraggingRef = React.useRef(false);
   const dragStartRef = React.useRef<{ mouseX: number; mouseY: number; baseLeft: number; baseTop: number } | null>(null);
 
@@ -563,6 +563,12 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
     e.stopPropagation();
     e.preventDefault();
     isDraggingRef.current = true;
+    setIsDraggingNow(true);
+
+    if (markerRef.current) {
+      markerRef.current.classList.add('is-dragging');
+      markerRef.current.style.cursor = 'grabbing';
+    }
 
     const curLeft = parseFloat(markerRef.current?.style.left || '0');
     const curTop = parseFloat(markerRef.current?.style.top || '0');
@@ -574,32 +580,40 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDraggingRef.current || !dragStartRef.current || !markerRef.current) return;
+
       const dx = (e.clientX - dragStartRef.current.mouseX) / scale;
       const dy = (e.clientY - dragStartRef.current.mouseY) / scale;
+
       const newLeft = dragStartRef.current.baseLeft + dx;
       const newTop = dragStartRef.current.baseTop + dy;
+
       markerRef.current.style.left = `${newLeft}px`;
       markerRef.current.style.top = `${newTop}px`;
-      markerRef.current.style.cursor = 'grabbing';
-      setDragOffset({ x: dx, y: dy }); // force re-render for visual feedback
     };
 
     const handleMouseUp = (e: MouseEvent) => {
-      if (!isDraggingRef.current || !dragStartRef.current || !centroidRef.current) return;
+      if (!isDraggingRef.current || !dragStartRef.current) return;
+
       isDraggingRef.current = false;
-      markerRef.current && (markerRef.current.style.cursor = '');
+      setIsDraggingNow(false);
+      if (markerRef.current) {
+        markerRef.current.classList.remove('is-dragging');
+        markerRef.current.style.cursor = '';
+      }
 
       const dx = (e.clientX - dragStartRef.current.mouseX) / scale;
       const dy = (e.clientY - dragStartRef.current.mouseY) / scale;
-      // Keep offset in local layer space (unscaled) for storage
-      const storedOffX = (region.marker.markerOffsetX ?? 0) + dx;
-      const storedOffY = (region.marker.markerOffsetY ?? 0) + dy;
+
+      // Calculate final offset
+      const currentOffsetX = region.marker.markerOffsetX ?? 0;
+      const currentOffsetY = region.marker.markerOffsetY ?? 0;
+      const finalOffX = Math.round((currentOffsetX + dx) * 100) / 100;
+      const finalOffY = Math.round((currentOffsetY + dy) * 100) / 100;
 
       dragStartRef.current = null;
-      setDragOffset(null);
 
-      if (onMarkerDragged) {
-        onMarkerDragged(region.id, storedOffX, storedOffY);
+      if (onMarkerDragged && (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1)) {
+        onMarkerDragged(region.id, finalOffX, finalOffY);
       }
     };
 
@@ -610,8 +624,6 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isBuilderMode, scale, region.id, region.marker.markerOffsetX, region.marker.markerOffsetY]);
-
-  const isDraggingNow = isDraggingRef.current;
 
   return (
     <button
@@ -640,11 +652,11 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
       {isBuilderMode && (
         <div
           title="Kéo để di chuyển pin"
-          className={`absolute -top-4 text-[8px] font-bold px-1 py-0.5 rounded transition-opacity ${dragOffset ? 'opacity-100 bg-violet-600 text-white' : 'opacity-0 group-hover/marker:opacity-100 bg-slate-700 text-white'
+          className={`absolute -top-4 text-[8px] font-bold px-1 py-0.5 rounded transition-opacity ${isDraggingNow ? 'opacity-100 bg-violet-600 text-white' : 'opacity-0 group-hover/marker:opacity-100 bg-slate-700 text-white'
             }`}
           style={{ whiteSpace: 'nowrap', pointerEvents: 'none' }}
         >
-          {dragOffset ? '⤢ Đang di chuyển' : '✥ Kéo để di chuyển'}
+          {isDraggingNow ? '⤢ Đang di chuyển' : '✥ Kéo để di chuyển'}
         </div>
       )}
 
