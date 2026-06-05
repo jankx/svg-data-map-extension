@@ -13,17 +13,13 @@
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Lấy ajaxUrl & nonce từ globals do WordPress localize */
-function getAjaxConfig(): { url: string; nonce: string } {
+function getAjaxConfig(): { url: string; nonce: string; postId: number } {
     const w = window as any;
+    const config = w.jankxSvgDataMapConfig || w.jankxDynamicDataLayoutView || {};
     return {
-        url:
-            w.jankxViewsData?.ajaxUrl ||
-            w.jankxDynamicDataLayoutView?.ajaxUrl ||
-            '/wp-admin/admin-ajax.php',
-        nonce:
-            w.jankxViewsData?.nonce ||
-            w.jankxDynamicDataLayoutView?.nonce ||
-            '',
+        url: config.ajaxUrl || '/wp-admin/admin-ajax.php',
+        nonce: config.nonce || '',
+        postId: Number(config.postId || 0),
     };
 }
 
@@ -187,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mapElements.forEach(container => {
         const rawConfig = container.getAttribute('data-config');
         const mapId = container.getAttribute('data-map-id') || 'default-map';
-        const postId = Number((window as any).jankxViewsData?.postId || 0);
+        const postId = getAjaxConfig().postId;
 
         if (!rawConfig) return;
 
