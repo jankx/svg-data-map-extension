@@ -72,11 +72,14 @@ class SvgDataMapBlock extends Block
                 true
             );
 
+            $postId = get_queried_object_id() ?: (get_the_ID() ?: 0);
+            error_log('[SVG Map Debug] Localizing postId: ' . $postId);
+
             // Expose AJAX config (postId needed for jankx_dynamic_data_layout_filter)
             wp_localize_script('jankx-svg-data-map-frontend', 'jankxSvgDataMapConfig', [
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce'   => wp_create_nonce('jankx_load_more'), // Important: using jankx_load_more as expected by DynamicDataLayoutBlock
-                'postId'  => get_the_ID() ?: 0,
+                'postId'  => $postId,
             ]);
         }
     }
