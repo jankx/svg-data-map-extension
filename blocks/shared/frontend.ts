@@ -237,8 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const cx = bbox.x + bbox.width / 2;
                             const cy = bbox.y + bbox.height / 2;
 
-                            // Use svg element's CTM for stability - group detection may fail in some cases
-                            const ctm = svgEl.getScreenCTM();
+                            // Use the specific path element's CTM so that nested group transforms are correctly applied
+                            const ctm = pathEl.getScreenCTM();
                             // Only proceed if CTM is valid (a, d != 0) indicating it's rendered
                             if (ctm && ctm.a !== 0 && ctm.d !== 0) {
                                 const pt = (svgEl as any).createSVGPoint();

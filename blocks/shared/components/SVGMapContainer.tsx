@@ -514,8 +514,8 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
           const cx = bbox.x + bbox.width / 2;
           const cy = bbox.y + bbox.height / 2;
 
-          // Use svg element's CTM for stability - group detection may fail in some cases
-          const ctm = svgElement.getScreenCTM();
+          // Use the specific path element's CTM so that nested group transforms are correctly applied
+          const ctm = (pathEl as SVGGraphicsElement).getScreenCTM();
           if (ctm) {
             const pt = (svgElement as any).createSVGPoint();
             pt.x = cx;
