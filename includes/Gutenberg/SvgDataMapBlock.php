@@ -71,6 +71,13 @@ class SvgDataMapBlock extends Block
                 $assets['version'],
                 true
             );
+
+            // Expose AJAX config (postId needed for jankx_dynamic_data_layout_filter)
+            wp_localize_script('jankx-svg-data-map-frontend', 'jankxViewsData', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce'   => wp_create_nonce('jankx_load_more'),
+                'postId'  => get_the_ID() ?: 0,
+            ]);
         }
     }
 

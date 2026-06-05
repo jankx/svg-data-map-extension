@@ -1,47 +1,35 @@
-(()=>{document.addEventListener("DOMContentLoaded",()=>{let q=document.querySelectorAll(".jankx-svg-data-map-runtime"),I=document.querySelectorAll(".jankx-svg-data-map-info-runtime"),w=new Map;I.forEach(r=>{let x=r.getAttribute("data-map-id")||"default-map",h=r.querySelector(".jankx-svg-map-info-content");h&&w.set(x,h)}),q.forEach(r=>{let x=r.getAttribute("data-config"),h=r.getAttribute("data-map-id")||"default-map";if(!x)return;let b;try{b=JSON.parse(x)}catch{return}let j=b.regions||[],d=r.querySelector(".jankx-svg-map-wrapper svg"),c=r.querySelector(".jankx-svg-map-info-panel")||w.get(h);if(!d||!c)return;let f=new Map;j.forEach(e=>f.set(e.id,e));let y=!1,m=null,A=()=>{c&&(c.innerHTML=`
-                <div class="flex flex-col items-center justify-center h-full space-y-4 py-10">
-                    <div class="w-10 h-10 border-4 border-white/30 border-t-[#1E4D65] rounded-full animate-spin"></div>
-                    <p class="text-[#1E4D65] font-bold text-xs uppercase tracking-widest">\u0110ang t\xECm ki\u1EBFm...</p>
+(()=>{function D(){let e=window;return{url:e.jankxViewsData?.ajaxUrl||e.jankxDynamicDataLayoutView?.ajaxUrl||"/wp-admin/admin-ajax.php",nonce:e.jankxViewsData?.nonce||e.jankxDynamicDataLayoutView?.nonce||""}}function I(e){return e.querySelector(".wp-block-jankx-dynamic-data-layout")||null}function V(e){let r=e.dataset.blockSettings;if(!r)return null;try{return JSON.parse(r)}catch{return null}}function O(e){let r=e.querySelector(".carousel-container")||e;r.innerHTML=`
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;gap:12px;">
+            <div style="width:36px;height:36px;border:3px solid rgba(30,77,101,0.15);border-top-color:#1E4D65;border-radius:50%;animation:jankx-spin 0.7s linear infinite;"></div>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#1E4D65;margin:0;">\u0110ang t\u1EA3i d\u1EEF li\u1EC7u...</p>
+        </div>
+        <style>@keyframes jankx-spin{to{transform:rotate(360deg)}}</style>
+    `}async function R(e,r,h){let o=e.dataset.blockId||e.dataset.queryId||"";if(!o){console.warn("[SVG Map] dynamic-data-layout kh\xF4ng c\xF3 data-block-id");return}let g=V(e)||{},{url:E,nonce:L}=D(),m={};Array.isArray(r.taxQuery)&&r.taxQuery.length>0?m.taxQuery=r.taxQuery:r.termId&&(m.taxQuery=[{taxonomy:r.taxonomy||"category",terms:[Number(r.termId)],operator:"IN",field:"term_id"}]),r.keyword&&(m.keyword=r.keyword),r.postType&&(m.postType=r.postType);let v={...g,queryId:o};O(e);try{let s=new FormData;s.append("action","jankx_dynamic_data_layout_filter"),s.append("nonce",L),s.append("block_id",o),s.append("attributes",JSON.stringify(v)),s.append("filters",JSON.stringify(m)),s.append("post_id",String(h));let l=await(await fetch(E,{method:"POST",body:s})).json();if(l.success&&l.data?.html){let u=document.createElement("div");u.innerHTML=l.data.html;let y=u.querySelector(".wp-block-jankx-dynamic-data-layout")||u.firstElementChild;y?(l.data.attributes&&(e.dataset.blockSettings=JSON.stringify(l.data.attributes)),e.innerHTML=y.innerHTML):e.innerHTML=l.data.html,e.dataset.layout==="carousel"&&e.dispatchEvent(new CustomEvent("jankx:reinitialize-carousel",{detail:{element:e},bubbles:!0}))}else{let u=l.data?.message||"Kh\xF4ng t\xECm th\u1EA5y d\u1EEF li\u1EC7u.",y=e.querySelector(".carousel-container")||e;y.innerHTML=`
+                <div style="padding:24px;text-align:center;color:#64748b;font-size:13px;">
+                    <p style="margin:0;">${u}</p>
                 </div>
-            `)},E=()=>{c&&(c.innerHTML=`
-                <div class="flex flex-col items-center justify-center h-full text-center text-[#1E4D65]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-2 opacity-50"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <p class="font-bold text-sm">Kh\xF4ng th\u1EC3 t\u1EA3i th\xF4ng tin</p>
-                </div>
-            `)},S=async e=>{if(y||m===e)return;let t=f.get(e);if(!t)return;if(m){let n=f.get(m);n&&n.pathIds&&n.pathIds.forEach(l=>{let p=d.querySelector(`#${l}`);p&&p.classList.remove("jankx-map-active")});let a=r.querySelector(`.jankx-marker-btn[data-region-id="${m}"]`);a&&a.classList.remove("jankx-map-active")}m=e,t.pathIds&&t.pathIds.forEach(n=>{let a=d.querySelector(`#${n}`);a&&a.classList.add("jankx-map-active")});let s=r.querySelector(`.jankx-marker-btn[data-region-id="${e}"]`);s&&s.classList.add("jankx-map-active");let i=r.querySelector(".jankx-map-active-title")||(c.parentElement?c.parentElement.querySelector(".jankx-map-active-title"):null);i&&(i.textContent=t.name||t.label||"Khu v\u1EF1c");let g="";t.items&&t.items.length>0&&t.items.forEach(n=>{g+=`
-                        <div class="bg-indigo-50/50 p-5 rounded-xl shadow-sm border border-indigo-100/50 hover:shadow transition mb-4 animate-in">
-                            <div class="flex items-center gap-2 mb-1.5">
-                                <span class="p-0.5 px-1.5 rounded bg-indigo-600 text-white text-[9px] font-bold uppercase tracking-wider">Ghim</span>
-                                <h3 class="font-bold text-slate-900 text-base m-0 tracking-tight">${n.title||"Th\xF4ng tin"}</h3>
-                            </div>
-                            <p class="text-slate-600 text-xs leading-relaxed whitespace-pre-wrap break-words line-clamp-3">${n.description||""}</p>
-                            ${n.linkUrl?`
-                                <a href="${n.linkUrl}" target="_blank" class="inline-flex items-center gap-1 mt-3 font-sans font-bold text-xs text-indigo-800 hover:text-indigo-900 transition-colors">
-                                    <span>${n.linkLabel||"Xem chi ti\u1EBFt"}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                                </a>
-                            `:""}
-                        </div>
-                    `});let o=(n="")=>{c.innerHTML=`
-                    <div class="flex flex-col h-full justify-between animate-fade-in">
-                        <div>
-                            <h2 class="text-3xl font-sans font-bold text-slate-800 tracking-tight mb-1 flex items-center gap-2 m-0 p-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-800 shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                                ${t.name||"H\u1EA1ng m\u1EE5c"}
-                            </h2>
-                            <p class="text-slate-600/90 text-xs leading-relaxed mb-5 mt-1">
-                                ${t.description||"Th\xF4ng tin chi ti\u1EBFt v\u1EC1 khu v\u1EF1c di s\u1EA3n n\xE0y."}
-                            </p>
-                        </div>
-
-                        <div class="flex-1 overflow-y-auto space-y-4 max-h-[460px] pr-2 custom-scrollbar">
-                            ${g}
-                            ${n}
-                        </div>
-
-                        <div class="pt-4 mt-4 border-t border-sky-200/80 flex items-center justify-between text-[11px] text-sky-800 font-medium">
-                            <span>T\u1ECDa \u0111\u1ED9 D\u1EEF li\u1EC7u SVG</span>
-                            <span class="bg-sky-200/60 px-2 py-0.5 rounded uppercase tracking-tighter">B\u1EA3n \u0111\u1ED3 \u0111\u1ED9ng</span>
-                        </div>
-                    </div>
-                `};if(!t.termId){console.log("SVG Map: No termId, showing manual data only"),o();return}A(),y=!0;try{let n=window.jankxViewsData?.ajaxUrl||"/wp-admin/admin-ajax.php",a=new FormData;a.append("action","svg_data_map_fetch_posts"),a.append("term_id",t.termId),a.append("taxonomy",t.taxonomy||"category"),a.append("post_type",t.postType||"post");let p=await(await fetch(n,{method:"POST",body:a})).json();p.success?o(p.data.html):E()}catch(n){console.error("SVG Map: AJAX error:",n),E()}finally{y=!1}},u=(e,t)=>{let s=f.get(e);if(!s)return;s.pathIds&&s.pathIds.forEach(g=>{let o=d.querySelector(`#${g}`);o&&(t?o.classList.add("jankx-map-hover"):o.classList.remove("jankx-map-hover"))});let i=r.querySelector(`.jankx-marker-btn[data-region-id="${e}"]`);i&&(t?i.classList.add("jankx-map-marker-hover"):i.classList.remove("jankx-map-marker-hover"))};j.forEach(e=>{e.pathIds&&e.pathIds.forEach(t=>{let s=d.querySelector(`#${t}`);s&&(s.classList.add("jankx-map-region-clickable"),s.addEventListener("click",i=>{i.preventDefault(),S(e.id)}),s.addEventListener("mouseenter",()=>u(e.id,!0)),s.addEventListener("mouseleave",()=>u(e.id,!1)))})}),Array.from(r.querySelectorAll(".jankx-marker-btn")).forEach(e=>{let t=e.getAttribute("data-region-id"),s=e.getAttribute("data-path-id"),i=()=>{if(s){let o=d,n=o.querySelector(`#${s}`),a=r.querySelector(".jankx-markers-layer");if(n&&a&&typeof n.getBBox=="function")try{let l=n.getBBox(),p=l.x+l.width/2,T=l.y+l.height/2,v=n.getScreenCTM();if(v&&v.a!==0&&v.d!==0){let k=o.createSVGPoint();k.x=p,k.y=T;let L=k.matrixTransform(v),M=a.getBoundingClientRect(),D=L.x-M.left,G=L.y-M.top,$=f.get(t),H=$?.marker?.markerOffsetX??0,C=$?.marker?.markerOffsetY??0;e.style.left=`${D+H}px`,e.style.top=`${G+C}px`,e.style.transform="translate(-50%, -50%)",e.style.transformOrigin="center bottom",e.style.display="flex",e.style.position="absolute"}}catch(l){console.error("SVG Map: Failed to calculate bbox for",s,l)}}};i(),new ResizeObserver(()=>{i()}).observe(d),e.addEventListener("click",o=>{o.preventDefault(),o.stopPropagation(),t&&S(t)}),e.addEventListener("mouseenter",()=>{t&&u(t,!0)}),e.addEventListener("mouseleave",()=>{t&&u(t,!1)})})})});})();
+            `}}catch(s){console.error("[SVG Map] AJAX error:",s);let p=e.querySelector(".carousel-container")||e;p.innerHTML=`
+            <div style="padding:24px;text-align:center;color:#ef4444;font-size:13px;">
+                <p style="margin:0;">L\u1ED7i k\u1EBFt n\u1ED1i. Vui l\xF2ng th\u1EED l\u1EA1i.</p>
+            </div>
+        `}}document.addEventListener("DOMContentLoaded",()=>{let e=document.querySelectorAll(".jankx-svg-data-map-runtime"),r=document.querySelectorAll(".jankx-svg-data-map-info-runtime"),h=new Map;r.forEach(o=>{let g=o.getAttribute("data-map-id")||"default-map";h.set(g,o)}),e.forEach(o=>{let g=o.getAttribute("data-config"),E=o.getAttribute("data-map-id")||"default-map",L=Number(window.jankxViewsData?.postId||0);if(!g)return;let m;try{m=JSON.parse(g)}catch{return}let v=m.regions||[],s=o.querySelector(".jankx-svg-map-wrapper svg"),p=h.get(E)||null;if(!s)return;let l=new Map;v.forEach(t=>l.set(t.id,t));let u=null,y=(t,a)=>{let n=l.get(t);n?.pathIds&&n.pathIds.forEach(d=>{let f=s.querySelector(`#${d}`);f&&f.classList.toggle("jankx-map-active",a)})},k=(t,a)=>{let n=l.get(t);if(!n?.pathIds)return;n.pathIds.forEach(f=>{let c=s.querySelector(`#${f}`);c&&c.classList.toggle("jankx-map-hover",a)});let d=o.querySelector(`.jankx-marker-btn[data-region-id="${t}"]`);d&&d.classList.toggle("jankx-map-marker-hover",a)},S=t=>{if(u===t)return;if(u){y(u,!1);let i=o.querySelector(`.jankx-marker-btn[data-region-id="${u}"]`);i&&i.classList.remove("jankx-map-active")}u=t,y(t,!0);let a=o.querySelector(`.jankx-marker-btn[data-region-id="${t}"]`);a&&a.classList.add("jankx-map-active");let n=l.get(t),d=o.querySelector(".jankx-map-active-title")||(p?p.querySelector(".jankx-map-active-title"):null);if(d&&(d.textContent=n?.name||n?.label||"Khu v\u1EF1c"),p&&n){let i=I(p);if(i){R(i,n,L);return}}if(!p)return;let f=p.querySelector(".jankx-svg-map-info-content");if(!f||!n)return;let c="";n.items?.length&&n.items.forEach(i=>{c+=`
+                        <div class="bg-indigo-50/50 p-5 rounded-xl shadow-sm border border-indigo-100/50 hover:shadow transition mb-4">
+                            <h3 class="font-bold text-slate-900 text-base m-0 mb-1">${i.title||""}</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed">${i.description||""}</p>
+                            ${i.linkUrl?`<a href="${i.linkUrl}" target="_blank" class="inline-flex items-center gap-1 mt-2 font-bold text-xs text-indigo-800 hover:text-indigo-900">${i.linkLabel||"Xem chi ti\u1EBFt"} \u2192</a>`:""}
+                        </div>`}),f.innerHTML=`
+                <h2 class="text-2xl font-bold text-slate-800 mb-3">${n.name||"Khu v\u1EF1c"}</h2>
+                <p class="text-slate-600 text-xs mb-4">${n.description||""}</p>
+                <div class="space-y-3">${c}</div>
+            `};v.forEach(t=>{t.pathIds&&t.pathIds.forEach(a=>{let n=s.querySelector(`#${a}`);n&&(n.classList.add("jankx-map-region-clickable"),n.addEventListener("click",d=>{d.preventDefault(),S(t.id)}),n.addEventListener("mouseenter",()=>k(t.id,!0)),n.addEventListener("mouseleave",()=>k(t.id,!1)))})}),Array.from(o.querySelectorAll(".jankx-marker-btn")).forEach(t=>{let a=t.getAttribute("data-region-id"),n=t.getAttribute("data-path-id"),d=()=>{if(!n)return;let c=s.querySelector(`#${n}`),i=o.querySelector(".jankx-markers-layer");if(!(!c||!i||typeof c.getBBox!="function"))try{let x=c.getBBox(),H=x.x+x.width/2,q=x.y+x.height/2,b=c.getScreenCTM();if(!b||b.a===0||b.d===0)return;let j=s.createSVGPoint();j.x=H,j.y=q;let M=j.matrixTransform(b),w=i.getBoundingClientRect(),T=a?l.get(a):null,A=T?.marker?.markerOffsetX??0,$=T?.marker?.markerOffsetY??0;t.style.left=`${M.x-w.left+A}px`,t.style.top=`${M.y-w.top+$}px`,t.style.transform="translate(-50%, -50%)",t.style.transformOrigin="center bottom",t.style.display="flex",t.style.position="absolute"}catch(x){console.error("[SVG Map] Failed to position marker",n,x)}};d(),new ResizeObserver(()=>d()).observe(s),t.addEventListener("click",c=>{c.preventDefault(),c.stopPropagation(),a&&S(a)}),t.addEventListener("mouseenter",()=>{a&&k(a,!0)}),t.addEventListener("mouseleave",()=>{a&&k(a,!1)})})})});})();
+/**
+ * SVG Data Map — Frontend Runtime
+ *
+ * Khi user click vào region / pin marker:
+ *  1. Highlight SVG path
+ *  2. Tìm block dynamic-data-layout liên kết qua info panel cùng mapId
+ *  3. Gọi AJAX jankx_dynamic_data_layout_filter với taxQuery từ marker config
+ *  4. Swap nội dung block (chỉ innerHTML) bằng HTML server trả về
+ *
+ * @license Apache-2.0
+ */

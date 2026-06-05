@@ -1,294 +1,369 @@
+/**
+ * SVG Data Map — Frontend Runtime
+ *
+ * Khi user click vào region / pin marker:
+ *  1. Highlight SVG path
+ *  2. Tìm block dynamic-data-layout liên kết qua info panel cùng mapId
+ *  3. Gọi AJAX jankx_dynamic_data_layout_filter với taxQuery từ marker config
+ *  4. Swap nội dung block (chỉ innerHTML) bằng HTML server trả về
+ *
+ * @license Apache-2.0
+ */
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Lấy ajaxUrl & nonce từ globals do WordPress localize */
+function getAjaxConfig(): { url: string; nonce: string } {
+    const w = window as any;
+    return {
+        url:
+            w.jankxViewsData?.ajaxUrl ||
+            w.jankxDynamicDataLayoutView?.ajaxUrl ||
+            '/wp-admin/admin-ajax.php',
+        nonce:
+            w.jankxViewsData?.nonce ||
+            w.jankxDynamicDataLayoutView?.nonce ||
+            '',
+    };
+}
+
+/**
+ * Tìm block dynamic-data-layout wrapper bên trong info panel.
+ * Returns null nếu không có.
+ */
+function findDynamicDataLayoutBlock(infoRoot: Element): HTMLElement | null {
+    return (
+        (infoRoot.querySelector('.wp-block-jankx-dynamic-data-layout') as HTMLElement) ||
+        null
+    );
+}
+
+/**
+ * Đọc data-block-settings JSON từ dynamic-data-layout block.
+ */
+function readBlockAttributes(block: HTMLElement): Record<string, any> | null {
+    const raw = block.dataset.blockSettings;
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Hiển thị spinner tạm thời bên trong block content (carousel-container).
+ */
+function showBlockLoading(block: HTMLElement): void {
+    const container = block.querySelector('.carousel-container') || block;
+    (container as HTMLElement).innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;gap:12px;">
+            <div style="width:36px;height:36px;border:3px solid rgba(30,77,101,0.15);border-top-color:#1E4D65;border-radius:50%;animation:jankx-spin 0.7s linear infinite;"></div>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#1E4D65;margin:0;">Đang tải dữ liệu...</p>
+        </div>
+        <style>@keyframes jankx-spin{to{transform:rotate(360deg)}}</style>
+    `;
+}
+
+/**
+ * Gọi AJAX jankx_dynamic_data_layout_filter và swap nội dung block.
+ */
+async function refreshDynamicDataLayout(
+    block: HTMLElement,
+    region: Record<string, any>,
+    postId: number
+): Promise<void> {
+    const blockId = block.dataset.blockId || block.dataset.queryId || '';
+    if (!blockId) {
+        console.warn('[SVG Map] dynamic-data-layout không có data-block-id');
+        return;
+    }
+
+    const baseAttrs = readBlockAttributes(block) || {};
+    const { url: ajaxUrl, nonce } = getAjaxConfig();
+
+    // ── Xây dựng filters từ marker config ──────────────────────────────────
+    // Hỗ trợ: region.termId + region.taxonomy, hoặc region.taxQuery (array)
+    const filters: Record<string, any> = {};
+
+    if (Array.isArray(region.taxQuery) && region.taxQuery.length > 0) {
+        // Format: [{ taxonomy, terms, operator }]
+        filters.taxQuery = region.taxQuery;
+    } else if (region.termId) {
+        filters.taxQuery = [
+            {
+                taxonomy: region.taxonomy || 'category',
+                terms: [Number(region.termId)],
+                operator: 'IN',
+                field: 'term_id',
+            },
+        ];
+    }
+
+    // Keyword / meta từ marker nếu có
+    if (region.keyword) filters.keyword = region.keyword;
+    if (region.postType) filters.postType = region.postType;
+
+    // Merge filters vào attributes (DynamicDataLayoutQueryHelper::applyFiltersToAttributes sẽ xử lý phía server)
+    const mergedAttrs = { ...baseAttrs, queryId: blockId };
+
+    showBlockLoading(block);
+
+    try {
+        const body = new FormData();
+        body.append('action', 'jankx_dynamic_data_layout_filter');
+        body.append('nonce', nonce);
+        body.append('block_id', blockId);
+        body.append('attributes', JSON.stringify(mergedAttrs));
+        body.append('filters', JSON.stringify(filters));
+        body.append('post_id', String(postId));
+
+        const response = await fetch(ajaxUrl, { method: 'POST', body });
+        const json = await response.json();
+
+        if (json.success && json.data?.html) {
+            // Parse server response
+            const tmp = document.createElement('div');
+            tmp.innerHTML = json.data.html;
+
+            // Server may return a full wrapper div or just inner HTML
+            const serverBlock =
+                (tmp.querySelector('.wp-block-jankx-dynamic-data-layout') as HTMLElement) ||
+                (tmp.firstElementChild as HTMLElement);
+
+            if (serverBlock) {
+                // Update cached block settings if server returned fresh attributes
+                if (json.data.attributes) {
+                    block.dataset.blockSettings = JSON.stringify(json.data.attributes);
+                }
+
+                // Replace the entire inner HTML of the DDL block wrapper
+                // (keeps the block's own wrapper div + data-* intact for subsequent calls)
+                block.innerHTML = serverBlock.innerHTML;
+            } else {
+                block.innerHTML = json.data.html;
+            }
+
+            // Kích hoạt lại carousel nếu layout là carousel
+            if (block.dataset.layout === 'carousel') {
+                block.dispatchEvent(
+                    new CustomEvent('jankx:reinitialize-carousel', {
+                        detail: { element: block },
+                        bubbles: true,
+                    })
+                );
+            }
+        } else {
+            const msg = json.data?.message || 'Không tìm thấy dữ liệu.';
+            const container = block.querySelector('.carousel-container') || block;
+            (container as HTMLElement).innerHTML = `
+                <div style="padding:24px;text-align:center;color:#64748b;font-size:13px;">
+                    <p style="margin:0;">${msg}</p>
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('[SVG Map] AJAX error:', err);
+        const container = block.querySelector('.carousel-container') || block;
+        (container as HTMLElement).innerHTML = `
+            <div style="padding:24px;text-align:center;color:#ef4444;font-size:13px;">
+                <p style="margin:0;">Lỗi kết nối. Vui lòng thử lại.</p>
+            </div>
+        `;
+    }
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
     const mapElements = document.querySelectorAll('.jankx-svg-data-map-runtime');
     const infoElements = document.querySelectorAll('.jankx-svg-data-map-info-runtime');
 
-    // Registry of info panels indexed by mapId
-    const infoPanelsByMapId = new Map();
+    // Registry: mapId → info root element
+    const infoRootsByMapId = new Map<string, Element>();
     infoElements.forEach(el => {
         const mid = el.getAttribute('data-map-id') || 'default-map';
-        const contentArea = el.querySelector('.jankx-svg-map-info-content');
-        if (contentArea) {
-            infoPanelsByMapId.set(mid, contentArea);
-        }
+        infoRootsByMapId.set(mid, el);
     });
 
-    mapElements.forEach((container) => {
+    mapElements.forEach(container => {
         const rawConfig = container.getAttribute('data-config');
         const mapId = container.getAttribute('data-map-id') || 'default-map';
+        const postId = Number((window as any).jankxViewsData?.postId || 0);
+
         if (!rawConfig) return;
 
         let config: any;
         try {
             config = JSON.parse(rawConfig);
-        } catch (e) {
+        } catch {
             return;
         }
 
-        const regions = config.regions || [];
-        const svgWrapper = container.querySelector('.jankx-svg-map-wrapper svg');
+        const regions: any[] = config.regions || [];
+        const svgWrapper = container.querySelector('.jankx-svg-map-wrapper svg') as SVGGraphicsElement | null;
+        const infoRoot = infoRootsByMapId.get(mapId) || null;
 
-        // Info panel could be inside this block (legacy) or separate
-        let infoPanel = container.querySelector('.jankx-svg-map-info-panel') || infoPanelsByMapId.get(mapId);
+        if (!svgWrapper) return;
 
-        if (!svgWrapper || !infoPanel) return;
+        // regionMap for quick lookup
+        const regionMap = new Map<string, any>();
+        regions.forEach(r => regionMap.set(r.id, r));
 
-        const regionMap = new Map();
-        regions.forEach((r: any) => regionMap.set(r.id, r));
-
-        let loading = false;
         let activeRegionId: string | null = null;
 
-        const showLoading = () => {
-            if (!infoPanel) return;
-            infoPanel.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full space-y-4 py-10">
-                    <div class="w-10 h-10 border-4 border-white/30 border-t-[#1E4D65] rounded-full animate-spin"></div>
-                    <p class="text-[#1E4D65] font-bold text-xs uppercase tracking-widest">Đang tìm kiếm...</p>
-                </div>
-            `;
+        // ── Highlight helpers ──────────────────────────────────────────────
+
+        const setPathActive = (regionId: string, active: boolean) => {
+            const r = regionMap.get(regionId);
+            if (!r?.pathIds) return;
+            r.pathIds.forEach((pid: string) => {
+                const el = svgWrapper.querySelector(`#${pid}`);
+                if (el) el.classList.toggle('jankx-map-active', active);
+            });
         };
 
-        const showError = () => {
-            if (!infoPanel) return;
-            infoPanel.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full text-center text-[#1E4D65]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-2 opacity-50"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <p class="font-bold text-sm">Không thể tải thông tin</p>
-                </div>
-            `;
+        const setRegionHover = (regionId: string, active: boolean) => {
+            const r = regionMap.get(regionId);
+            if (!r?.pathIds) return;
+            r.pathIds.forEach((pid: string) => {
+                const el = svgWrapper.querySelector(`#${pid}`);
+                if (el) el.classList.toggle('jankx-map-hover', active);
+            });
+            const markerBtn = container.querySelector(`.jankx-marker-btn[data-region-id="${regionId}"]`);
+            if (markerBtn) markerBtn.classList.toggle('jankx-map-marker-hover', active);
         };
 
-        const selectRegion = async (regionId: string) => {
-            if (loading || activeRegionId === regionId) return;
+        // ── selectRegion ───────────────────────────────────────────────────
 
-            const region = regionMap.get(regionId);
-            if (!region) {
-                return;
-            }
+        const selectRegion = (regionId: string) => {
+            if (activeRegionId === regionId) return;
 
-            // Update SVG visuals (all paths in this region)
+            // Deactivate previous
             if (activeRegionId) {
-                const prevRegion = regionMap.get(activeRegionId);
-                if (prevRegion && prevRegion.pathIds) {
-                    prevRegion.pathIds.forEach((pid: string) => {
-                        const el = svgWrapper.querySelector(`#${pid}`);
-                        if (el) el.classList.remove('jankx-map-active');
-                    });
-                }
+                setPathActive(activeRegionId, false);
                 const prevMarker = container.querySelector(`.jankx-marker-btn[data-region-id="${activeRegionId}"]`);
                 if (prevMarker) prevMarker.classList.remove('jankx-map-active');
             }
 
             activeRegionId = regionId;
-            if (region.pathIds) {
-                region.pathIds.forEach((pid: string) => {
-                    const el = svgWrapper.querySelector(`#${pid}`);
-                    if (el) el.classList.add('jankx-map-active');
-                });
-            }
+            setPathActive(regionId, true);
             const activeMarker = container.querySelector(`.jankx-marker-btn[data-region-id="${regionId}"]`);
             if (activeMarker) activeMarker.classList.add('jankx-map-active');
 
-            // Find title in either container
-            const titleEl = container.querySelector('.jankx-map-active-title') || (infoPanel.parentElement ? infoPanel.parentElement.querySelector('.jankx-map-active-title') : null);
-            if (titleEl) titleEl.textContent = region.name || region.label || 'Khu vực';
-
-            // Start rendering info panel
-            let manualItemsHtml = '';
-            if (region.items && region.items.length > 0) {
-                region.items.forEach((item: any) => {
-                    manualItemsHtml += `
-                        <div class="bg-indigo-50/50 p-5 rounded-xl shadow-sm border border-indigo-100/50 hover:shadow transition mb-4 animate-in">
-                            <div class="flex items-center gap-2 mb-1.5">
-                                <span class="p-0.5 px-1.5 rounded bg-indigo-600 text-white text-[9px] font-bold uppercase tracking-wider">Ghim</span>
-                                <h3 class="font-bold text-slate-900 text-base m-0 tracking-tight">${item.title || 'Thông tin'}</h3>
-                            </div>
-                            <p class="text-slate-600 text-xs leading-relaxed whitespace-pre-wrap break-words line-clamp-3">${item.description || ''}</p>
-                            ${item.linkUrl ? `
-                                <a href="${item.linkUrl}" target="_blank" class="inline-flex items-center gap-1 mt-3 font-sans font-bold text-xs text-indigo-800 hover:text-indigo-900 transition-colors">
-                                    <span>${item.linkLabel || 'Xem chi tiết'}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                                </a>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-            }
-
-            // Set initial HTML with static data
-            const setInfoHtml = (dynamicHtml: string = '') => {
-                infoPanel.innerHTML = `
-                    <div class="flex flex-col h-full justify-between animate-fade-in">
-                        <div>
-                            <h2 class="text-3xl font-sans font-bold text-slate-800 tracking-tight mb-1 flex items-center gap-2 m-0 p-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-800 shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                                ${region.name || 'Hạng mục'}
-                            </h2>
-                            <p class="text-slate-600/90 text-xs leading-relaxed mb-5 mt-1">
-                                ${region.description || 'Thông tin chi tiết về khu vực di sản này.'}
-                            </p>
-                        </div>
-
-                        <div class="flex-1 overflow-y-auto space-y-4 max-h-[460px] pr-2 custom-scrollbar">
-                            ${manualItemsHtml}
-                            ${dynamicHtml}
-                        </div>
-
-                        <div class="pt-4 mt-4 border-t border-sky-200/80 flex items-center justify-between text-[11px] text-sky-800 font-medium">
-                            <span>Tọa độ Dữ liệu SVG</span>
-                            <span class="bg-sky-200/60 px-2 py-0.5 rounded uppercase tracking-tighter">Bản đồ động</span>
-                        </div>
-                    </div>
-                `;
-            };
-
-            // If no termId, just show manual data and stop
-            if (!region.termId) {
-                console.log('SVG Map: No termId, showing manual data only');
-                setInfoHtml();
-                return;
-            }
-
-            showLoading();
-            loading = true;
-
-            try {
-                const ajaxUrl = ((window as any).jankxViewsData?.ajaxUrl) || '/wp-admin/admin-ajax.php';
-                const formData = new FormData();
-                formData.append('action', 'svg_data_map_fetch_posts');
-                formData.append('term_id', region.termId);
-                formData.append('taxonomy', region.taxonomy || 'category');
-                formData.append('post_type', region.postType || 'post');
-
-                const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
-                const data = await response.json();
-
-                if (data.success) {
-                    setInfoHtml(data.data.html);
-                } else {
-                    showError();
-                }
-            } catch (e) {
-                console.error('SVG Map: AJAX error:', e);
-                showError();
-            } finally {
-                loading = false;
-            }
-        };
-
-        const setRegionHover = (regionId: string, active: boolean) => {
+            // Update title element if present
             const region = regionMap.get(regionId);
-            if (!region) return;
+            const titleEl =
+                container.querySelector('.jankx-map-active-title') ||
+                (infoRoot ? infoRoot.querySelector('.jankx-map-active-title') : null);
+            if (titleEl) titleEl.textContent = region?.name || region?.label || 'Khu vực';
 
-            // Toggle hover on all paths
-            if (region.pathIds) {
-                region.pathIds.forEach((pid: string) => {
-                    const el = svgWrapper.querySelector(`#${pid}`);
-                    if (el) {
-                        if (active) el.classList.add('jankx-map-hover');
-                        else el.classList.remove('jankx-map-hover');
-                    }
+            // ── Refresh dynamic-data-layout if available ──────────────────
+            if (infoRoot && region) {
+                const ddlBlock = findDynamicDataLayoutBlock(infoRoot);
+                if (ddlBlock) {
+                    refreshDynamicDataLayout(ddlBlock, region, postId);
+                    return; // skip legacy AJAX below
+                }
+            }
+
+            // ── Legacy: render static region.items when no DDL block ───────
+            if (!infoRoot) return;
+            const legacyContent = infoRoot.querySelector('.jankx-svg-map-info-content') as HTMLElement | null;
+            if (!legacyContent || !region) return;
+
+            let manualHtml = '';
+            if (region.items?.length) {
+                region.items.forEach((item: any) => {
+                    manualHtml += `
+                        <div class="bg-indigo-50/50 p-5 rounded-xl shadow-sm border border-indigo-100/50 hover:shadow transition mb-4">
+                            <h3 class="font-bold text-slate-900 text-base m-0 mb-1">${item.title || ''}</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed">${item.description || ''}</p>
+                            ${item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" class="inline-flex items-center gap-1 mt-2 font-bold text-xs text-indigo-800 hover:text-indigo-900">${item.linkLabel || 'Xem chi tiết'} →</a>` : ''}
+                        </div>`;
                 });
             }
 
-            // Toggle hover on marker button if it exists
-            const markerBtn = container.querySelector(`.jankx-marker-btn[data-region-id="${regionId}"]`);
-            if (markerBtn) {
-                if (active) markerBtn.classList.add('jankx-map-marker-hover'); // For potential marker scale effects
-                else markerBtn.classList.remove('jankx-map-marker-hover');
-            }
+            legacyContent.innerHTML = `
+                <h2 class="text-2xl font-bold text-slate-800 mb-3">${region.name || 'Khu vực'}</h2>
+                <p class="text-slate-600 text-xs mb-4">${region.description || ''}</p>
+                <div class="space-y-3">${manualHtml}</div>
+            `;
         };
 
-        // Attach events to SVG paths
-        regions.forEach((r: any) => {
-            if (r.pathIds) {
-                r.pathIds.forEach((pid: string) => {
-                    const el = svgWrapper.querySelector(`#${pid}`);
-                    if (el) {
-                        el.classList.add('jankx-map-region-clickable');
-                        el.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            selectRegion(r.id);
-                        });
-                        el.addEventListener('mouseenter', () => setRegionHover(r.id, true));
-                        el.addEventListener('mouseleave', () => setRegionHover(r.id, false));
-                    }
-                });
-            }
+        // ── Attach events to SVG paths ─────────────────────────────────────
+
+        regions.forEach(r => {
+            if (!r.pathIds) return;
+            r.pathIds.forEach((pid: string) => {
+                const el = svgWrapper.querySelector(`#${pid}`);
+                if (!el) return;
+                el.classList.add('jankx-map-region-clickable');
+                el.addEventListener('click', e => { e.preventDefault(); selectRegion(r.id); });
+                el.addEventListener('mouseenter', () => setRegionHover(r.id, true));
+                el.addEventListener('mouseleave', () => setRegionHover(r.id, false));
+            });
         });
 
-        const allMarkerBtns = Array.from(container.querySelectorAll('.jankx-marker-btn')) as HTMLButtonElement[];
+        // ── Attach events + positioning to Markers ─────────────────────────
 
-        // Attach events to Markers and position them
-        allMarkerBtns.forEach(markerBtn => {
+        const allMarkers = Array.from(
+            container.querySelectorAll('.jankx-marker-btn')
+        ) as HTMLButtonElement[];
+
+        allMarkers.forEach(markerBtn => {
             const rid = markerBtn.getAttribute('data-region-id');
             const pathId = markerBtn.getAttribute('data-path-id');
 
-            // 1. Position the marker using exact SVG space mapping
+            // Position marker using getScreenCTM of the specific path element
             const computePosition = () => {
-                if (pathId) {
-                    const svgEl = svgWrapper as SVGGraphicsElement;
-                    const pathEl = svgEl.querySelector(`#${pathId}`) as SVGGraphicsElement;
-                    const layer = container.querySelector('.jankx-markers-layer') as HTMLElement;
+                if (!pathId) return;
+                const pathEl = svgWrapper.querySelector(`#${pathId}`) as SVGGraphicsElement | null;
+                const layer = container.querySelector('.jankx-markers-layer') as HTMLElement | null;
+                if (!pathEl || !layer || typeof pathEl.getBBox !== 'function') return;
 
-                    if (pathEl && layer && typeof pathEl.getBBox === 'function') {
-                        try {
-                            const bbox = pathEl.getBBox();
-                            const cx = bbox.x + bbox.width / 2;
-                            const cy = bbox.y + bbox.height / 2;
+                try {
+                    const bbox = pathEl.getBBox();
+                    const cx = bbox.x + bbox.width / 2;
+                    const cy = bbox.y + bbox.height / 2;
 
-                            // Use the specific path element's CTM so that nested group transforms are correctly applied
-                            const ctm = pathEl.getScreenCTM();
-                            // Only proceed if CTM is valid (a, d != 0) indicating it's rendered
-                            if (ctm && ctm.a !== 0 && ctm.d !== 0) {
-                                const pt = (svgEl as any).createSVGPoint();
-                                pt.x = cx;
-                                pt.y = cy;
-                                const screenPt = pt.matrixTransform(ctm);
-                                const layerRect = layer.getBoundingClientRect();
+                    const ctm = pathEl.getScreenCTM();
+                    if (!ctm || ctm.a === 0 || ctm.d === 0) return;
 
-                                const relX = (screenPt.x - layerRect.left);
-                                const relY = (screenPt.y - layerRect.top);
+                    const pt = (svgWrapper as any).createSVGPoint();
+                    pt.x = cx;
+                    pt.y = cy;
+                    const screenPt = pt.matrixTransform(ctm);
+                    const layerRect = layer.getBoundingClientRect();
 
-                                // Apply stored drag offset from config if available
-                                const region = regionMap.get(rid);
-                                const offX = region?.marker?.markerOffsetX ?? 0;
-                                const offY = region?.marker?.markerOffsetY ?? 0;
+                    const region = rid ? regionMap.get(rid) : null;
+                    const offX = region?.marker?.markerOffsetX ?? 0;
+                    const offY = region?.marker?.markerOffsetY ?? 0;
 
-                                markerBtn.style.left = `${relX + offX}px`;
-                                markerBtn.style.top = `${relY + offY}px`;
-                                markerBtn.style.transform = `translate(-50%, -50%)`;
-                                markerBtn.style.transformOrigin = 'center bottom';
-                                markerBtn.style.display = 'flex';
-                                markerBtn.style.position = 'absolute';
-                            }
-                        } catch (e) {
-                            console.error('SVG Map: Failed to calculate bbox for', pathId, e);
-                        }
-                    }
+                    markerBtn.style.left = `${screenPt.x - layerRect.left + offX}px`;
+                    markerBtn.style.top = `${screenPt.y - layerRect.top + offY}px`;
+                    markerBtn.style.transform = 'translate(-50%, -50%)';
+                    markerBtn.style.transformOrigin = 'center bottom';
+                    markerBtn.style.display = 'flex';
+                    markerBtn.style.position = 'absolute';
+                } catch (e) {
+                    console.error('[SVG Map] Failed to position marker', pathId, e);
                 }
             };
 
             computePosition();
-            
-            // Use ResizeObserver to re-calculate whenever SVG container dimensions change (handles initial load delays & resize)
-            const observer = new ResizeObserver(() => {
-                computePosition();
-            });
+
+            const observer = new ResizeObserver(() => computePosition());
             observer.observe(svgWrapper);
 
-            // 2. Attach events
-            markerBtn.addEventListener('click', (e) => {
+            // Click: selectRegion (→ refreshDynamicDataLayout nếu có DDL block)
+            markerBtn.addEventListener('click', e => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (rid) selectRegion(rid);
             });
-            markerBtn.addEventListener('mouseenter', () => {
-                if (rid) setRegionHover(rid, true);
-            });
-            markerBtn.addEventListener('mouseleave', () => {
-                if (rid) setRegionHover(rid, false);
-            });
+            markerBtn.addEventListener('mouseenter', () => { if (rid) setRegionHover(rid, true); });
+            markerBtn.addEventListener('mouseleave', () => { if (rid) setRegionHover(rid, false); });
         });
     });
 });

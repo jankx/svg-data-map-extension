@@ -5,15 +5,34 @@
     "version": "1.0.0",
     "title": "Jankx SVG Data Map Info",
     "category": "jankx",
-    "description": "Displays region info for a linked SVG Data Map.",
+    "description": "Displays region info for a linked SVG Data Map. Supports inner blocks (advanced-filters, dynamic-data-layout) for search and content.",
     "attributes": {
         "mapId": {
             "type": "string",
             "default": "default-map"
+        },
+        "showSearchBar": {
+            "type": "boolean",
+            "default": true
         }
     },
+    "allowedBlocks": [
+        "jankx/advanced-filters",
+        "jankx/dynamic-data-layout",
+        "jankx/dynamic-data-template",
+        "core/heading",
+        "core/paragraph",
+        "core/group"
+    ],
     "supports": {
-        "html": false
+        "html": false,
+        "innerBlocks": true,
+        "anchor": true,
+        "spacing": {
+            "margin": true,
+            "padding": true,
+            "blockGap": true
+        }
     },
     "editorScript": "file:../../dist/assets/index.js",
     "editorStyle": "file:../../dist/assets/index.css",
