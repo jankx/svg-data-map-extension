@@ -1,23 +1,13 @@
 import { registerBlockType } from '@wordpress/blocks';
-import { InnerBlocks, InspectorControls } from '@wordpress/block-editor';
+import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { PanelBody, TextControl, ToggleControl } from '@wordpress/components';
-import App from '../shared/App';
 
 /**
  * Default inner blocks template:
- * 1. jankx/advanced-filters  — search bar + "Bộ lọc" button (matches mockup top row)
- * 2. jankx/dynamic-data-layout — the scrollable post/item list below
+ * 1. jankx/advanced-filters  — search / filter bar
+ * 2. jankx/dynamic-data-layout — the post list below
  */
 const INFO_TEMPLATE: any = [
-    [
-        'core/heading',
-        {
-            level: 1,
-            content: 'Tất cả Địa Điểm',
-            className: 'jankx-map-active-title',
-            style: { typography: { fontSize: '42px', fontWeight: '700' }, color: { text: '#0B293C' } },
-        }
-    ],
     [
         'jankx/advanced-filters',
         {
@@ -25,7 +15,7 @@ const INFO_TEMPLATE: any = [
             layout: 'horizontal',
             keywordFilter: {
                 enabled: true,
-                placeholder: 'Tìm kiếm......',
+                placeholder: 'Tìm kiếm...',
             },
             showResetButton: true,
             resetButtonText: 'Bộ lọc',
@@ -37,7 +27,7 @@ const INFO_TEMPLATE: any = [
         {
             layout: 'list',
             postsPerPage: 10,
-            queryPreset: 'custom',
+            queryPreset: 'default',
             showTitle: true,
             showExcerpt: true,
             showFeaturedImage: false,
@@ -47,6 +37,9 @@ const INFO_TEMPLATE: any = [
 
 const InfoEdit = ({ attributes, setAttributes }: any) => {
     const mapId = attributes.mapId || 'default-map';
+    const blockProps = useBlockProps({
+        className: 'jankx-svg-data-map-info-editor',
+    });
 
     return (
         <>
@@ -66,41 +59,14 @@ const InfoEdit = ({ attributes, setAttributes }: any) => {
                 </PanelBody>
             </InspectorControls>
 
-            <div className="jankx-svg-data-map-info-editor">
-                {/* Mini map preview so editor can see which map is linked */}
-                <App
-                    blockId="jankx/svg-data-map-info"
-                    mapId={mapId}
-                    isGutenberg={true}
+            <div {...blockProps}>
+                <p style={{ fontSize: '11px', color: '#1E4D65', marginBottom: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #b3d4e6', paddingBottom: '6px' }}>
+                    Jankx SVG Data Map Info — Map ID: <code>{mapId}</code>
+                </p>
+                <InnerBlocks
+                    template={INFO_TEMPLATE}
+                    templateLock={false}
                 />
-
-                {/* Inner blocks: advanced-filters on top, dynamic-data-layout below */}
-                <div
-                    className="jankx-svg-map-info-inner-blocks-container"
-                    style={{
-                        border: '1px dashed #b3d4e6',
-                        borderRadius: '8px',
-                        padding: '12px',
-                        marginTop: '12px',
-                        background: '#f0f8ff',
-                    }}
-                >
-                    <p style={{ fontSize: '10px', color: '#1E4D65', marginBottom: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Nội dung Info Panel (Inner Blocks)
-                    </p>
-                    <InnerBlocks
-                        template={INFO_TEMPLATE}
-                        templateLock={false}
-                        allowedBlocks={[
-                            'jankx/advanced-filters',
-                            'jankx/dynamic-data-layout',
-                            'jankx/dynamic-data-template',
-                            'core/heading',
-                            'core/paragraph',
-                            'core/group',
-                        ]}
-                    />
-                </div>
             </div>
         </>
     );
@@ -116,3 +82,4 @@ if (typeof registerBlockType !== 'undefined') {
         save: Save,
     });
 }
+
