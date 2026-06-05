@@ -30,7 +30,7 @@ function calculateMarkerPosition(
 
 function getMarkerTransform(scale: number, mode: 'editor' | 'frontend'): string {
   if (mode === 'editor') {
-    return `translate(-50%, -50%) scale(${1 / scale})`;
+    return `translate(-50%, -50%) scale(${Math.min(1.25, scale) / scale})`;
   }
   return `translate(-50%, -50%)`;
 }
@@ -60,8 +60,8 @@ describe('Marker Position Calculation', () => {
 
   describe('Transform application', () => {
     it('editor mode applies counter-scale to keep marker size constant', () => {
-      expect(getMarkerTransform(2, 'editor')).toBe('translate(-50%, -50%) scale(0.5)');
-      expect(getMarkerTransform(0.5, 'editor')).toBe('translate(-50%, -50%) scale(2)');
+      expect(getMarkerTransform(2, 'editor')).toBe('translate(-50%, -50%) scale(0.625)');
+      expect(getMarkerTransform(0.5, 'editor')).toBe('translate(-50%, -50%) scale(1)');
     });
 
     it('frontend mode does not apply scale', () => {
