@@ -154,13 +154,13 @@ const Save = ({ attributes }: any) => {
 
     return (
         <div className="jankx-svg-data-map-runtime font-sans flex flex-col gap-4"
-             id="svg-map-runtime"
-             data-config={JSON.stringify(jsConfig)}
-             data-map-id={mapId}
-             data-ssr="yes">
-            <div className="relative bg-[#F1F7FA] rounded-[2rem] overflow-hidden shadow-2xl border border-white/50 min-h-[600px] flex items-center justify-center" id="map-container-root">
+            id="svg-map-runtime"
+            data-config={JSON.stringify(jsConfig)}
+            data-map-id={mapId}
+            data-ssr="yes">
+            <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border border-white/50 min-h-[600px] flex items-center justify-center" id="map-container-root">
                 <div id="svg-viewport" className="w-full h-full flex items-center justify-center transition-transform duration-75">
-                    <div className="jankx-svg-map-wrapper relative w-full h-full flex items-center justify-center pointer-events-auto" style={{minHeight: '500px'}}>
+                    <div className="jankx-svg-map-wrapper relative w-full h-full flex items-center justify-center pointer-events-auto" style={{ minHeight: '500px' }}>
                         {config.svgContent && (
                             <div dangerouslySetInnerHTML={{ __html: config.svgContent }} />
                         )}
