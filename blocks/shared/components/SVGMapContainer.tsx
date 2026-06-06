@@ -41,6 +41,9 @@ interface SVGMapContainerProps {
   zoomPositionY?: number;
   onZoomChange?: (zoomState: { scale: number; positionX: number; positionY: number }) => void;
   isGutenberg?: boolean;
+  // Selection style
+  selectionStyle?: string; // 'fill' | 'marker-zoom' | 'fill-glow' | 'stroke-only'
+  selectionAnimation?: boolean;
 }
 
 export function SVGMapContainer({
@@ -58,6 +61,8 @@ export function SVGMapContainer({
   zoomPositionY = 0,
   onZoomChange,
   isGutenberg = false,
+  selectionStyle = 'fill',
+  selectionAnimation = false,
 }: SVGMapContainerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgWrapperRef = useRef<HTMLDivElement>(null);
@@ -307,14 +312,59 @@ export function SVGMapContainer({
 
       region.pathIds.forEach(pathId => {
         if (isSelected) {
-          css += `
-            #${pathId} {
-              fill: ${selectedColor} !important;
-              stroke: #ffffff !important;
-              stroke-width: 3px !important;
-              opacity: 1 !important;
-            }
-          `;
+          if (selectionStyle === 'stroke-only') {
+            // Only highlight border, no fill change
+            css += `
+              #${pathId} {
+                stroke: ${selectedColor} !important;
+                stroke-width: 4px !important;
+                opacity: 1 !important;
+              }
+            `;
+          } else if (selectionStyle === 'fill-glow') {
+            // Fill + glowing border
+            css += `
+              #${pathId} {
+                fill: ${selectedColor} !important;
+                stroke: ${selectedColor} !important;
+                stroke-width: 3px !important;
+                opacity: 1 !important;
+                filter: drop-shadow(0 0 8px ${selectedColor}99);
+              }
+            `;
+          } else if (selectionStyle === 'marker-zoom') {
+            // Subtle fill, marker handles visual emphasis
+            css += `
+              #${pathId} {
+                fill: ${baseColor} !important;
+                stroke: ${selectedColor} !important;
+                stroke-width: 2.5px !important;
+                opacity: 0.9 !important;
+              }
+            `;
+          } else {
+            // Default: fill
+            css += `
+              #${pathId} {
+                fill: ${selectedColor} !important;
+                stroke: #ffffff !important;
+                stroke-width: 3px !important;
+                opacity: 1 !important;
+              }
+            `;
+          }
+
+          // Optional selection animation pulse
+          if (selectionAnimation) {
+            css += `
+              @keyframes jankx-region-pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.65; }
+                100% { opacity: 1; }
+              }
+              #${pathId} { animation: jankx-region-pulse 1.5s ease-in-out infinite; }
+            `;
+          }
         } else {
           css += `
             #${pathId} {
@@ -433,6 +483,8 @@ export function SVGMapContainer({
                 scale={scale}
                 isBuilderMode={isBuilderMode}
                 onMarkerDragged={onMarkerDragged}
+                selectionStyle={selectionStyle}
+                selectionAnimation={selectionAnimation}
               />
             );
           })}
@@ -524,7 +576,7 @@ export function SVGMapContainer({
   );
 }
 
-const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, svgWrapperRef, onSelectRegion, getMarkerIcon, scale = 1, isBuilderMode = false, onMarkerDragged }: any) => {
+const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, svgWrapperRef, onSelectRegion, getMarkerIcon, scale = 1, isBuilderMode = false, onMarkerDragged, selectionStyle = 'fill', selectionAnimation = false }: any) => {
   const markerRef = React.useRef<HTMLButtonElement>(null);
 
   // Drag state for UI feedback (only 2 renders per drag action: start & end)
@@ -669,11 +721,15 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
         left: '-9999px',
         top: '-9999px',
         zIndex: isSelected ? 40 : 20,
-        // Cap the visual size of the marker when zoomed in to avoid bloating, but allow it to shrink when zoomed out.
-        transform: `translate(-50%, -50%) scale(${Math.min(1.25, scale) / scale})`,
+        // marker-zoom: dramatically scale up selected marker; otherwise normal scale cap
+        transform: isSelected && selectionStyle === 'marker-zoom'
+          ? `translate(-50%, -50%) scale(${Math.min(2.2, scale * 1.8) / scale})`
+          : `translate(-50%, -50%) scale(${Math.min(1.25, scale) / scale})`,
         transformOrigin: 'center bottom',
-        transition: isDraggingNow ? 'none' : 'transform 0.15s ease',
+        transition: isDraggingNow ? 'none' : 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
         cursor: isBuilderMode ? (isDraggingNow ? 'grabbing' : 'grab') : 'pointer',
+        // pulse animation for selected + selectionAnimation mode
+        ...(isSelected && selectionAnimation && selectionStyle !== 'marker-zoom' ? {} : {}),
       }}
       onMouseDown={handleMarkerMouseDown}
       onClick={(e) => {

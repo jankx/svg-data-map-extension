@@ -45,6 +45,8 @@ interface AppProps {
   zoomPositionX?: number;
   zoomPositionY?: number;
   onZoomChange?: (zoomState: { scale: number; positionX: number; positionY: number }) => void;
+  selectionStyle?: string;
+  selectionAnimation?: boolean;
 }
 
 export default function App({
@@ -58,7 +60,9 @@ export default function App({
   zoomScale = 1,
   zoomPositionX = 0,
   zoomPositionY = 0,
-  onZoomChange
+  onZoomChange,
+  selectionStyle = 'fill',
+  selectionAnimation = false,
 }: AppProps) {
   // Global active tab state ('viewer' mode or 'builder' mode)
   const [internalActiveTab, setInternalActiveTab] = useState<'viewer' | 'builder'>('viewer');
@@ -408,6 +412,8 @@ export default function App({
               zoomPositionY={zoomPositionY}
               onZoomChange={onZoomChange}
               isGutenberg={isGutenberg}
+              selectionStyle={selectionStyle}
+              selectionAnimation={selectionAnimation}
             />
           </div>
         ) : (
@@ -425,6 +431,8 @@ export default function App({
                 zoomPositionY={zoomPositionY}
                 onZoomChange={onZoomChange}
                 isGutenberg={isGutenberg}
+                selectionStyle={selectionStyle}
+                selectionAnimation={selectionAnimation}
               />
             </div>
           ) : (

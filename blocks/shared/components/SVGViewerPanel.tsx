@@ -24,6 +24,8 @@ interface SVGViewerPanelProps {
   zoomPositionY?: number;
   onZoomChange?: (zoomState: { scale: number; positionX: number; positionY: number }) => void;
   isGutenberg?: boolean;
+  selectionStyle?: string;
+  selectionAnimation?: boolean;
 }
 
 export function SVGViewerPanel({
@@ -37,6 +39,8 @@ export function SVGViewerPanel({
   zoomPositionY = 0,
   onZoomChange,
   isGutenberg = false,
+  selectionStyle = 'fill',
+  selectionAnimation = false,
 }: SVGViewerPanelProps) {
 
   // Find currently active region details
@@ -63,6 +67,8 @@ export function SVGViewerPanel({
               zoomPositionY={zoomPositionY}
               onZoomChange={onZoomChange}
               isGutenberg={isGutenberg}
+              selectionStyle={selectionStyle}
+              selectionAnimation={selectionAnimation}
             />
           </div>
 

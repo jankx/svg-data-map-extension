@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { registerBlockType } from '@wordpress/blocks';
 import { BlockControls, InspectorControls, PanelColorSettings } from '@wordpress/block-editor';
-import { ToolbarButton, ToolbarGroup, PanelBody, Button, ToggleControl } from '@wordpress/components';
+import { ToolbarButton, ToolbarGroup, PanelBody, Button, ToggleControl, SelectControl } from '@wordpress/components';
 import { Eye, Settings, Sun } from 'lucide-react';
 import App from '../shared/App';
 
 const MapEdit = ({ attributes, setAttributes }: any) => {
     const config = attributes.config || {};
     const mapId = attributes.mapId || 'default-map';
+    const selectionStyle = attributes.selectionStyle || 'fill';
+    const selectionAnimation = attributes.selectionAnimation || false;
     const [activeTab, setActiveTab] = useState<'viewer' | 'builder'>('viewer');
 
     const handleConfigChange = (newConfig: any) => {
@@ -124,6 +126,32 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
                         onChange={(val) => updateGlobalSettings('showMarkerLabels', val)}
                     />
                 </PanelBody>
+
+                <PanelBody title="Hiệu ứng khi chọn vùng" initialOpen={true}>
+                    <SelectControl
+                        label="Kiểu hiển thị vùng được chọn"
+                        value={selectionStyle}
+                        onChange={(val) => setAttributes({ selectionStyle: val })}
+                        options={[
+                            { label: '🎨 Tô màu (Fill) — Đổi màu vùng', value: 'fill' },
+                            { label: '🔍 Phóng to Marker — Zoom pin', value: 'marker-zoom' },
+                            { label: '🌟 Tô màu + Viền sáng', value: 'fill-glow' },
+                            { label: '📍 Chỉ viền nổi bật', value: 'stroke-only' },
+                        ]}
+                        help={
+                            selectionStyle === 'fill' ? 'Vùng được chọn sẽ đổi sang màu đã cấu hình.' :
+                                selectionStyle === 'marker-zoom' ? 'Pin Marker trên vùng được chọn sẽ được phóng to.' :
+                                    selectionStyle === 'fill-glow' ? 'Tô màu kết hợp viền phát sáng (glow).' :
+                                        'Chỉ hiện viền đậm, không đổi màu nền vùng.'
+                        }
+                    />
+                    <ToggleControl
+                        label="Bật hiệu ứng animation khi chọn"
+                        checked={selectionAnimation}
+                        onChange={(val) => setAttributes({ selectionAnimation: val })}
+                        help="Thêm animation nhấp nháy / pulse khi vùng được chọn."
+                    />
+                </PanelBody>
             </InspectorControls>
             <App
                 blockId="jankx/svg-data-map"
@@ -137,6 +165,8 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
                 zoomPositionX={attributes.zoomPositionX || 0}
                 zoomPositionY={attributes.zoomPositionY || 0}
                 onZoomChange={handleZoomChange}
+                selectionStyle={selectionStyle}
+                selectionAnimation={selectionAnimation}
             />
         </div>
     );

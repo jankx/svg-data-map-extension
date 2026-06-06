@@ -26,6 +26,14 @@
         "zoomPositionY": {
             "type": "number",
             "default": 0
+        },
+        "selectionStyle": {
+            "type": "string",
+            "default": "fill"
+        },
+        "selectionAnimation": {
+            "type": "boolean",
+            "default": false
         }
     },
     "supports": {
