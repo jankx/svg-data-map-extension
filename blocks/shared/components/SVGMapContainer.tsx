@@ -381,7 +381,7 @@ export function SVGMapContainer({
     <div
       id="map-container-root"
       ref={containerRef}
-      className="relative w-full h-full select-none overflow-hidden bg-slate-50 border border-slate-200/80 shadow-inner min-h-[500px]"
+      className="relative w-full h-full select-none overflow-hidden bg-slate-50 border border-slate-200/80 shadow-inner"
       onMouseDown={handleMouseDown}
       onMouseMove={handleDragMouseMove}
       onMouseUp={handleMouseUp}
@@ -406,7 +406,7 @@ export function SVGMapContainer({
         onMouseLeave={handleMouseLeave}
       >
         <div
-          className="relative w-full h-full max-w-full max-h-full flex items-center justify-center p-4 pointer-events-auto"
+          className="relative w-full h-full max-w-full max-h-full flex items-center justify-center pointer-events-auto"
           dangerouslySetInnerHTML={{ __html: config.svgContent }}
         />
 

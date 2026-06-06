@@ -303,12 +303,12 @@ export function SVGMapperEditor({
   // activeRegionObj is now declared at top of component
 
   return (
-    <div id="builder-editor-root" className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch h-full">
+    <div id="builder-editor-root" className="grid grid-cols-1 xl:grid-cols-12 gap-2 items-stretch h-full">
       {/* 1. Left Action Bar Panel (Vector ID parser list only - export/import moved to settings) */}
-      <div className="xl:col-span-3 flex flex-col gap-5 h-full">
+      <div className="xl:col-span-2 flex flex-col gap-2 h-full">
 
         {/* Vector Element path checklist selection */}
-        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex-1 flex flex-col min-h-[200px]">
+        <div className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex-1 flex flex-col min-h-[200px]">
           <div className="flex items-center justify-between mb-2.5 border-b border-slate-50 pb-1.5">
             <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight flex items-center gap-2">
               <Layers className="w-4 h-4 text-purple-600" />
@@ -405,68 +405,26 @@ export function SVGMapperEditor({
       </div>
 
       {/* 2. Middle Interactive Map Builder Container - full height */}
-      <div className="xl:col-span-6 flex flex-col h-full gap-4">
+      <div className="xl:col-span-7 flex flex-col h-full gap-2">
 
         {/* Editor map controller */}
-        <div className="bg-white border border-indigo-50/50 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4 flex-wrap">
-          <div>
+        <div className="bg-white border border-indigo-50/50 rounded-xl p-2 px-3 shadow-sm flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex-1 w-full">
             <div className="flex items-center gap-2">
               <span className="p-0.5 px-1.5 rounded bg-amber-50 text-amber-600 font-bold text-[9px]">BUILDER WORKSPACE</span>
               <input
                 id="edit-map-title"
                 type="text"
-                className="font-bold text-base text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none focus:bg-slate-50 px-1 rounded transition"
+                className="font-bold text-base text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none focus:bg-slate-50 px-1 rounded transition w-full max-w-sm"
                 value={config.title}
                 onChange={(e) => onChangeConfig({ ...config, title: e.target.value })}
               />
             </div>
-            <input
-              id="edit-map-desc"
-              type="text"
-              placeholder="Nhập mô tả của bản đồ cấu hình..."
-              className="text-xs text-slate-500 mt-1 w-full border-b border-transparent hover:border-slate-200 focus:border-indigo-400 focus:outline-none px-1 py-0.5 rounded transition"
-              value={config.description}
-              onChange={(e) => onChangeConfig({ ...config, description: e.target.value })}
-            />
           </div>
-
-          {/* Raw SVG paste button */}
-          <button
-            id="raw-svg-toggle"
-            onClick={() => {
-              setIsEditingRawSvg(!isEditingRawSvg);
-              setRawSvgInput(config.svgContent);
-            }}
-            className="text-xs py-1.5 px-3 border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium rounded-lg cursor-pointer flex items-center gap-1.5"
-          >
-            <FileCode className="w-3.5 h-3.5" />
-            {isEditingRawSvg ? 'Đóng mã nguồn SVG' : 'Dán mã SVG trực tiếp'}
-          </button>
         </div>
 
-        {/* Raw SVG paste area */}
-        {isEditingRawSvg && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Dán Code SVG (&lt;svg&gt;...&lt;/svg&gt;):</label>
-            <textarea
-              id="textarea-raw-svg"
-              className="w-full h-32 p-2 font-mono text-[10px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50"
-              value={rawSvgInput}
-              onChange={(e) => setRawSvgInput(e.target.value)}
-              placeholder="Paste <svg>...</svg> content here..."
-            />
-            <button
-              id="btn-apply-raw-svg"
-              onClick={handleApplyRawSvg}
-              className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-1.5 px-3 rounded-lg cursor-pointer"
-            >
-              Áp dụng XML SVG
-            </button>
-          </div>
-        )}
-
         {/* Map panel - full height 100% */}
-        <div className="relative flex-1 h-full">
+        <div className="relative flex-1 h-full min-h-[600px]">
           <SVGMapContainer
             config={config}
             selectedRegionId={selectedRegionId}
@@ -497,10 +455,10 @@ export function SVGMapperEditor({
       </div>
 
       {/* 3. Right Panel Sidebar: Selected Region Details & Content Cards Editor */}
-      <div className="xl:col-span-3 flex flex-col gap-5 h-full">
+      <div className="xl:col-span-3 flex flex-col gap-2 h-full">
 
         {/* Regions list sidebar quick select */}
-        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
           <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2 flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-500" />
             Danh Sách Địa Danh ({config.regions.length})
@@ -543,7 +501,7 @@ export function SVGMapperEditor({
         </div>
 
         {/* Selected Area/Region Editor form */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-[400px]">
+        <div className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm flex-1 flex flex-col min-h-[400px]">
           {activeRegionObj ? (
             <div className="flex flex-col h-full justify-between gap-4">
               <div className="space-y-4 overflow-y-auto pr-1 max-h-[480px] custom-scrollbar flex-1">
