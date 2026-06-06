@@ -303,9 +303,9 @@ export function SVGMapperEditor({
   // activeRegionObj is now declared at top of component
 
   return (
-    <div id="builder-editor-root" className="grid grid-cols-1 xl:grid-cols-12 gap-2 items-stretch h-full">
+    <div id="builder-editor-root" className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch h-full p-4 overflow-hidden">
       {/* 1. Left Action Bar Panel (Vector ID parser list only - export/import moved to settings) */}
-      <div className="xl:col-span-2 flex flex-col gap-2 h-full">
+      <div className="xl:col-span-3 flex flex-col gap-4 h-full min-w-0">
 
         {/* Vector Element path checklist selection */}
         <div className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex-1 flex flex-col min-h-[200px]">
@@ -405,17 +405,17 @@ export function SVGMapperEditor({
       </div>
 
       {/* 2. Middle Interactive Map Builder Container - full height */}
-      <div className="xl:col-span-7 flex flex-col h-full gap-2">
+      <div className="xl:col-span-6 flex flex-col h-full gap-4 min-w-0">
 
         {/* Editor map controller */}
-        <div className="bg-white border border-indigo-50/50 rounded-xl p-2 px-3 shadow-sm flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex-1 w-full">
+        <div className="bg-white border border-indigo-50/50 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="p-0.5 px-1.5 rounded bg-amber-50 text-amber-600 font-bold text-[9px]">BUILDER WORKSPACE</span>
               <input
                 id="edit-map-title"
                 type="text"
-                className="font-bold text-base text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none focus:bg-slate-50 px-1 rounded transition w-full max-w-sm"
+                className="font-bold text-base text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none focus:bg-slate-50 px-1 rounded transition w-full"
                 value={config.title}
                 onChange={(e) => onChangeConfig({ ...config, title: e.target.value })}
               />
@@ -424,7 +424,7 @@ export function SVGMapperEditor({
         </div>
 
         {/* Map panel - full height 100% */}
-        <div className="relative flex-1 h-full min-h-[600px]">
+        <div className="relative flex-1 h-full min-h-[500px] bg-slate-100 rounded-2xl overflow-hidden border border-slate-200">
           <SVGMapContainer
             config={config}
             selectedRegionId={selectedRegionId}
@@ -455,10 +455,10 @@ export function SVGMapperEditor({
       </div>
 
       {/* 3. Right Panel Sidebar: Selected Region Details & Content Cards Editor */}
-      <div className="xl:col-span-3 flex flex-col gap-2 h-full">
+      <div className="xl:col-span-3 flex flex-col gap-5 h-full min-w-0">
 
         {/* Regions list sidebar quick select */}
-        <div className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
+        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
           <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2 flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-500" />
             Danh Sách Địa Danh ({config.regions.length})
@@ -501,7 +501,7 @@ export function SVGMapperEditor({
         </div>
 
         {/* Selected Area/Region Editor form */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm flex-1 flex flex-col min-h-[400px]">
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-[400px]">
           {activeRegionObj ? (
             <div className="flex flex-col h-full justify-between gap-4">
               <div className="space-y-4 overflow-y-auto pr-1 max-h-[480px] custom-scrollbar flex-1">
