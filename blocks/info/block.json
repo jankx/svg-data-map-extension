@@ -14,6 +14,18 @@
         "showSearchBar": {
             "type": "boolean",
             "default": true
+        },
+        "maxHeight": {
+            "type": "string",
+            "default": ""
+        },
+        "maxHeightUnit": {
+            "type": "string",
+            "default": "px"
+        },
+        "scrollbarStyle": {
+            "type": "string",
+            "default": "thin"
         }
     },
     "allowedBlocks": [
