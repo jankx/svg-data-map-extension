@@ -39,6 +39,7 @@ const InfoEdit = ({ attributes, setAttributes }: any) => {
     const mapId = attributes.mapId || 'default-map';
     const blockProps = useBlockProps({
         className: 'jankx-svg-data-map-info-editor',
+        style: { padding: '20px', border: '1px solid #e2e8f0', borderRadius: '8px' }
     });
 
     return (
@@ -59,7 +60,7 @@ const InfoEdit = ({ attributes, setAttributes }: any) => {
                 </PanelBody>
             </InspectorControls>
 
-            <div {...blockProps} style={{ padding: '20px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+            <div {...blockProps}>
                 <div style={{ marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #edf2f7' }}>
                     <h4 style={{ margin: 0, color: '#2d3748', fontSize: '14px' }}>
                         Jankx Info Panel — Linking Map: <code style={{ color: '#e53e3e' }}>{mapId}</code>

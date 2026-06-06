@@ -33,7 +33,14 @@
         "align": [
             "wide",
             "full"
-        ]
+        ],
+        "color": {
+            "background": true,
+            "text": false,
+            "__experimentalDefaultControls": {
+                "background": true
+            }
+        }
     },
     "editorScript": "file:../../dist/assets/index.js",
     "editorStyle": "file:../../dist/assets/index.css",

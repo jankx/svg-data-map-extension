@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { SVGMapConfig } from './types';
 import { SVGViewerPanel } from './components/SVGViewerPanel';
 import { SVGMapperEditor } from './components/SVGMapperEditor';
@@ -169,20 +170,16 @@ export default function App({
           }
         }
 
-        // Hide all other blocks when in builder mode (only for map block)
-        if (blockId === 'jankx/svg-data-map' && isGutenberg) {
-          const editorBlocks = document.querySelectorAll('.block-editor-block-list__block');
-          const currentBlockWrapper = document.querySelector('.jankx-svg-data-map-editor')?.closest('.block-editor-block-list__block') as HTMLElement;
-
-          editorBlocks.forEach((block: any) => {
-            if (currentBlockWrapper && !currentBlockWrapper.contains(block) && !block.contains(currentBlockWrapper)) {
-              if (e.detail.isBuilderMode) {
-                block.style.display = 'none';
-              } else {
-                block.style.display = '';
-              }
+        // You can keep info editor hiding for better perf, but map block doesn't need to hide siblings anymore
+        if (blockId === 'jankx/svg-data-map-info') {
+          const infoEditor = document.querySelector('.jankx-svg-data-map-info-editor') as HTMLElement;
+          if (infoEditor) {
+            if (e.detail.isBuilderMode) {
+              infoEditor.style.display = 'none';
+            } else {
+              infoEditor.style.display = 'block';
             }
-          });
+          }
         }
       }
     };
@@ -291,7 +288,7 @@ export default function App({
     // Samples removed — preset loading is no longer supported
   };
 
-  return (
+  const appContent = (
     <div id="app-root-container" className={`${isGutenberg && activeTab === 'builder' ? 'fixed inset-0 z-[999999] bg-white' : 'min-h-screen bg-slate-50/50'} flex flex-col font-sans`}>
 
       {/* 1. Header Toolbar navigation element (only in Gutenberg/Builder mode) */}
@@ -463,4 +460,12 @@ export default function App({
       )}
     </div>
   );
+
+  // When in Gutenberg builder mode, use createPortal to inject directly into document.body
+  // This makes it truly fullscreen, bypassing all block-editor boundaries / z-index contexts
+  if (isGutenberg && activeTab === 'builder' && typeof document !== 'undefined') {
+    return createPortal(appContent, document.body);
+  }
+
+  return appContent;
 }

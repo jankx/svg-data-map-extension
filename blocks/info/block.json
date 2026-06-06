@@ -28,6 +28,15 @@
         "html": false,
         "innerBlocks": true,
         "anchor": true,
+        "color": {
+            "background": true,
+            "text": true,
+            "gradients": true,
+            "__experimentalDefaultControls": {
+                "background": true,
+                "text": true
+            }
+        },
         "spacing": {
             "margin": true,
             "padding": true,
