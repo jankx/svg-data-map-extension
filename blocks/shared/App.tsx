@@ -12,7 +12,10 @@ import {
   Settings,
   Map,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  FileCode,
+  Upload,
+  Download
 } from 'lucide-react';
 
 const EMPTY_CONFIG: SVGMapConfig = {
@@ -58,6 +61,46 @@ export default function App({
 }: AppProps) {
   // Global active tab state ('viewer' mode or 'builder' mode)
   const [internalActiveTab, setInternalActiveTab] = useState<'viewer' | 'builder'>('viewer');
+
+  // Settings panel state
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showJsonOverlay, setShowJsonOverlay] = useState(false);
+  const [jsonPasteValue, setJsonPasteValue] = useState('');
+
+  // SVG file upload handler
+  const handleSvgFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        setMapConfig({
+          ...mapConfig,
+          title: `Bản đồ: ${file.name.replace('.svg', '')}`,
+          svgContent: text,
+          regions: [],
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // JSON export handler
+  const handleExportJson = () => {
+    const exportConfig = {
+      ...mapConfig,
+      svgContent: mapConfig.svgContent || ''
+    };
+    const dataStr = JSON.stringify(exportConfig, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'svg-map-config.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
 
   // Use external activeTab if provided (from Gutenberg block), otherwise use internal state
   const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalActiveTab;
@@ -282,13 +325,24 @@ export default function App({
                 </button>
               )}
               {activeTab === 'builder' && (
-                <button
-                  onClick={() => setActiveTab('viewer')}
-                  className="p-2 px-3 text-xs bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-                  title="Thoát chế độ toàn màn hình"
-                >
-                  <Eye className="w-3.5 h-3.5" /> Xem kết quả
-                </button>
+                <>
+                  <button
+                    onClick={() => setActiveTab('viewer')}
+                    className="p-2 px-3 text-xs bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+                    title="Thoát chế độ toàn màn hình"
+                  >
+                    <Eye className="w-3.5 h-3.5" /> Xem kết quả
+                  </button>
+
+                  {/* Settings toggle for export/import */}
+                  <button
+                    onClick={() => setShowSettingsPanel(!showSettingsPanel)}
+                    className={`p-2 px-3 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${showSettingsPanel ? 'bg-indigo-100 text-indigo-700 border border-indigo-300' : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'}`}
+                    title="Cài đặt bản đồ"
+                  >
+                    <Settings className="w-3.5 h-3.5" /> Cài đặt
+                  </button>
+                </>
               )}
 
               <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 border-l border-slate-200 pl-3">
@@ -301,8 +355,47 @@ export default function App({
         </header>
       )}
 
+      {/* Settings Panel (Export/Import SVG) */}
+      {isGutenberg && activeTab === 'builder' && showSettingsPanel && (
+        <div className="bg-white border-b border-indigo-50/50 px-4 py-3 shadow-sm">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+              <FileCode className="w-4 h-4 text-indigo-600" />
+              Export/Import Bản Đồ SVG
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="file"
+                accept=".svg"
+                onChange={handleSvgFileUpload}
+                className="hidden"
+                id="svg-upload-input"
+              />
+              <label
+                htmlFor="svg-upload-input"
+                className="p-2 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Upload className="w-3.5 h-3.5" /> Import SVG
+              </label>
+              <button
+                onClick={handleExportJson}
+                className="p-2 px-3 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" /> Export JSON
+              </button>
+              <button
+                onClick={() => setShowJsonOverlay(true)}
+                className="p-2 px-3 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileCode className="w-3.5 h-3.5" /> Import JSON
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 2. Main Content viewport wrapper */}
-      <main className={`${isGutenberg && activeTab === 'builder' ? 'flex-1 overflow-auto p-4' : 'flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8'}`}>
+      <main className={`${isGutenberg && activeTab === 'builder' ? 'flex-1 overflow-hidden p-0' : 'flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8'}`}>
 
         {/* Dynamic content rendering according to active tab and blockId */}
         {blockId === 'jankx/svg-data-map-info' ? (
@@ -338,23 +431,7 @@ export default function App({
               />
             </div>
           ) : (
-            <div id="tab-content-builder" className="animate-fade-in space-y-4">
-
-              {/* Informational banner about editing flow */}
-              <div className="bg-slate-900 text-slate-100 rounded-2xl p-5 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-slate-800 rounded-xl text-amber-400 shrink-0 mt-0.5">
-                    <HelpCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-100 uppercase tracking-wider">Bộ Công Cụ Thiết Thiết Kế Bản Đồ Động</h3>
-                    <p className="text-slate-400 text-xs leading-relaxed mt-1">
-                      Bạn có thể kéo thả <b>File SVG bất kỳ</b> của mình vào khung bên phải &rarr; Hệ thống sẽ tự động quét và phân rã các thẻ vector có ID. Sau đó gộp vector, ghim cờ, soạn thảo danh sách thẻ dữ liệu giống như ảnh mẫu và xuất file JSON để lưu trữ!
-                    </p>
-                  </div>
-                </div>
-              </div>
-
+            <div id="tab-content-builder" className="animate-fade-in h-full">
               {/* Builder Component workspace */}
               <SVGMapperEditor
                 config={mapConfig}

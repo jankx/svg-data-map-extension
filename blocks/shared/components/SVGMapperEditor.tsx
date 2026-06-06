@@ -58,12 +58,7 @@ export function SVGMapperEditor({
   // States for marker placement
   const [isPlacingMarker, setIsPlacingMarker] = useState(false);
 
-  // JSON view modal
-  const [jsonPasteValue, setJsonPasteValue] = useState('');
-  const [showJsonOverlay, setShowJsonOverlay] = useState(false);
-  const [exportNotice, setExportNotice] = useState(false);
-
-  // Raw SVG edit area toggle
+  // Raw SVG edit area toggle (moved to settings panel)
   const [isEditingRawSvg, setIsEditingRawSvg] = useState(false);
   const [rawSvgInput, setRawSvgInput] = useState('');
 
@@ -143,55 +138,7 @@ export function SVGMapperEditor({
     }
   }, [config.svgContent]);
 
-  // Handle local SVG file selection
-  const handleSvgFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text) {
-        // Simple sanitization to preserve nested IDs
-        onChangeConfig({
-          ...config,
-          title: `Bản đồ: ${file.name.replace('.svg', '')}`,
-          svgContent: text,
-          regions: [], // Reset previous mapped nodes since vectors changed
-        });
-        setSelectedPathsForNewRegion([]);
-        onSelectRegion(null);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  // Drag over handler for drop area
-  const [isDragOver, setIsDragOver] = useState(false);
-  const handleSvgDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.name.endsWith('.svg')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        if (text) {
-          onChangeConfig({
-            ...config,
-            title: `Bản đồ: ${file.name.replace('.svg', '')}`,
-            svgContent: text,
-            regions: [],
-          });
-          setSelectedPathsForNewRegion([]);
-          onSelectRegion(null);
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  // Parse custom pasted SVG code directly
+  // Parse custom pasted SVG code directly (kept for direct paste feature)
   const handleApplyRawSvg = () => {
     if (!rawSvgInput.trim()) return;
     onChangeConfig({
@@ -350,122 +297,18 @@ export function SVGMapperEditor({
   };
 
   // Export full mapping setup to a JSON file (downloadable)
-  const handleExportJson = () => {
-    try {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `${config.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_mapping_config.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-
-      setExportNotice(true);
-      setTimeout(() => setExportNotice(false), 3000);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleCopyClipboardJson = () => {
-    navigator.clipboard.writeText(JSON.stringify(config, null, 2));
-    setExportNotice(true);
-    setTimeout(() => setExportNotice(false), 3000);
-  };
-
-  // Import custom Config from pasted JSON block
-  const handleImportJson = () => {
-    if (!jsonPasteValue.trim()) return;
-    try {
-      const parsed = JSON.parse(jsonPasteValue);
-      if (parsed && typeof parsed === 'object' && parsed.svgContent && Array.isArray(parsed.regions)) {
-        onChangeConfig(parsed);
-        setShowJsonOverlay(false);
-        setJsonPasteValue('');
-        onSelectRegion(null);
-      } else {
-        alert('Cấu trúc file JSON không hợp lệ. Vui lòng kiểm tra lại cấu trúc thuộc tính.');
-      }
-    } catch (e) {
-      alert('Lỗi định dạng JSON: ' + (e as Error).message);
-    }
-  };
+  // JSON import/export handlers moved to App.tsx settings panel
 
   // UI section was removed from bottom as it was moved up
   // activeRegionObj is now declared at top of component
 
   return (
-    <div id="builder-editor-root" className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-      {/* 1. Left Action Bar Panel (SVG Upload & Vector ID parser list) */}
-      <div className="xl:col-span-3 flex flex-col gap-5">
-
-        {/* Workspace details & import */}
-        <div className="bg-white border border-indigo-50/50 rounded-xl p-4 shadow-sm">
-          <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2.5 flex items-center gap-2">
-            <Upload className="w-4 h-4 text-indigo-600" />
-            Nguồn Bản Đồ (SVG)
-          </h3>
-
-          <div
-            id="svg-dropzone"
-            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleSvgDrop}
-            className={`border-2 border-dashed rounded-xl p-4 text-center transition cursor-pointer ${isDragOver
-              ? 'bg-indigo-50/75 border-indigo-400'
-              : 'bg-slate-50 border-slate-200 hover:bg-slate-100/60'
-              }`}
-          >
-            <label className="cursor-pointer block">
-              <input
-                type="file"
-                accept=".svg"
-                onChange={handleSvgFileUpload}
-                className="hidden"
-              />
-              <FileCode className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
-              <span className="text-xs font-bold text-slate-700 block">Kéo thả file .svg vào đây</span>
-              <span className="text-[10px] text-slate-400 mt-1 block">Hoặc bấm để duyệt tập tin từ máy</span>
-            </label>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-2">
-            <button
-              id="raw-svg-toggle"
-              onClick={() => {
-                setIsEditingRawSvg(!isEditingRawSvg);
-                setRawSvgInput(config.svgContent);
-              }}
-              className="text-xs w-full py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium rounded-lg text-center cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <FileCode className="w-3.5 h-3.5" />
-              {isEditingRawSvg ? 'Đóng mã nguồn SVG' : 'Dán mã SVG trực tiếp'}
-            </button>
-
-            {isEditingRawSvg && (
-              <div className="mt-2 text-left">
-                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Dán Code SVG (&lt;svg&gt;...&lt;/svg&gt;):</label>
-                <textarea
-                  id="textarea-raw-svg"
-                  className="w-full h-32 p-2 font-mono text-[10px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50"
-                  value={rawSvgInput}
-                  onChange={(e) => setRawSvgInput(e.target.value)}
-                  placeholder="Paste <svg>...</svg> content here..."
-                />
-                <button
-                  id="btn-apply-raw-svg"
-                  onClick={handleApplyRawSvg}
-                  className="mt-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-1.5 rounded-lg text-center cursor-pointer"
-                >
-                  Áp dụng XML SVG
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+    <div id="builder-editor-root" className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch h-full">
+      {/* 1. Left Action Bar Panel (Vector ID parser list only - export/import moved to settings) */}
+      <div className="xl:col-span-3 flex flex-col gap-5 h-full">
 
         {/* Vector Element path checklist selection */}
-        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex-1 flex flex-col min-h-[300px]">
+        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex-1 flex flex-col min-h-[200px]">
           <div className="flex items-center justify-between mb-2.5 border-b border-slate-50 pb-1.5">
             <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight flex items-center gap-2">
               <Layers className="w-4 h-4 text-purple-600" />
@@ -547,10 +390,13 @@ export function SVGMapperEditor({
                 </button>
                 <button
                   id="btn-cancel-group"
-                  onClick={() => setSelectedPathsForNewRegion([])}
-                  className="bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold text-xs p-1.5 rounded-lg text-center cursor-pointer transition-all active:scale-95"
+                  onClick={() => {
+                    setSelectedPathsForNewRegion([]);
+                    setNewRegionName('');
+                  }}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg text-center cursor-pointer transition-all"
                 >
-                  ✕
+                  ✗ Hủy bỏ
                 </button>
               </div>
             </div>
@@ -558,8 +404,8 @@ export function SVGMapperEditor({
         )}
       </div>
 
-      {/* 2. Middle Interactive Map Builder Container */}
-      <div className="xl:col-span-6 flex flex-col gap-4">
+      {/* 2. Middle Interactive Map Builder Container - full height */}
+      <div className="xl:col-span-6 flex flex-col h-full gap-4">
 
         {/* Editor map controller */}
         <div className="bg-white border border-indigo-50/50 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4 flex-wrap">
@@ -584,28 +430,43 @@ export function SVGMapperEditor({
             />
           </div>
 
-          <div className="flex gap-2">
-            <button
-              id="btn-show-json-import"
-              onClick={() => setShowJsonOverlay(true)}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-              title="Nhập JSON cấu hình"
-            >
-              <FileCode className="w-4 h-4" /> Import JSON
-            </button>
-            <button
-              id="btn-export-json-config"
-              onClick={handleExportJson}
-              className="p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm shadow-indigo-500/10"
-              title="Xuất JSON cấu hình"
-            >
-              <Download className="w-4 h-4" /> Export JSON
-            </button>
-          </div>
+          {/* Raw SVG paste button */}
+          <button
+            id="raw-svg-toggle"
+            onClick={() => {
+              setIsEditingRawSvg(!isEditingRawSvg);
+              setRawSvgInput(config.svgContent);
+            }}
+            className="text-xs py-1.5 px-3 border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium rounded-lg cursor-pointer flex items-center gap-1.5"
+          >
+            <FileCode className="w-3.5 h-3.5" />
+            {isEditingRawSvg ? 'Đóng mã nguồn SVG' : 'Dán mã SVG trực tiếp'}
+          </button>
         </div>
 
-        {/* Map panel */}
-        <div className="relative h-[530px]">
+        {/* Raw SVG paste area */}
+        {isEditingRawSvg && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Dán Code SVG (&lt;svg&gt;...&lt;/svg&gt;):</label>
+            <textarea
+              id="textarea-raw-svg"
+              className="w-full h-32 p-2 font-mono text-[10px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50"
+              value={rawSvgInput}
+              onChange={(e) => setRawSvgInput(e.target.value)}
+              placeholder="Paste <svg>...</svg> content here..."
+            />
+            <button
+              id="btn-apply-raw-svg"
+              onClick={handleApplyRawSvg}
+              className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-1.5 px-3 rounded-lg cursor-pointer"
+            >
+              Áp dụng XML SVG
+            </button>
+          </div>
+        )}
+
+        {/* Map panel - full height 100% */}
+        <div className="relative flex-1 h-full">
           <SVGMapContainer
             config={config}
             selectedRegionId={selectedRegionId}
@@ -633,97 +494,460 @@ export function SVGMapperEditor({
           )}
         </div>
 
-        {/* Settings options panel */}
+      </div>
+
+      {/* 3. Right Panel Sidebar: Selected Region Details & Content Cards Editor */}
+      <div className="xl:col-span-3 flex flex-col gap-5 h-full">
+
+        {/* Regions list sidebar quick select */}
         <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
-          <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2.5 flex items-center gap-2">
-            <Settings className="w-4 h-4 text-slate-500" />
-            Cấu Hình Màu Sắc & Hiệu ứng (Global Theme)
+          <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-indigo-500" />
+            Danh Sách Địa Danh ({config.regions.length})
           </h3>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Màu mặc định nền:</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={config.settings.defaultFillColor}
-                  onChange={(e) => onChangeConfig({
-                    ...config,
-                    settings: { ...config.settings, defaultFillColor: e.target.value }
-                  })}
-                  className="w-7 h-7 rounded border border-slate-200 cursor-pointer"
-                />
-                <span className="text-xs font-mono">{config.settings.defaultFillColor}</span>
+          <div className="space-y-1 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+            {config.regions.length > 0 ? (
+              config.regions.map(region => (
+                <div
+                  key={region.id}
+                  className={`flex items-center justify-between p-1.5 px-2.5 rounded-lg text-xs font-medium cursor-pointer transition ${selectedRegionId === region.id
+                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                    : 'hover:bg-slate-50 border border-transparent'
+                    }`}
+                  onClick={() => onSelectRegion(region.id)}
+                >
+                  <span className="truncate">{region.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded">📦 {region.items.length} cards</span>
+                    <button
+                      id={`btn-delete-region-${region.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteRegion(region.id);
+                      }}
+                      className="p-1 hover:text-red-655 hover:bg-neutral-50 rounded transition shrink-0"
+                      title="Xóa địa danh này"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center p-3 text-xs italic text-slate-400">
+                Chưa gán địa danh nào. Chọn vector bên trái để gán.
               </div>
-            </div>
+            )}
+          </div>
+        </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Màu di chuột (Hover):</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={config.settings.hoverFillColor}
-                  onChange={(e) => onChangeConfig({
-                    ...config,
-                    settings: { ...config.settings, hoverFillColor: e.target.value }
-                  })}
-                  className="w-7 h-7 rounded border border-slate-200 cursor-pointer"
-                />
-                <span className="text-xs font-mono">{config.settings.hoverFillColor}</span>
-              </div>
-            </div>
+        {/* Selected Area/Region Editor form */}
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-[400px]">
+          {activeRegionObj ? (
+            <div className="flex flex-col h-full justify-between gap-4">
+              <div className="space-y-4 overflow-y-auto pr-1 max-h-[480px] custom-scrollbar flex-1">
+                <div className="border-b border-indigo-50/50 pb-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded font-mono">Đang soạn thảo</span>
+                    <span className="text-[10px] text-slate-400 font-mono">ID: {activeRegionObj.id}</span>
+                  </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Màu chọn (Select):</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={config.settings.selectedFillColor}
-                  onChange={(e) => onChangeConfig({
-                    ...config,
-                    settings: { ...config.settings, selectedFillColor: e.target.value }
-                  })}
-                  className="w-7 h-7 rounded border border-slate-200 cursor-pointer"
-                />
-                <span className="text-xs font-mono">{config.settings.selectedFillColor}</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Màu mốc cờ (Marker):</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={config.settings.markerColor}
-                  onChange={(e) => onChangeConfig({
-                    ...config,
-                    settings: { ...config.settings, markerColor: e.target.value }
-                  })}
-                  className="w-7 h-7 rounded border border-slate-200 cursor-pointer"
-                />
-                <span className="text-xs font-mono">{config.settings.markerColor}</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Tiện ích & Nhãn:</label>
-              <div className="flex flex-col gap-2 mt-1">
-                <label className="flex items-center gap-2 cursor-pointer group">
+                  {/* Region name */}
                   <input
-                    type="checkbox"
-                    checked={config.settings.showMarkerLabels ?? true}
-                    onChange={(e) => onChangeConfig({
-                      ...config,
-                      settings: { ...config.settings, showMarkerLabels: e.target.checked }
-                    })}
-                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer"
+                    id="edit-region-title"
+                    type="text"
+                    className="w-full text-base font-bold text-slate-800 focus:outline-none border-b border-transparent hover:border-slate-200 focus:border-indigo-500 mt-1.5 px-1 rounded bg-slate-50/50"
+                    value={activeRegionObj.name}
+                    onChange={(e) => updateActiveRegion(r => ({ ...r, name: e.target.value }))}
                   />
-                  <span className="text-xs font-bold text-slate-600 group-hover:text-indigo-600 transition">Hiện nhãn Marker</span>
-                </label>
+
+                  {/* Path indicators */}
+                  <div className="mt-1 flex flex-wrap gap-1 items-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Liên kết path:</span>
+                    {activeRegionObj.pathIds.map(pathId => (
+                      <span
+                        key={pathId}
+                        className="bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded font-mono flex items-center gap-1 border border-purple-100"
+                      >
+                        {pathId}
+                        <button
+                          id={`remove-path-${pathId}`}
+                          onClick={() => {
+                            updateActiveRegion(r => ({
+                              ...r,
+                              pathIds: r.pathIds.filter(id => id !== pathId)
+                            }));
+                          }}
+                          className="hover:text-red-600 transition font-bold"
+                          title="Hủy gán path"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* WordPress Data Binding (Taxonomy/Term) */}
+                {useSelect && (
+                  <div className="bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-indigo-700 uppercase flex items-center gap-1">
+                        <Database className="w-3.5 h-3.5" />
+                        Liên kết Dữ liệu WordPress
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-[9px] text-slate-400 block mb-1">Chọn Post Type:</label>
+                        <select
+                          className="w-full text-xs p-1.5 border border-slate-200 rounded-lg focus:outline-none bg-white"
+                          value={selectedPostType}
+                          onChange={(e) => updateActiveRegion(r => ({
+                            ...r,
+                            postType: e.target.value,
+                            taxonomy: '', // Reset taxonomy when post type changes
+                            termId: undefined
+                          }))}
+                        >
+                          <option value="">-- Chọn post type --</option>
+                          {postTypes?.filter((pt: any) => pt.viewable).map((pt: any) => (
+                            <option key={pt.slug} value={pt.slug}>{pt.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[9px] text-slate-400 block mb-1">Chọn Phân loại (Taxonomy):</label>
+                        <select
+                          className="w-full text-xs p-1.5 border border-slate-200 rounded-lg focus:outline-none bg-white"
+                          value={selectedTaxonomy}
+                          onChange={(e) => updateActiveRegion(r => ({ ...r, taxonomy: e.target.value, termId: undefined }))}
+                        >
+                          <option value="">-- Chọn taxonomy --</option>
+                          {filteredTaxonomies.map((tax: any) => (
+                            <option key={tax.slug} value={tax.slug}>{tax.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[9px] text-slate-400 block mb-1">Chọn Term (Địa danh / Mốc):</label>
+                        {!terms && selectedTaxonomy ? (
+                          <div className="py-2 text-center text-[10px] text-slate-400 italic">Đang tải dữ liệu...</div>
+                        ) : (
+                          <select
+                            className="w-full text-xs p-1.5 border border-slate-200 rounded-lg focus:outline-none bg-white"
+                            value={activeRegionObj?.termId || ''}
+                            onChange={(e) => updateActiveRegion(r => ({ ...r, termId: parseInt(e.target.value) }))}
+                          >
+                            <option value="">-- Chọn một term --</option>
+                            {terms?.map((term: any) => (
+                              <option key={term.id} value={term.id}>{term.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Marker Coordinates */}
+                <div className="bg-orange-50/50 border border-orange-100 p-3 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-orange-700 uppercase flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                      Tọa độ ghim Marker (Cờ)
+                    </span>
+                    {activeRegionObj.marker ? (
+                      <button
+                        id="btn-remove-region-marker"
+                        onClick={handleRemoveMarker}
+                        className="text-[9px] hover:text-red-600 transition"
+                      >
+                        Xóa mốc ghim
+                      </button>
+                    ) : (
+                      <button
+                        id="btn-place-marker"
+                        onClick={() => setIsPlacingMarker(true)}
+                        className="text-[9px] bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded transition font-bold"
+                      >
+                        📍 Ghim cờ
+                      </button>
+                    )}
+                  </div>
+
+                  {activeRegionObj.marker ? (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-[9px] text-slate-400 block">Tọa độ mốc:</span>
+                        <div className="font-mono text-[10px] font-semibold text-slate-700">
+                          X: {activeRegionObj.marker.x}% | Y: {activeRegionObj.marker.y}%
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[9px] text-slate-400 block font-sans">Loại Icon:</span>
+                        <select
+                          id="select-region-marker-icon"
+                          className="p-1 px-1.5 border border-slate-200 text-[10px] rounded focus:outline-none w-full bg-white font-bold"
+                          value={activeRegionObj.marker.iconType}
+                          onChange={(e) => handleUpdateRegionMarkerField('iconType', e.target.value as MarkerIconType)}
+                        >
+                          <option value="pin">📍 Ghim Bản đồ</option>
+                          <option value="transport">🚌 Giao thông</option>
+                          <option value="hotel">🛌 Khách sạn</option>
+                          <option value="food">🍽️ Ẩm thực</option>
+                          <option value="scenic">📷 Danh thắng</option>
+                          <option value="jankx">🏛️ Jankx Library...</option>
+                        </select>
+                      </div>
+
+                      {activeRegionObj.marker.iconType === 'jankx' && (
+                        <div className="col-span-2">
+                          <span className="text-[9px] text-slate-400 block">Tên Icon (Jankx Library):</span>
+                          <input
+                            id="input-region-marker-custom-icon"
+                            type="text"
+                            className="w-full p-1.5 border border-slate-200 text-[10px] rounded focus:outline-none focus:border-indigo-400 bg-white font-mono"
+                            value={activeRegionObj.marker.customIconName || ''}
+                            onChange={(e) => handleUpdateRegionMarkerField('customIconName', e.target.value)}
+                            placeholder="Tên icon (ví dụ: home, menu, search...)"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center text-[10px] text-slate-400 italic">
+                      Chưa gán marker. Click "Ghim cờ" để đặt marker trên bản đồ.
+                    </div>
+                  )}
+                </div>
+
+                {/* Color customization */}
+                <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-700 uppercase">Màu sắc hiển thị</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[9px] text-slate-400 block mb-1">Màu nền (Hover):</label>
+                      <input
+                        type="color"
+                        value={activeRegionObj.fillColor || config.settings.hoverFillColor || '#93c5fd'}
+                        onChange={(e) => updateActiveRegion(r => ({ ...r, fillColor: e.target.value }))}
+                        className="w-full h-8 rounded cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Mô tả:</label>
+                  <textarea
+                    id="edit-region-description"
+                    rows={3}
+                    className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-400 bg-slate-50 resize-none"
+                    placeholder="Nhập mô tả chi tiết về địa danh này..."
+                    value={activeRegionObj.description}
+                    onChange={(e) => updateActiveRegion(r => ({ ...r, description: e.target.value }))}
+                  />
+                </div>
+
+                {/* Data Cards Management */}
+                <div className="bg-green-50/50 border border-green-100 p-3 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-green-700 uppercase flex items-center gap-1">
+                      <Database className="w-3.5 h-3.5" />
+                      Thông tin bổ sung
+                    </span>
+                    <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-mono">{activeRegionObj.items.length} items</span>
+                  </div>
+
+                  {activeRegionObj.items.length > 0 ? (
+                    <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
+                      {activeRegionObj.items.map((item, index) => (
+                        <div key={index} className="bg-white p-2 rounded-lg border border-green-100 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-700">{item.label}</span>
+                            <button
+                              onClick={() => updateActiveRegion(r => ({
+                                ...r,
+                                items: r.items.filter((_, i) => i !== index)
+                              }))}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-1 truncate">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-[10px] text-slate-400 italic">
+                      Chưa có thông tin bổ sung.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-400 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+              <Layers className="w-10 h-10 text-slate-350 mb-2" />
+              <p className="text-xs font-semibold text-slate-600">Chưa chọn địa danh nào</p>
+              <p className="text-[10px] text-slate-400 mt-1 max-w-[200px] leading-relaxed">
+                Hãy click chọn một tỉnh thành/vùng trên bản đồ hoặc chọn một danh mục trong list phía trên để bắt đầu gán dữ liệu chi tiết.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* JSON Import/Export moved to App.tsx settings panel */}
+    </div>
+  );
+}
+
+          <div className="flex-1 overflow-y-auto max-h-[350px] space-y-1.5 pr-1 custom-scrollbar">
+            {availablePathIds.length > 0 ? (
+              availablePathIds.map(pathId => {
+                const belongsToRegion = config.regions.find(r => r.pathIds.includes(pathId));
+                const isSelectedForNew = selectedPathsForNewRegion.includes(pathId);
+
+                return (
+                  <button
+                    key={pathId}
+                    id={`vector-item-${pathId}`}
+                    onClick={() => handleSelectPathId(pathId)}
+                    className={`w-full text-left p-1.5 px-2.5 rounded-lg text-xs font-mono font-medium flex items-center justify-between gap-1 transition ${isSelectedForNew
+                      ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                      : belongsToRegion
+                        ? 'bg-blue-50/70 text-blue-700 border border-blue-100 hover:bg-blue-100/50'
+                        : 'bg-slate-50 border border-slate-100 hover:bg-slate-100/80 text-slate-600'
+                      }`}
+                  >
+                    <span className="truncate">{pathId}</span>
+                    {isSelectedForNew ? (
+                      <span className="text-[9px] bg-purple-600 text-white rounded px-1">Chờ gộp ({selectedPathsForNewRegion.indexOf(pathId) + 1})</span>
+                    ) : belongsToRegion ? (
+                      <span className="text-[10px] text-blue-500 font-sans font-bold">→ {belongsToRegion.name}</span>
+                    ) : (
+                      <span className="text-[9px] bg-slate-200 text-slate-400 rounded px-1">Chưa gán</span>
+                    )}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="p-4 text-center text-xs text-slate-400 italic">
+                Không tìm thấy phần tử SVG nào có thuộc tính id. Hãy kiểm tra hoặc dán định dạng SVG mới chứa các thuộc tính id cho từng tỉnh/phân khu.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sticky Quick Grouping panel — outside the scrollable list, anchored to bottom of card */}
+        {selectedPathsForNewRegion.length > 0 && (
+          <div className="sticky bottom-0 z-20 mt-2">
+            <div className="bg-purple-50/95 backdrop-blur-sm rounded-xl p-3 border border-purple-200 shadow-lg shadow-purple-100/60">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-purple-700 uppercase flex items-center gap-1">
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-600 text-white text-[8px] font-bold">{selectedPathsForNewRegion.length}</span>
+                  Gom Nhóm Mới
+                </span>
+                <span className="text-[9px] text-purple-500 italic">{selectedPathsForNewRegion.join(', ').slice(0, 40)}{selectedPathsForNewRegion.join(', ').length > 40 ? '...' : ''}</span>
+              </div>
+              <input
+                id="input-new-region-name"
+                type="text"
+                placeholder="Nhập tên địa danh..."
+                className="w-full text-xs p-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white shadow-sm"
+                value={newRegionName}
+                onChange={(e) => setNewRegionName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && newRegionName.trim()) handleCreateRegion(); }}
+                autoFocus
+              />
+              <div className="mt-2 flex gap-1.5">
+                <button
+                  id="btn-confirm-group"
+                  onClick={handleCreateRegion}
+                  disabled={!newRegionName.trim()}
+                  className="flex-1 bg-purple-600 disabled:opacity-50 hover:bg-purple-700 active:scale-95 text-white font-bold text-xs p-1.5 rounded-lg text-center cursor-pointer transition-all"
+                >
+                  ✓ Định vị nhóm
+                </button>
+                <button
+                  id="btn-cancel-group"
+                  onClick={() => setSelectedPathsForNewRegion([])}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold text-xs p-1.5 rounded-lg text-center cursor-pointer transition-all active:scale-95"
+                >
+                  ✕
+                </button>
               </div>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* 2. Middle Interactive Map Builder Container - full height */}
+      <div className="xl:col-span-6 flex flex-col h-full gap-4">
+
+        {/* Editor map controller */}
+        <div className="bg-white border border-indigo-50/50 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-0.5 px-1.5 rounded bg-amber-50 text-amber-600 font-bold text-[9px]">BUILDER WORKSPACE</span>
+              <input
+                id="edit-map-title"
+                type="text"
+                className="font-bold text-base text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none focus:bg-slate-50 px-1 rounded transition"
+                value={config.title}
+                onChange={(e) => onChangeConfig({ ...config, title: e.target.value })}
+              />
+            </div>
+            <input
+              id="edit-map-desc"
+              type="text"
+              placeholder="Nhập mô tả của bản đồ cấu hình..."
+              className="text-xs text-slate-500 mt-1 w-full border-b border-transparent hover:border-slate-200 focus:border-indigo-400 focus:outline-none px-1 py-0.5 rounded transition"
+              value={config.description}
+              onChange={(e) => onChangeConfig({ ...config, description: e.target.value })}
+            />
+          </div>
+
+        {/* Map panel - full height 100% */}
+        <div className="relative flex-1 h-full">
+          <SVGMapContainer
+            config={config}
+            selectedRegionId={selectedRegionId}
+            onSelectRegion={onSelectRegion}
+            isBuilderMode={true}
+            onSelectPathId={handleSelectPathId}
+            onPlaceMarkerCoords={handleMapMarkerCoordsPlaced}
+            onMarkerDragged={handleMarkerDragged}
+            selectedPathIdsForGrouping={selectedPathsForNewRegion}
+            isPlacingMarker={isPlacingMarker}
+          />
+
+          {/* Overlay indicator for marker placing state */}
+          {isPlacingMarker && (
+            <div className="absolute inset-x-0 top-0 bg-orange-500/90 text-white text-xs font-semibold py-2 px-4 shadow text-center animate-fade-in flex items-center justify-center gap-2 z-30">
+              <span className="animate-pulse">📍 Chế độ ghim cờ: Vui lòng click chọn một tọa độ trên bản đồ để đặt Marker...</span>
+              <button
+                id="btn-cancel-place"
+                onClick={() => setIsPlacingMarker(false)}
+                className="bg-white text-orange-600 font-bold px-2 py-0.5 rounded text-[10px] hover:bg-orange-50 transition"
+              >
+                Hủy chế độ ghim
+              </button>
+            </div>
+          )}
         </div>
+
       </div>
 
       {/* 3. Right Panel Sidebar: Selected Region Details & Content Cards Editor */}
@@ -1150,70 +1374,7 @@ export function SVGMapperEditor({
         </div>
       </div>
 
-      {/* JSON Import Overlay modal */}
-      {
-        showJsonOverlay && (
-          <div id="json-modal-overlay" className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
-              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
-                  <FileCode className="w-5 h-5 text-blue-600" />
-                  Nhập Cấu hình Bản Đồ JSON
-                </h3>
-                <button
-                  id="btn-close-json-modal"
-                  onClick={() => setShowJsonOverlay(false)}
-                  className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 px-2.5 rounded hover:bg-slate-150 transition"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="p-5 flex-1 overflow-y-auto space-y-2 text-left">
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Địa chỉ tải các file JSON đã xuất trước đó để thiết lập nhanh, gán đè toàn bộ cấu trúc bản đồ, định danh và các markers:
-                </p>
-
-                <textarea
-                  id="textarea-json-paste"
-                  className="w-full h-64 p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 bg-slate-50 font-mono text-[11px] leading-relaxed"
-                  placeholder='Dán cấu trúc JSON chứa properties "svgContent", "regions" và "settings" tại đây...'
-                  value={jsonPasteValue}
-                  onChange={(e) => setJsonPasteValue(e.target.value)}
-                />
-              </div>
-
-              <div className="p-5 border-t border-slate-150 bg-slate-50 flex justify-end gap-2 text-xs">
-                <button
-                  id="btn-cancel-import-action"
-                  onClick={() => setShowJsonOverlay(false)}
-                  className="p-2 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 font-bold transition cursor-pointer"
-                >
-                  Đóng
-                </button>
-                <button
-                  id="btn-confirm-import-action"
-                  onClick={handleImportJson}
-                  disabled={!jsonPasteValue.trim()}
-                  className="p-2 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition disabled:opacity-50 cursor-pointer shadow-sm shadow-blue-500/10"
-                >
-                  Nhập Cấu Hình
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Floating toast notification for copy/export events */}
-      {
-        exportNotice && (
-          <div id="toast-notify" className="fixed bottom-6 right-6 z-[200] bg-slate-900 border border-slate-800 text-white p-3.5 px-5 rounded-xl shadow-2xl flex items-center gap-2.5 animate-slide-up text-xs font-semibold">
-            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Sao chép / Xuất cấu hình JSON thành công!</span>
-          </div>
-        )
-      }
+      {/* JSON Import/Export moved to App.tsx settings panel */}
     </div >
   );
 }

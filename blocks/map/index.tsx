@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { registerBlockType } from '@wordpress/blocks';
-import { BlockControls, InspectorControls } from '@wordpress/block-editor';
-import { ToolbarButton, ToolbarGroup, PanelBody, Button } from '@wordpress/components';
-import { Eye, Settings } from 'lucide-react';
+import { BlockControls, InspectorControls, PanelColorSettings } from '@wordpress/block-editor';
+import { ToolbarButton, ToolbarGroup, PanelBody, Button, ToggleControl } from '@wordpress/components';
+import { Eye, Settings, Sun } from 'lucide-react';
 import App from '../shared/App';
 
 const MapEdit = ({ attributes, setAttributes }: any) => {
@@ -22,13 +22,15 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
         });
     };
 
-    // Emit event when builder mode changes to hide/show other blocks
-    useEffect(() => {
-        const event = new CustomEvent('jankx-svg-map-builder-mode', {
-            detail: { mapId, isBuilderMode: activeTab === 'builder', blockId: 'jankx/svg-data-map' }
+    const updateGlobalSettings = (key: string, value: any) => {
+        handleConfigChange({
+            ...config,
+            settings: {
+                ...(config.settings || {}),
+                [key]: value
+            }
         });
-        window.dispatchEvent(event);
-    }, [activeTab, mapId]);
+    };
 
     return (
         <div className="jankx-svg-data-map-editor">
@@ -86,6 +88,41 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
                             <span>Chế độ chỉnh sửa</span>
                         </Button>
                     </div>
+                </PanelBody>
+
+                <PanelColorSettings
+                    title="Cấu hình màu sắc và hiệu ứng"
+                    initialOpen={true}
+                    colorSettings={[
+                        {
+                            value: config.settings?.defaultFillColor || '#e2e8f0',
+                            onChange: (color) => updateGlobalSettings('defaultFillColor', color),
+                            label: 'Màu sắc nền mặc định',
+                        },
+                        {
+                            value: config.settings?.hoverFillColor || '#cbd5e1',
+                            onChange: (color) => updateGlobalSettings('hoverFillColor', color),
+                            label: 'Màu sắc khi di chuột (Hover)',
+                        },
+                        {
+                            value: config.settings?.selectedFillColor || '#6366f1',
+                            onChange: (color) => updateGlobalSettings('selectedFillColor', color),
+                            label: 'Màu sắc khi vùng được chọn',
+                        },
+                        {
+                            value: config.settings?.markerColor || '#ef4444',
+                            onChange: (color) => updateGlobalSettings('markerColor', color),
+                            label: 'Màu sắc biểu tượng Marker',
+                        }
+                    ]}
+                />
+
+                <PanelBody title="Tiện ích và Nhãn" initialOpen={false}>
+                    <ToggleControl
+                        label="Hiển thị nhãn cho Marker"
+                        checked={config.settings?.showMarkerLabels ?? true}
+                        onChange={(val) => updateGlobalSettings('showMarkerLabels', val)}
+                    />
                 </PanelBody>
             </InspectorControls>
             <App
