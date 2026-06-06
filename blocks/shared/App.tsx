@@ -3,23 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SVGMapConfig } from './types';
-import { VIETNAM_MAP_PRESET, EXHIBITION_MAP_PRESET } from './utils/samples';
 import { SVGViewerPanel } from './components/SVGViewerPanel';
 import { SVGMapperEditor } from './components/SVGMapperEditor';
 import {
   Eye,
   Settings,
   Map,
-  RotateCcw,
-  Compass,
-  Github,
   HelpCircle,
-  FileJson,
-  Layers,
   Sparkles
 } from 'lucide-react';
+
+const EMPTY_CONFIG: SVGMapConfig = {
+  title: 'Bản đồ mới',
+  description: '',
+  regions: [],
+  settings: {
+    defaultFillColor: '#e2edf5',
+    hoverFillColor: '#93c5fd',
+    selectedFillColor: '#3b82f6',
+    markerColor: '#f97316',
+    backgroundColor: '#ffffff',
+    showMarkerLabels: true,
+  }
+};
 
 interface AppProps {
   blockId?: string;
@@ -62,15 +70,18 @@ export default function App({
   }, []);
 
   // Current loaded map configurations
-  const getInitialConfig = () => {
-    if (blockConfig && Array.isArray(blockConfig.regions) && blockConfig.regions.length > 0) {
+  const getInitialConfig = (): SVGMapConfig => {
+    // Priority 1: saved block attributes
+    if (blockConfig && (Array.isArray(blockConfig.regions) || blockConfig.svgFileUrl)) {
       return blockConfig;
     }
+    // Priority 2: PHP-rendered global config (frontend)
     const globalConfig = (window as any).jankxSvgMapData?.initialConfig;
-    if (globalConfig && Array.isArray(globalConfig.regions) && globalConfig.regions.length > 0) {
+    if (globalConfig && (Array.isArray(globalConfig.regions) || globalConfig.svgFileUrl)) {
       return globalConfig;
     }
-    return VIETNAM_MAP_PRESET;
+    // Priority 3: empty blank canvas — never auto-load a sample
+    return EMPTY_CONFIG;
   };
 
   const [mapConfig, setMapConfig] = useState<SVGMapConfig>(getInitialConfig());
@@ -141,6 +152,11 @@ export default function App({
     };
   }, [mapId, blockId]);
 
+  // Track the SVG content that has already been uploaded to the server,
+  // so we don't re-upload on every minor config change (region name, color, marker, etc.)
+  const uploadedSvgContentRef = useRef<string | null>(null);
+  const uploadedSvgFileUrlRef = useRef<string | null>(blockConfig?.svgFileUrl || null);
+
   useEffect(() => {
     // If the config has a file URL but the content is empty, fetch the SVG text
     if (mapConfig.svgFileUrl && (!mapConfig.svgContent || mapConfig.svgContent.trim() === '')) {
@@ -149,6 +165,10 @@ export default function App({
         .then(text => {
           if (text.includes('<svg')) {
             setMapConfig(prev => ({ ...prev, svgContent: text }));
+            // Mark this as already-uploaded: the file already exists on the server,
+            // so future config changes won't re-upload the same SVG content.
+            uploadedSvgContentRef.current = text;
+            uploadedSvgFileUrlRef.current = mapConfig.svgFileUrl || null;
           }
         })
         .catch(err => console.error('Failed to load SVG from URL', err));
@@ -160,11 +180,31 @@ export default function App({
     setMapConfig(newConfig);
 
     if (onBlockConfigChange) {
-      if (newConfig.svgContent && newConfig.svgContent.length > 100) {
+      const hasSvgContent = newConfig.svgContent && newConfig.svgContent.length > 100;
+
+      if (hasSvgContent) {
+        // Check if this SVG content was already uploaded (i.e. it hasn't changed)
+        const alreadyUploaded =
+          uploadedSvgContentRef.current === newConfig.svgContent &&
+          uploadedSvgFileUrlRef.current;
+
+        if (alreadyUploaded) {
+          // SVG hasn't changed — just strip svgContent and reuse existing file URL
+          const configToSave = {
+            ...newConfig,
+            svgFileUrl: uploadedSvgFileUrlRef.current as string,
+            svgFilePath: newConfig.svgFilePath
+          };
+          delete configToSave.svgContent;
+          onBlockConfigChange(configToSave);
+          return;
+        }
+
+        // SVG content is new — upload it to server
         try {
           const formData = new FormData();
           formData.append('action', 'svg_data_map_save_file');
-          formData.append('svgContent', newConfig.svgContent);
+          formData.append('svgContent', newConfig.svgContent!);
 
           const ajaxUrl = (window as any).ajaxurl || '/wp-admin/admin-ajax.php';
           const res = await fetch(ajaxUrl, {
@@ -173,6 +213,10 @@ export default function App({
           });
           const result = await res.json();
           if (result.success) {
+            // Remember this content is now safely stored server-side
+            uploadedSvgContentRef.current = newConfig.svgContent!;
+            uploadedSvgFileUrlRef.current = result.data.url;
+
             // Strip the giant SVG string before passing to Gutenberg
             const configToSave = {
               ...newConfig,
@@ -188,26 +232,20 @@ export default function App({
         }
       }
 
+      // No SVG content or upload failed — pass config as-is (without svgContent if URL exists)
+      if (newConfig.svgFileUrl && newConfig.svgContent) {
+        const configToSave = { ...newConfig };
+        delete configToSave.svgContent;
+        onBlockConfigChange(configToSave);
+        return;
+      }
+
       onBlockConfigChange(newConfig);
     }
   };
 
-  const handleLoadPreset = (presetName: 'vietnam' | 'exhibition') => {
-    if (presetName === 'vietnam') {
-      setMapConfig(VIETNAM_MAP_PRESET);
-      setSelectedRegionId('vn-scc');
-    } else {
-      setMapConfig(EXHIBITION_MAP_PRESET);
-      setSelectedRegionId('ex-stage');
-    }
-  };
-
-  const handleResetCurrent = () => {
-    if (mapConfig.title.includes('Việt Nam')) {
-      handleLoadPreset('vietnam');
-    } else {
-      handleLoadPreset('exhibition');
-    }
+  const handleLoadPreset = (_presetName: string) => {
+    // Samples removed — preset loading is no longer supported
   };
 
   return (
@@ -273,7 +311,6 @@ export default function App({
               config={mapConfig}
               selectedRegionId={selectedRegionId}
               onSelectRegion={handleSelectRegion}
-              onLoadPreset={handleLoadPreset}
               displayMode="info-only"
               mapId={mapId}
               zoomScale={zoomScale}
@@ -291,7 +328,6 @@ export default function App({
                 config={mapConfig}
                 selectedRegionId={selectedRegionId}
                 onSelectRegion={handleSelectRegion}
-                onLoadPreset={handleLoadPreset}
                 displayMode="map-only"
                 mapId={mapId}
                 zoomScale={zoomScale}

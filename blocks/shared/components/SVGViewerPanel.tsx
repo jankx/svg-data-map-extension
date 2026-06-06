@@ -4,23 +4,19 @@
  */
 
 import React from 'react';
-import { SVGMapConfig, RegionConfig, DataItem } from '../types';
+import { SVGMapConfig, DataItem } from '../types';
 import { SVGMapContainer } from './SVGMapContainer';
 import {
-  Compass,
   MapPin,
   ChevronRight,
   BookOpen,
-  Share2,
-  FileJson,
-  Info
 } from 'lucide-react';
 
 interface SVGViewerPanelProps {
   config: SVGMapConfig;
   selectedRegionId: string | null;
   onSelectRegion: (id: string | null) => void;
-  onLoadPreset: (presetName: 'vietnam' | 'exhibition') => void;
+  onLoadPreset?: (presetName: string) => void;
   displayMode?: 'full' | 'map-only' | 'info-only';
   mapId?: string;
   zoomScale?: number;
@@ -34,7 +30,6 @@ export function SVGViewerPanel({
   config,
   selectedRegionId,
   onSelectRegion,
-  onLoadPreset,
   displayMode = 'full',
   mapId = 'default-map',
   zoomScale = 1,
@@ -47,12 +42,8 @@ export function SVGViewerPanel({
   // Find currently active region details
   const activeRegion = config.regions.find(r => r.id === selectedRegionId) || null;
 
-  const handleCardClick = (item: DataItem) => {
-    if (item.linkUrl) {
-      // Let's open smoothly or trigger alert. According to guidelines, Try to avoid window.alert/window.open inside restricted iframe,
-      // but if we show clean redirect options, let's render a elegant mini modal or simple status indicator or use a target="_blank" anchor tag on the link label!
-      // Rendering target="_blank" on a real <a> href tag is best because it's standard HTML, very safe, and fulfills the "no simulated infrastructure" rule perfectly!
-    }
+  const handleCardClick = (_item: DataItem) => {
+    // Navigation handled via anchor tag href
   };
 
   return (
@@ -60,43 +51,6 @@ export function SVGViewerPanel({
       {/* 1. Left Map side */}
       {(displayMode === 'full' || displayMode === 'map-only') && (
         <div className={`${displayMode === 'full' ? 'lg:col-span-7 xl:col-span-8' : 'w-full'} flex flex-col gap-4`}>
-
-          {/* Info header of map (only in Gutenberg/Builder mode) */}
-          {isGutenberg && (
-            <div className="bg-white border border-indigo-50/70 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="p-1 px-2 rounded bg-indigo-50 text-indigo-600 font-bold text-[10px] uppercase tracking-wider font-mono">Bản đồ hiện tại</span>
-                  <h1 className="text-xl font-bold text-slate-800">{config.title || 'Bản đồ chưa đặt tên'}</h1>
-                </div>
-                <p className="text-slate-500 text-xs mt-1">{config.description || 'Chưa cung cấp mô tả trực quan cho bản đồ này.'}</p>
-              </div>
-
-              <div className="flex items-center gap-1.5 self-start sm:self-center">
-                <span className="text-xs text-slate-400 mr-1.5">Bản mẫu:</span>
-                <button
-                  id="preset-vietnam-btn"
-                  onClick={() => onLoadPreset('vietnam')}
-                  className={`p-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition ${config.title.includes('Việt Nam')
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                    }`}
-                >
-                  Việt Nam
-                </button>
-                <button
-                  id="preset-exhibition-btn"
-                  onClick={() => onLoadPreset('exhibition')}
-                  className={`p-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition ${config.title.includes('Triển Lãm')
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                    }`}
-                >
-                  Hội Chợ Triển Lãm
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* The map visual canvas container */}
           <div className="relative h-[620px] shadow-sm">

@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { registerBlockType } from '@wordpress/blocks';
 import { BlockControls, InspectorControls } from '@wordpress/block-editor';
-import { ToolbarButton, ToolbarGroup, PanelBody, Button, SelectControl } from '@wordpress/components';
-import { Eye, Settings, RotateCcw } from 'lucide-react';
+import { ToolbarButton, ToolbarGroup, PanelBody, Button } from '@wordpress/components';
+import { Eye, Settings } from 'lucide-react';
 import App from '../shared/App';
-import { VIETNAM_MAP_PRESET, EXHIBITION_MAP_PRESET } from '../shared/utils/samples';
 
 const MapEdit = ({ attributes, setAttributes }: any) => {
     const config = attributes.config || {};
@@ -30,13 +29,6 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
         });
         window.dispatchEvent(event);
     }, [activeTab, mapId]);
-
-    useEffect(() => {
-        const hasSvgContent = config && config.svgContent && config.svgContent.trim().length > 0;
-        if (!hasSvgContent) {
-            setAttributes({ config: VIETNAM_MAP_PRESET });
-        }
-    }, []);
 
     return (
         <div className="jankx-svg-data-map-editor">
@@ -94,37 +86,6 @@ const MapEdit = ({ attributes, setAttributes }: any) => {
                             <span>Chế độ chỉnh sửa</span>
                         </Button>
                     </div>
-                </PanelBody>
-                <PanelBody title="Bản mẫu" initialOpen={false}>
-                    <SelectControl
-                        label="Chọn bản mẫu"
-                        value={config.title?.includes('Việt Nam') ? 'vietnam' : 'exhibition'}
-                        options={[
-                            { label: 'Bản đồ Việt Nam', value: 'vietnam' },
-                            { label: 'Sơ đồ Triển lãm Abstract', value: 'exhibition' }
-                        ]}
-                        onChange={(value) => {
-                            if (value === 'vietnam') {
-                                handleConfigChange(VIETNAM_MAP_PRESET);
-                            } else {
-                                handleConfigChange(EXHIBITION_MAP_PRESET);
-                            }
-                        }}
-                    />
-                    <Button
-                        variant="secondary"
-                        onClick={() => {
-                            if (config.title?.includes('Việt Nam')) {
-                                handleConfigChange(VIETNAM_MAP_PRESET);
-                            } else {
-                                handleConfigChange(EXHIBITION_MAP_PRESET);
-                            }
-                        }}
-                        style={{ marginTop: '12px', width: '100%' }}
-                    >
-                        <RotateCcw style={{ width: '16px', height: '16px', marginRight: '8px' }} />
-                        Khôi phục bản mẫu hiện tại
-                    </Button>
                 </PanelBody>
             </InspectorControls>
             <App
