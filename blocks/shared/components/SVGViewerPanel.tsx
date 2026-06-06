@@ -53,7 +53,7 @@ export function SVGViewerPanel({
         <div className={`${displayMode === 'full' ? 'lg:col-span-7 xl:col-span-8' : 'w-full'} flex flex-col gap-4`}>
 
           {/* The map visual canvas container */}
-          <div className="relative h-[620px] shadow-sm">
+          <div className="relative h-[620px]">
             <SVGMapContainer
               config={config}
               selectedRegionId={selectedRegionId}
@@ -97,11 +97,7 @@ export function SVGViewerPanel({
       {(displayMode === 'full' || displayMode === 'info-only') && (
         <div
           id={`viewer-sidebar-${mapId}`}
-          className={`${displayMode === 'full' ? 'lg:col-span-5 xl:col-span-4' : 'w-full'} rounded-2xl p-6 flex flex-col justify-between shadow-md border overflow-hidden min-h-[550px] transition-all`}
-          style={{
-            backgroundColor: '#d2ebfa',
-            borderColor: '#bce1f7'
-          }}
+          className={`${displayMode === 'full' ? 'lg:col-span-5 xl:col-span-4' : 'w-full'} flex flex-col justify-between min-h-[550px] transition-all`}
         >
           {activeRegion ? (
             <div className="flex flex-col h-full justify-between">

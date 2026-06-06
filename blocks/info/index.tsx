@@ -38,8 +38,7 @@ const INFO_TEMPLATE: any = [
 const InfoEdit = ({ attributes, setAttributes }: any) => {
     const mapId = attributes.mapId || 'default-map';
     const blockProps = useBlockProps({
-        className: 'jankx-svg-data-map-info-editor',
-        style: { padding: '20px', border: '1px solid #e2e8f0', borderRadius: '8px' }
+        className: 'jankx-svg-data-map-info-editor'
     });
 
     return (
