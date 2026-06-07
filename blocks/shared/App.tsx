@@ -9,11 +9,6 @@ import { SVGMapConfig } from './types';
 import { SVGViewerPanel } from './components/SVGViewerPanel';
 import { SVGMapperEditor } from './components/SVGMapperEditor';
 import {
-  Eye,
-  Settings,
-  Map,
-  HelpCircle,
-  Sparkles,
   FileCode,
   Upload,
   Download
@@ -295,46 +290,6 @@ export default function App({
   const appContent = (
     <div id="app-root-container" className={`${isGutenberg && activeTab === 'builder' ? 'fixed inset-0 z-[999999] bg-white' : 'min-h-screen bg-slate-50/50'} flex flex-col font-sans`}>
 
-      {/* 1. Header Toolbar navigation element (only in Gutenberg/Builder mode) */}
-      {isGutenberg && (
-        <header className={`${activeTab === 'builder' ? 'px-4 py-3' : 'px-6 py-4'} bg-white/95 backdrop-blur-md border-b border-indigo-50/50`}>
-          <div className={`${activeTab === 'builder' ? '' : 'max-w-7xl mx-auto'} flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
-                <Map className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">z
-                  <h1 className="text-lg font-extrabold text-slate-800 tracking-tight">SVG Data Map</h1>
-                  <span className="text-[10px] font-bold bg-amber-500 text-white rounded-full px-1.5 py-0.5 animate-pulse flex items-center gap-0.5">
-                    <Sparkles className="w-2.5 h-2.5" /> v1.0
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium font-mono">Hệ thống Soạn thảo & Định vị Địa lý dựa trên Vector SVG</p>
-              </div>
-            </div>
-
-            {/* Quick utility actions */}
-            <div className="flex items-center gap-2 self-start md:self-auto">
-              {activeTab === 'viewer' && blockId === 'jankx/svg-data-map' && (
-                <button
-                  onClick={() => setActiveTab('builder')}
-                  className="p-2 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-                  title="Mở bộ công cụ thiết kế bản đồ"
-                >
-                  <Settings className="w-3.5 h-3.5" /> Chỉnh sửa bản đồ (Full)
-                </button>
-              )}
-
-              <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 border-l border-slate-200 pl-3">
-                <span>Màn hình:</span>
-                <span className={`w-2.5 h-2.5 rounded-full inline-block ${activeTab === 'viewer' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-                <span className="font-bold text-slate-600 capitalize">{activeTab === 'viewer' ? 'Live' : 'Edit'}</span>
-              </div>
-            </div>
-          </div>
-        </header>
-      )}
 
       {/* Settings Panel (Export/Import SVG) */}
       {isGutenberg && activeTab === 'builder' && showSettingsPanel && (
