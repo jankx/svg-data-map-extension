@@ -42,12 +42,32 @@ class SvgDataMapInfoBlock extends Block
             '1.0.0',
             true
         );
+
+        $styleUrl = $extension->get_extension_url() . '/dist/svg-data-map.css';
+        wp_enqueue_style(
+            'jankx-svg-data-map-frontend',
+            $styleUrl,
+            [],
+            '1.0.0'
+        );
     }
 
     public function render($attributes, $content = '', $block = null)
     {
         $mapId        = $attributes['mapId'] ?? 'default-map';
         $hasContent   = trim((string) $content) !== '';
+        $maxHeight    = $attributes['maxHeight'] ?? '';
+        $maxHeightUnit = $attributes['maxHeightUnit'] ?? 'px';
+        $scrollbarStyle = $attributes['scrollbarStyle'] ?? 'thin';
+
+        // Build container styles
+        $containerStyle = '';
+        $scrollClass = '';
+
+        if (!empty($maxHeight)) {
+            $containerStyle = sprintf('max-height: %s%s; overflow-y: auto;', esc_attr($maxHeight), esc_attr($maxHeightUnit));
+            $scrollClass = 'jankx-svg-info-scroll';
+        }
 
         ob_start();
         ?>
@@ -55,7 +75,8 @@ class SvgDataMapInfoBlock extends Block
              id="svg-map-info-<?php echo esc_attr($mapId); ?>"
              data-map-id="<?php echo esc_attr($mapId); ?>">
 
-            <div class="jankx-svg-map-info-container">
+            <div class="jankx-svg-map-info-container <?php echo esc_attr($scrollClass); ?>"
+                 style="<?php echo esc_attr($containerStyle); ?>">
                 <?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             </div><!-- .jankx-svg-map-info-container -->
 
