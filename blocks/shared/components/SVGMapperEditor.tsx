@@ -40,6 +40,9 @@ interface SVGMapperEditorProps {
   onChangeConfig: (newConfig: SVGMapConfig) => void;
   selectedRegionId: string | null;
   onSelectRegion: (id: string | null) => void;
+  onViewResult?: () => void;
+  onToggleSettings?: () => void;
+  showSettingsPanel?: boolean;
 }
 
 export function SVGMapperEditor({
@@ -47,6 +50,9 @@ export function SVGMapperEditor({
   onChangeConfig,
   selectedRegionId,
   onSelectRegion,
+  onViewResult,
+  onToggleSettings,
+  showSettingsPanel,
 }: SVGMapperEditorProps) {
   // Temporary state for newly parsed path IDs in uploaded SVG
   const [availablePathIds, setAvailablePathIds] = useState<string[]>([]);
@@ -456,6 +462,35 @@ export function SVGMapperEditor({
 
       {/* 3. Right Panel Sidebar: Selected Region Details & Content Cards Editor */}
       <div className="xl:col-span-3 flex flex-col gap-5 h-full min-w-0">
+
+        {/* Action buttons at the top of the right panel */}
+        {(onViewResult || onToggleSettings) && (
+          <div className="flex items-center gap-2">
+            {onViewResult && (
+              <button
+                id="btn-view-result-panel"
+                onClick={onViewResult}
+                className="flex-1 p-2 px-3 text-xs bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                title="Thoát chế độ toàn màn hình"
+              >
+                <Eye className="w-3.5 h-3.5" /> Xem kết quả
+              </button>
+            )}
+            {onToggleSettings && (
+              <button
+                id="btn-toggle-settings-panel"
+                onClick={onToggleSettings}
+                className={`flex-1 p-2 px-3 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${showSettingsPanel
+                    ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
+                    : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                  }`}
+                title="Cài đặt bản đồ"
+              >
+                <Settings className="w-3.5 h-3.5" /> Cài đặt
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Regions list sidebar quick select */}
         <div className="bg-white border border-slate-100 rounded-xl p-4">

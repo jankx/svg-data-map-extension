@@ -325,26 +325,6 @@ export default function App({
                   <Settings className="w-3.5 h-3.5" /> Chỉnh sửa bản đồ (Full)
                 </button>
               )}
-              {activeTab === 'builder' && (
-                <>
-                  <button
-                    onClick={() => setActiveTab('viewer')}
-                    className="p-2 px-3 text-xs bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-                    title="Thoát chế độ toàn màn hình"
-                  >
-                    <Eye className="w-3.5 h-3.5" /> Xem kết quả
-                  </button>
-
-                  {/* Settings toggle for export/import */}
-                  <button
-                    onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-                    className={`p-2 px-3 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${showSettingsPanel ? 'bg-indigo-100 text-indigo-700 border border-indigo-300' : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'}`}
-                    title="Cài đặt bản đồ"
-                  >
-                    <Settings className="w-3.5 h-3.5" /> Cài đặt
-                  </button>
-                </>
-              )}
 
               <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 border-l border-slate-200 pl-3">
                 <span>Màn hình:</span>
@@ -443,6 +423,9 @@ export default function App({
                 onChangeConfig={handleConfigChange}
                 selectedRegionId={selectedRegionId}
                 onSelectRegion={handleSelectRegion}
+                onViewResult={() => setActiveTab('viewer')}
+                onToggleSettings={() => setShowSettingsPanel(!showSettingsPanel)}
+                showSettingsPanel={showSettingsPanel}
               />
             </div>
           )
