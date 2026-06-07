@@ -26,6 +26,14 @@
         "scrollbarStyle": {
             "type": "string",
             "default": "thin"
+        },
+        "minHeight": {
+            "type": "string",
+            "default": ""
+        },
+        "minHeightUnit": {
+            "type": "string",
+            "default": "px"
         }
     },
     "allowedBlocks": [

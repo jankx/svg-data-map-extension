@@ -66,9 +66,12 @@ const InfoEdit = ({ attributes, setAttributes }: any) => {
     const maxHeight = attributes.maxHeight || '';
     const maxHeightUnit = attributes.maxHeightUnit || 'px';
     const scrollbarStyle = attributes.scrollbarStyle || 'thin';
+    const minHeight = attributes.minHeight || '';
+    const minHeightUnit = attributes.minHeightUnit || 'px';
 
     // Build the inline max-height value
     const computedMaxHeight = maxHeight ? `${maxHeight}${maxHeightUnit}` : '';
+    const computedMinHeight = minHeight ? `${minHeight}${minHeightUnit}` : '';
 
     const blockProps = useBlockProps({
         className: 'jankx-svg-data-map-info-editor',
@@ -112,6 +115,26 @@ const InfoEdit = ({ attributes, setAttributes }: any) => {
                         ]}
                         onChange={(val: string) => setAttributes({ maxHeightUnit: val })}
                     />
+                    <TextControl
+                        label="Chiều cao tối thiểu (để trống = không giới hạn)"
+                        value={minHeight}
+                        type="number"
+                        onChange={(val: string) => setAttributes({ minHeight: val })}
+                        help={computedMinHeight ? `Áp dụng: min-height: ${computedMinHeight}` : 'Chưa đặt chiều cao tối thiểu.'}
+                    />
+                    <SelectControl
+                        label="Đơn vị chiều cao tối thiểu"
+                        value={minHeightUnit}
+                        options={[
+                            { label: 'px — Pixel cố định', value: 'px' },
+                            { label: '% — Phần trăm thẻ cha', value: '%' },
+                            { label: 'vh — Phần trăm chiều cao màn hình', value: 'vh' },
+                            { label: 'vw — Phần trăm chiều rộng màn hình', value: 'vw' },
+                            { label: 'em — Tương đối với font-size', value: 'em' },
+                            { label: 'rem — Tương đối với font-size gốc', value: 'rem' },
+                        ]}
+                        onChange={(val: string) => setAttributes({ minHeightUnit: val })}
+                    />
                     <SelectControl
                         label="Kiểu thanh cuộn (Scrollbar)"
                         value={scrollbarStyle}
@@ -146,12 +169,17 @@ const InfoEdit = ({ attributes, setAttributes }: any) => {
                     </h4>
                     <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#718096' }}>
                         Thêm các block (Search, Data Layout) vào bên dưới để xây dựng giao diện chi tiết.
-                        {computedMaxHeight && <> · <strong>Max height:</strong> {computedMaxHeight} · Scrollbar: <em>{scrollbarStyle}</em></>}
+                        {computedMaxHeight && <> · <strong>Max height:</strong> {computedMaxHeight}</>}
+                        {computedMinHeight && <> · <strong>Min height:</strong> {computedMinHeight}</>}
+                        {computedMaxHeight && <> · Scrollbar: <em>{scrollbarStyle}</em></>}
                     </p>
                 </div>
                 <div
                     className={computedMaxHeight ? 'jankx-svg-info-scroll' : ''}
-                    style={computedMaxHeight ? { maxHeight: computedMaxHeight, overflowY: 'auto' } : {}}
+                    style={{
+                        ...(computedMaxHeight ? { maxHeight: computedMaxHeight, overflowY: 'auto' } : {}),
+                        ...(computedMinHeight ? { minHeight: computedMinHeight } : {})
+                    }}
                 >
                     <InnerBlocks
                         template={INFO_TEMPLATE}

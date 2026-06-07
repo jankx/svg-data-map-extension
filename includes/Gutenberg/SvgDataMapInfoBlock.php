@@ -59,6 +59,8 @@ class SvgDataMapInfoBlock extends Block
         $maxHeight    = $attributes['maxHeight'] ?? '';
         $maxHeightUnit = $attributes['maxHeightUnit'] ?? 'px';
         $scrollbarStyle = $attributes['scrollbarStyle'] ?? 'thin';
+        $minHeight    = $attributes['minHeight'] ?? '';
+        $minHeightUnit = $attributes['minHeightUnit'] ?? 'px';
 
         // Build container styles
         $containerStyle = '';
@@ -67,6 +69,10 @@ class SvgDataMapInfoBlock extends Block
         if (!empty($maxHeight)) {
             $containerStyle = sprintf('max-height: %s%s; overflow-y: auto;', esc_attr($maxHeight), esc_attr($maxHeightUnit));
             $scrollClass = 'jankx-svg-info-scroll';
+        }
+
+        if (!empty($minHeight)) {
+            $containerStyle .= sprintf(' min-height: %s%s;', esc_attr($minHeight), esc_attr($minHeightUnit));
         }
 
         ob_start();
