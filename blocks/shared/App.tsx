@@ -297,14 +297,14 @@ export default function App({
 
       {/* 1. Header Toolbar navigation element (only in Gutenberg/Builder mode) */}
       {isGutenberg && (
-        <header className={`${activeTab === 'builder' ? 'px-4 py-3' : 'px-6 py-4'} bg-white/95 backdrop-blur-md border-b border-indigo-50/50 shadow-sm`}>
+        <header className={`${activeTab === 'builder' ? 'px-4 py-3' : 'px-6 py-4'} bg-white/95 backdrop-blur-md border-b border-indigo-50/50`}>
           <div className={`${activeTab === 'builder' ? '' : 'max-w-7xl mx-auto'} flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
                 <Map className="w-5 h-5" />
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5">z
                   <h1 className="text-lg font-extrabold text-slate-800 tracking-tight">SVG Data Map</h1>
                   <span className="text-[10px] font-bold bg-amber-500 text-white rounded-full px-1.5 py-0.5 animate-pulse flex items-center gap-0.5">
                     <Sparkles className="w-2.5 h-2.5" /> v1.0
@@ -319,7 +319,7 @@ export default function App({
               {activeTab === 'viewer' && blockId === 'jankx/svg-data-map' && (
                 <button
                   onClick={() => setActiveTab('builder')}
-                  className="p-2 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-500/20"
+                  className="p-2 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer"
                   title="Mở bộ công cụ thiết kế bản đồ"
                 >
                   <Settings className="w-3.5 h-3.5" /> Chỉnh sửa bản đồ (Full)
@@ -358,7 +358,7 @@ export default function App({
 
       {/* Settings Panel (Export/Import SVG) */}
       {isGutenberg && activeTab === 'builder' && showSettingsPanel && (
-        <div className="bg-white border-b border-indigo-50/50 px-4 py-3 shadow-sm">
+        <div className="bg-white border-b border-indigo-50/50 px-4 py-3">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
               <FileCode className="w-4 h-4 text-indigo-600" />

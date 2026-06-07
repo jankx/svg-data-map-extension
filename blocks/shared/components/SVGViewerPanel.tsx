@@ -78,11 +78,11 @@ export function SVGViewerPanel({
               <div className="flex items-center gap-4 flex-wrap">
                 <span className="font-semibold text-slate-600">Chú thích bản đồ:</span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded bg-indigo-600 inline-block border border-white shadow-sm"></span>
+                  <span className="w-3.5 h-3.5 rounded bg-indigo-600 inline-block border border-white"></span>
                   Địa danh được chọn
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded bg-indigo-200 inline-block border border-white shadow-sm"></span>
+                  <span className="w-3.5 h-3.5 rounded bg-indigo-200 inline-block border border-white"></span>
                   Di chuột qua
                 </span>
                 <span className="flex items-center gap-1.5">
@@ -126,7 +126,7 @@ export function SVGViewerPanel({
                   activeRegion.items.map((item, idx) => (
                     <div
                       key={item.id || idx}
-                      className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow transition"
+                      className="bg-white p-5 rounded-xl border border-slate-100 hover:shadow transition"
                     >
                       <h3 className="font-bold text-slate-900 text-base mb-1.5 tracking-tight">
                         {item.title}

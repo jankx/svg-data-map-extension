@@ -128,7 +128,7 @@ class SvgDataMapExtension extends AbstractExtension
                     $excerpt = wp_trim_words(get_the_content(), 20);
                 }
                 
-                $html .= '<div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow transition mb-4 animate-in">';
+                $html .= '<div class="bg-white p-5 rounded-xl border border-slate-100 hover:shadow transition mb-4 animate-in">';
                 $html .= '<h3 class="font-bold text-slate-900 text-base mb-1.5 tracking-tight">' . esc_html($title) . '</h3>';
                 $html .= '<p class="text-slate-600 text-xs leading-relaxed whitespace-pre-wrap break-words line-clamp-3">' . esc_html($excerpt) . '</p>';
                 $html .= '<a href="' . esc_url($link) . '" target="_blank" class="inline-flex items-center gap-1 mt-3 font-sans font-bold text-xs text-amber-800 hover:text-amber-900 transition-colors">';

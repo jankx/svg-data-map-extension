@@ -431,7 +431,7 @@ export function SVGMapContainer({
     <div
       id="map-container-root"
       ref={containerRef}
-      className="relative w-full h-full select-none overflow-hidden bg-slate-50 border border-slate-200/80 shadow-inner"
+      className="relative w-full h-full select-none overflow-hidden bg-slate-50 border border-slate-200/80"
       onMouseDown={handleMouseDown}
       onMouseMove={handleDragMouseMove}
       onMouseUp={handleMouseUp}
@@ -492,7 +492,7 @@ export function SVGMapContainer({
       </div>
 
       {/* 4. Controls overlays in corner */}
-      <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 bg-white/95 backdrop-blur-sm p-1.5 rounded-lg border border-slate-100 shadow-md no-drag">
+      <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 bg-white/95 backdrop-blur-sm p-1.5 rounded-lg border border-slate-100 no-drag">
         <button
           id="btn-zoom-in"
           onClick={handleZoomIn}
@@ -521,7 +521,7 @@ export function SVGMapContainer({
 
       {/* Helper legend overlay in corner (only in Gutenberg/Builder mode) */}
       {isGutenberg && (
-        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-2.5 py-2 rounded-lg border border-slate-100 shadow-md no-drag max-w-xs text-[11px] text-slate-500 flex flex-col gap-1.5">
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-2.5 py-2 rounded-lg border border-slate-100 no-drag max-w-xs text-[11px] text-slate-500 flex flex-col gap-1.5">
           <span className="font-bold text-slate-700 uppercase tracking-wide text-[10px] flex items-center gap-1">
             <HelpCircle className="w-3.5 h-3.5 text-blue-500" /> Hướng dẫn thao tác
           </span>
@@ -543,7 +543,7 @@ export function SVGMapContainer({
       {isGutenberg && (hoveredPathId || hoveredRegion) && (
         <div
           id="svg-map-tooltip"
-          className="absolute z-50 pointer-events-none p-3 bg-slate-900/95 backdrop-blur-sm text-white rounded-lg shadow-xl border border-slate-800 max-w-xs transition-opacity duration-150 text-xs"
+          className="absolute z-50 pointer-events-none p-3 bg-slate-900/95 backdrop-blur-sm text-white rounded-lg border border-slate-800 max-w-xs transition-opacity duration-150 text-xs"
           style={{
             left: `${tooltipPosition.x}px`,
             top: `${tooltipPosition.y}px`,
@@ -761,10 +761,10 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
       {/* Base pin size: 26x26 at scale=1 */}
       <div
         className={`flex items-center justify-center border-2 cursor-pointer transition-all duration-200 ${isDraggingNow
-          ? 'border-violet-400 shadow-xl shadow-violet-500/40'
+          ? 'border-violet-400'
           : isSelected
-            ? 'border-white shadow-lg'
-            : 'border-white group-hover/marker:brightness-110 shadow-sm'
+            ? 'border-white'
+            : 'border-white group-hover/marker:brightness-110'
           }`}
         style={{
           width: 26,
@@ -787,7 +787,7 @@ const MarkerDataComponent = ({ region, pathId, isSelected, markerColor, config, 
           : config.settings?.showMarkerLabels !== false;
 
         return isLabelVisible && region.marker.label && (
-          <div className={`mt-0.5 font-sans font-bold rounded shadow-sm transition-all border ${isDraggingNow
+          <div className={`mt-0.5 font-sans font-bold rounded transition-all border ${isDraggingNow
             ? 'bg-violet-700 text-white border-violet-600'
             : isSelected
               ? 'bg-blue-900 text-white border-blue-800'

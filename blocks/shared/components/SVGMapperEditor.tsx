@@ -308,7 +308,7 @@ export function SVGMapperEditor({
       <div className="xl:col-span-3 flex flex-col gap-4 h-full min-w-0">
 
         {/* Vector Element path checklist selection */}
-        <div className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex-1 flex flex-col min-h-[200px]">
+        <div className="bg-white border border-slate-100 rounded-xl p-3 flex-1 flex flex-col min-h-[200px]">
           <div className="flex items-center justify-between mb-2.5 border-b border-slate-50 pb-1.5">
             <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight flex items-center gap-2">
               <Layers className="w-4 h-4 text-purple-600" />
@@ -361,7 +361,7 @@ export function SVGMapperEditor({
         {/* Sticky Quick Grouping panel — outside the scrollable list, anchored to bottom of card */}
         {selectedPathsForNewRegion.length > 0 && (
           <div className="sticky bottom-0 z-20 mt-2">
-            <div className="bg-purple-50/95 backdrop-blur-sm rounded-xl p-3 border border-purple-200 shadow-lg shadow-purple-100/60">
+            <div className="bg-purple-50/95 backdrop-blur-sm rounded-xl p-3 border border-purple-200">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-bold text-purple-700 uppercase flex items-center gap-1">
                   <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-600 text-white text-[8px] font-bold">{selectedPathsForNewRegion.length}</span>
@@ -373,7 +373,7 @@ export function SVGMapperEditor({
                 id="input-new-region-name"
                 type="text"
                 placeholder="Nhập tên địa danh..."
-                className="w-full text-xs p-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white shadow-sm"
+                className="w-full text-xs p-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 bg-white"
                 value={newRegionName}
                 onChange={(e) => setNewRegionName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && newRegionName.trim()) handleCreateRegion(); }}
@@ -408,7 +408,7 @@ export function SVGMapperEditor({
       <div className="xl:col-span-6 flex flex-col h-full gap-4 min-w-0">
 
         {/* Editor map controller */}
-        <div className="bg-white border border-indigo-50/50 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+        <div className="bg-white border border-indigo-50/50 rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="p-0.5 px-1.5 rounded bg-amber-50 text-amber-600 font-bold text-[9px]">BUILDER WORKSPACE</span>
@@ -458,7 +458,7 @@ export function SVGMapperEditor({
       <div className="xl:col-span-3 flex flex-col gap-5 h-full min-w-0">
 
         {/* Regions list sidebar quick select */}
-        <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-slate-100 rounded-xl p-4">
           <h3 className="font-bold text-slate-800 text-[11px] uppercase tracking-tight mb-2 flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-500" />
             Danh Sách Địa Danh ({config.regions.length})
@@ -501,7 +501,7 @@ export function SVGMapperEditor({
         </div>
 
         {/* Selected Area/Region Editor form */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-[400px]">
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 flex-1 flex flex-col min-h-[400px]">
           {activeRegionObj ? (
             <div className="flex flex-col h-full justify-between gap-4">
               <div className="space-y-4 overflow-y-auto pr-1 max-h-[480px] custom-scrollbar flex-1">

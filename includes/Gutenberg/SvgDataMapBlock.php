@@ -144,7 +144,7 @@ class SvgDataMapBlock extends Block
              data-map-id="<?php echo esc_attr($mapId); ?>"
              data-ssr="yes">
 
-            <div class="relative overflow-hidden shadow-2xl border border-white/50 min-h-[600px] flex items-center justify-center" id="map-container-root">
+            <div class="relative overflow-hidden border border-white/50 min-h-[600px] flex items-center justify-center" id="map-container-root">
                 <div id="svg-viewport" class="w-full h-full flex items-center justify-center transition-transform duration-75">
                     <div class="jankx-svg-map-wrapper relative w-full h-full flex items-center justify-center pointer-events-auto" style="min-height: 500px;">
                         <?php 

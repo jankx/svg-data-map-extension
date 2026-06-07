@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (region.items?.length) {
                 region.items.forEach((item: any) => {
                     manualHtml += `
-                        <div class="bg-indigo-50/50 p-5 rounded-xl shadow-sm border border-indigo-100/50 hover:shadow transition mb-4">
+                        <div class="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100/50 hover:shadow transition mb-4">
                             <h3 class="font-bold text-slate-900 text-base m-0 mb-1">${item.title || ''}</h3>
                             <p class="text-slate-600 text-xs leading-relaxed">${item.description || ''}</p>
                             ${item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" class="inline-flex items-center gap-1 mt-2 font-bold text-xs text-indigo-800 hover:text-indigo-900">${item.linkLabel || 'Xem chi tiết'} →</a>` : ''}
