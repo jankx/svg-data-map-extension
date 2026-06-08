@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const r = regionMap.get(regionId);
             if (!r?.pathIds) return;
             r.pathIds.forEach((pid: string) => {
-                const el = svgWrapper.querySelector(`#${pid}`);
+                const el = svgWrapper.querySelector(`[id="${pid}"]`);
                 if (el) el.classList.toggle('jankx-map-active', active);
             });
         };
@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const r = regionMap.get(regionId);
             if (!r?.pathIds) return;
             r.pathIds.forEach((pid: string) => {
-                const el = svgWrapper.querySelector(`#${pid}`);
+                const el = svgWrapper.querySelector(`[id="${pid}"]`);
                 if (el) el.classList.toggle('jankx-map-hover', active);
             });
             const markerBtn = container.querySelector(`.jankx-marker-btn[data-region-id="${regionId}"]`);

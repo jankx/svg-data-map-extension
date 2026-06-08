@@ -232,10 +232,14 @@ class SvgDataMapBlock extends Block
                 .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-hover {
                     fill: <?php echo esc_attr($regionHoverFill); ?>;
                 }
-                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-active {
-                    fill: <?php echo esc_attr($activeFill); ?>;
-                    stroke: #1d4ed8;
-                    stroke-width: 2px;
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-active,
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-active path,
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-active polygon,
+                .jankx-svg-map-wrapper svg #<?php echo $pid; ?>.jankx-map-active circle {
+                    fill: <?php echo esc_attr($activeFill); ?> !important;
+                    stroke: #1d4ed8 !important;
+                    stroke-width: 2px !important;
+                    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
                 }
                 <?php endforeach; endforeach; ?>
 
@@ -250,18 +254,25 @@ class SvgDataMapBlock extends Block
                     transform: translate(-50%, -50%);
                     z-index: 20;
                 }
-                .jankx-marker-btn:hover {
+                .jankx-marker-btn:hover,
+                .jankx-marker-btn.jankx-map-active {
                     z-index: 50;
                 }
                 .jankx-marker-btn:hover .marker-icon-wrapper,
-                .jankx-map-marker-hover .marker-icon-wrapper {
-                    transform: scale(1.15);
-                    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.4);
+                .jankx-map-marker-hover .marker-icon-wrapper,
+                .jankx-marker-btn.jankx-map-active .marker-icon-wrapper {
+                    transform: scale(1.2) !important;
+                    box-shadow: 0 0 15px <?php echo esc_attr($markerColor); ?> !important;
+                    border-color: #fff !important;
                 }
                 .jankx-marker-btn:hover .marker-label,
-                .jankx-map-marker-hover .marker-label {
-                    transform: scale(1.05);
+                .jankx-map-marker-hover .marker-label,
+                .jankx-marker-btn.jankx-map-active .marker-label {
+                    transform: scale(1.1);
                     opacity: 1 !important;
+                    background-color: #fff !important;
+                    color: <?php echo esc_attr($markerColor); ?> !important;
+                    border-color: <?php echo esc_attr($markerColor); ?> !important;
                 }
 
                 /* Pulsing animation */
